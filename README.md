@@ -12,6 +12,8 @@
 
 首次启动会引导选择项目目录、主题和角色。没有演示任务或随机 Agent 数据。安装包未签名，Windows 可能显示发布者未验证；目前未提供代码签名证书。
 
+完整的安装、功能和故障排查说明见 [Nexus Companion 0.2.0 使用手册](docs/USER_GUIDE.md)。
+
 ## 已实现
 
 0.2.0 新增数据目录选择与重启迁移、界面语言选项、中文导航和状态标签、Codex 连接设置，修正弹窗关闭与 Morning 配色，并提供专注页面返回入口。详见 [版本说明](docs/RELEASE_0.2.0.md)。
@@ -47,12 +49,12 @@
 
 设置中可选择其他文件夹，下次启动创建 `NexusCompanion-Data` 并迁移数据库/资源/备份/日志。原目录保留，不覆盖已有目标目录。路径配置 `data-location.json` 与 Chromium 缓存仍在系统应用目录。请保持自选数据磁盘可用。
 
-| 内容 | 位置 |
-| --- | --- |
+| 内容        | 位置                       |
+| ----------- | -------------------------- |
 | SQLite 数据 | `nexus.sqlite`（WAL 模式） |
-| 应用日志 | `logs/app.log` |
-| 导入图片 | `assets/`，按内容哈希命名 |
-| 恢复前快照 | `backups/` |
+| 应用日志    | `logs/app.log`             |
+| 导入图片    | `assets/`，按内容哈希命名  |
+| 恢复前快照  | `backups/`                 |
 
 数据默认只存本地。应用没有云上传、遥测或账号系统；点击外部仓库链接时会打开系统浏览器。导出的备份含你的个人内容，请自行保管。直接复制 SQLite 数据前请从托盘退出；日常备份优先使用 Settings 中的导出功能。
 
@@ -82,6 +84,7 @@ npm run package  # NSIS 安装版 + portable
 ## 工程文档
 
 - [架构](docs/ARCHITECTURE.md)
+- [详细使用手册](docs/USER_GUIDE.md)
 - [进度与验收](docs/PROJECT_STATUS.md)
 - [Avatar Pack](docs/AVATAR_PACK.md)
 - [开源项目学习与落地](docs/OPEN_SOURCE_RESEARCH.md)
