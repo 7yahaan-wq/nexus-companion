@@ -1,0 +1,113 @@
+.app[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f4f5fb;
+  --panel: #ffffff;
+  --text: #252b40;
+  --muted: #566079;
+  --line: #d5d9e5;
+}
+.app[data-theme='dark'] {
+  color-scheme: dark;
+}
+.app[data-theme='light'] .panel,
+.app[data-theme='light'] .stat,
+.app[data-theme='light'] .agent-card,
+.app[data-theme='light'] .sidebar,
+.app[data-theme='light'] .companion-rail {
+  background: #ffffffed;
+}
+.app[data-theme='light'] .hero {
+  background:
+    radial-gradient(ellipse at 85% 20%, #dcd6fc, transparent 65%),
+    linear-gradient(120deg, #fff, #e9eefc);
+  color: var(--text);
+  border-color: var(--line);
+}
+.app[data-theme='light'] .hero p,
+.app[data-theme='light'] .hero-caption,
+.app[data-theme='light'] .online-label {
+  color: var(--muted);
+}
+.app[data-theme='light'] .hero-orbit,
+.app[data-theme='light'] .hero-orbit span,
+.app[data-theme='light'] .brand {
+  color: #64548d;
+}
+.app[data-theme='light'] .primary {
+  background: var(--accent);
+  color: #fff;
+}
+.app[data-theme='light'] button:hover {
+  background-color: #71619417;
+}
+.app[data-theme='light'] .primary:hover {
+  background: #514279;
+}
+.app[data-theme='light'] .agent-symbol,
+.app[data-theme='light'] .agent-status.RUNNING,
+.app[data-theme='light'] .priority.Medium,
+.app[data-theme='light'] .priority.Low {
+  color: #46527b;
+}
+.app[data-theme='light'] .agent-status.COMPLETED {
+  color: #256147;
+}
+.app[data-theme='light'] .agent-status.FAILED,
+.app[data-theme='light'] .priority.Urgent,
+.app[data-theme='light'] .danger,
+.app[data-theme='light'] .overdue {
+  color: #9b3047;
+}
+.app[data-theme='light'] .agent-status.WAITING,
+.app[data-theme='light'] .agent-status.WAITING_APPROVAL,
+.app[data-theme='light'] .priority.High,
+.app[data-theme='light'] .waiting-panel > button span {
+  color: #755017;
+}
+.app[data-theme='light'] .agent-status.UNAVAILABLE {
+  color: #67506a;
+}
+.app[data-theme='light'] .error {
+  color: #922c37;
+  background: #ffe8eb;
+}
+.app[data-theme='light'] .modal {
+  background: #fff;
+  box-shadow: 0 20px 80px #22263d35;
+}
+.connection-settings p {
+  max-width: 85ch;
+  line-height: 1.8;
+}
+.settings-wide .path-text {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 8px;
+}
+.focus-page > .secondary:first-child {
+  align-self: flex-start;
+}
+button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+.stat small,
+.agent-card footer,
+.agent-output,
+.section-title > button,
+.daily-strip p,
+.daily-strip > span,
+.agenda-row small,
+.online-label,
+.rail-footer,
+.rail-title,
+.eyebrow,
+.quiet {
+  font-size: 11px;
+}
+.agent-output {
+  line-height: 1.6;
+}

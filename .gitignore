@@ -1,0 +1,6 @@
+node_modules/
+build/
+dist/
+.test-data/
+.npm-cache/
+test-results/

@@ -1,0 +1,188 @@
+.focus-page {
+  text-align: center;
+  padding: 35px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  min-height: 640px;
+}
+.focus-page h2 {
+  font-size: 20px;
+  border: 0;
+  margin-top: 15px;
+}
+.focus-page .avatar-render {
+  width: 220px;
+  height: 220px;
+  margin: 5px 0;
+}
+.focus-clock {
+  font-size: 72px;
+  font-weight: 200;
+  letter-spacing: 3px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.focus-clock span {
+  color: var(--muted);
+  padding: 0 6px;
+}
+.focus-presets {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 7px 0 18px;
+}
+.focus-presets > button {
+  border: 1px solid var(--line);
+  font-size: 11px;
+}
+.focus-presets .active {
+  border-color: #a6a2f577;
+  color: var(--accent);
+}
+.focus-presets label {
+  display: flex;
+  gap: 7px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+.focus-presets input {
+  width: 60px;
+  font-size: 11px;
+  padding: 9px;
+}
+.focus-page > select {
+  min-width: 270px;
+  font-size: 11px;
+}
+.focus-controls {
+  display: flex;
+  gap: 10px;
+  margin: 22px 0;
+}
+.focus-controls button {
+  padding: 12px 25px;
+}
+.focus-summary {
+  display: flex;
+  gap: 30px;
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+  width: 100%;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 10px;
+}
+.focus-summary span {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.palette-input {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+}
+.palette-input input {
+  flex: 1;
+  background: none;
+  border: 0;
+  outline: none;
+  font-size: 13px;
+}
+.command-results {
+  max-height: 390px;
+  overflow: auto;
+  padding: 10px 0;
+}
+.command-results button {
+  width: 100%;
+  justify-content: start;
+  text-align: left;
+  font-size: 12px;
+  padding: 14px;
+}
+.command-results .selected {
+  background: #a6a2f51c;
+  color: var(--accent);
+}
+.command-results small {
+  margin-left: auto;
+  font-size: 9px;
+  color: var(--muted);
+}
+.capture-input {
+  width: 100%;
+  resize: vertical;
+}
+.onboarding {
+  text-align: center;
+  padding: 10px 12px;
+}
+.onboarding > svg {
+  color: var(--accent);
+  margin: 25px 0;
+}
+.onboarding h1 {
+  font-size: 23px;
+  line-height: 1.7;
+}
+.onboarding h2 {
+  display: block;
+  text-align: center;
+  border: 0;
+  margin: 25px 0;
+}
+.onboarding p {
+  margin: 20px 0;
+}
+.onboarding .avatar-render {
+  margin: auto;
+  width: 200px;
+  height: 200px;
+}
+.onboarding .segmented {
+  width: max-content;
+  margin: auto;
+}
+.onboarding-steps {
+  display: flex;
+  gap: 7px;
+  justify-content: center;
+  padding: 10px 0 20px;
+}
+.onboarding-steps i {
+  width: 26px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--line);
+}
+.onboarding-steps .active {
+  background: var(--accent);
+}
+.theme-options {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin: 30px 0;
+}
+.theme-options button {
+  border: 1px solid var(--line);
+  padding: 25px;
+}
+.theme-options .selected {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.onboarding .modal-actions {
+  justify-content: center;
+  margin-top: 28px;
+}
+.capture-input:focus {
+  border-color: var(--accent);
+}

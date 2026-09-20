@@ -1,0 +1,163 @@
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 27px 0 15px;
+}
+.section-title h2 {
+  flex: 1;
+}
+.section-title h2 > span {
+  margin-left: 10px;
+}
+.section-title > button {
+  font-size: 10px;
+  color: var(--muted);
+}
+.home-agents .agent-card {
+  padding: 17px;
+}
+.home-agents .agent-output {
+  height: 43px;
+  font-size: 8px;
+}
+.home-agents .agent-card h3 {
+  margin-top: 14px;
+}
+.home-bottom {
+  margin-top: 22px;
+}
+.home-task {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  min-height: 54px;
+  border-bottom: 1px solid var(--line);
+}
+.home-task > button:nth-child(2) {
+  font-size: 11px;
+  text-align: left;
+  justify-content: start;
+  flex: 1;
+  padding: 7px 0;
+}
+.check-button {
+  width: 15px;
+  height: 15px;
+  border: 1px solid #939ab455;
+  padding: 0;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.check-button.checked {
+  background: var(--accent);
+  color: var(--bg);
+}
+.agenda-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  justify-content: start;
+  text-align: left;
+  padding: 17px 0;
+  border-bottom: 1px solid var(--line);
+}
+.agenda-row time {
+  color: var(--muted);
+  font-size: 10px;
+  min-width: 34px;
+}
+.agenda-row i {
+  width: 3px;
+  height: 28px;
+  border-radius: 3px;
+  margin: 0 4px;
+}
+.agenda-row > span {
+  font-size: 11px;
+}
+.agenda-row small {
+  display: block;
+  color: var(--muted);
+  font-size: 8px;
+  margin-top: 5px;
+}
+.home-projects {
+  margin-top: 22px;
+}
+.project-progress-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 17px 0;
+}
+.project-progress-row > span {
+  font-size: 20px;
+}
+.project-progress-row strong {
+  font-size: 12px;
+  font-weight: 500;
+  min-width: 100px;
+}
+.project-progress-row .progress-track {
+  flex: 1;
+  margin: 0;
+}
+.project-progress-row small {
+  color: var(--muted);
+  font-size: 10px;
+}
+.daily-strip {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 20px 0 0;
+  flex-wrap: wrap;
+}
+.daily-strip > span {
+  color: var(--muted);
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+.daily-strip p {
+  font-size: 9px;
+}
+.daily-strip button {
+  font-size: 10px;
+  color: var(--accent);
+  margin-left: auto;
+}
+.waiting-panel {
+  margin-bottom: 22px;
+  border-color: #d5b77e33;
+}
+.waiting-panel > button {
+  width: 100%;
+  justify-content: start;
+  font-size: 11px;
+  margin-top: 9px;
+}
+.waiting-panel > button span {
+  margin-left: auto;
+  color: #d5b77e;
+  font-size: 9px;
+}
+.error-toast {
+  position: sticky;
+  top: 10px;
+  z-index: 8;
+  display: flex;
+  width: calc(100% - 60px);
+  justify-content: space-between;
+  text-align: left;
+}
+.error-toast span {
+  margin-left: 10px;
+}
+.brand {
+  user-select: none;
+}
+.hero {
+  min-height: 247px;
+}

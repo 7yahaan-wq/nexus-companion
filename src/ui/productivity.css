@@ -1,0 +1,137 @@
+.timeline-row {
+  display: flex;
+  gap: 18px;
+  min-height: 76px;
+  position: relative;
+}
+.timeline-time {
+  font-size: 10px;
+  color: var(--muted);
+  padding-top: 5px;
+  min-width: 38px;
+}
+.timeline-row > i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-top: 7px;
+  flex-shrink: 0;
+  position: relative;
+}
+.timeline-row > i:after {
+  content: '';
+  position: absolute;
+  top: 13px;
+  left: 3px;
+  height: 50px;
+  width: 1px;
+  background: var(--line);
+}
+.timeline-row strong {
+  font-size: 12px;
+  font-weight: 400;
+}
+.timeline-row p {
+  font-size: 10px;
+  margin: 7px 0 18px;
+}
+.notes-layout {
+  display: grid;
+  grid-template-columns: 195px 1fr;
+  gap: 18px;
+}
+.notes-layout aside {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+}
+.note-item {
+  display: block;
+  text-align: left;
+  border: 1px solid var(--line);
+  padding: 15px;
+  background: var(--panel);
+}
+.note-item.active {
+  border-color: #a6a2f566;
+}
+.note-item strong {
+  font-size: 12px;
+  font-weight: 500;
+  display: block;
+}
+.note-item span {
+  font-size: 10px;
+  color: var(--muted);
+  display: block;
+  line-height: 1.7;
+  margin: 9px 0;
+  max-height: 36px;
+  overflow: hidden;
+}
+.note-item small {
+  font-size: 8px;
+  color: var(--accent);
+}
+.markdown {
+  font-size: 12px;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+.markdown h1 {
+  font-size: 23px;
+}
+.markdown h2 {
+  display: block;
+  font-size: 17px;
+  border: 0;
+  padding: 0;
+  margin: 22px 0 12px;
+}
+.markdown h3 {
+  font-size: 14px;
+}
+.markdown p,
+.markdown li {
+  color: var(--text);
+  font-size: 12px;
+}
+.markdown code {
+  font-family: Consolas, monospace;
+  background: var(--bg);
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.markdown pre {
+  background: var(--bg);
+  padding: 15px;
+  border-radius: 8px;
+  overflow: auto;
+}
+.markdown blockquote {
+  border-left: 2px solid var(--accent);
+  margin-left: 0;
+  padding-left: 18px;
+  color: var(--muted);
+}
+.inline-link {
+  display: inline;
+  color: var(--accent);
+  padding: 0;
+  text-decoration: underline;
+}
+.markdown hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 24px 0;
+}
+.markdown table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.markdown td,
+.markdown th {
+  padding: 8px;
+  border: 1px solid var(--line);
+}
