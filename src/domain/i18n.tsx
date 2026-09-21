@@ -11,7 +11,7 @@ const zh: Record<string, string> = {
   Calendar: '日程',
   Projects: '项目',
   Timeline: '时间线',
-  Notes: '笔记',
+  Notes: '灵感笔记',
   Settings: '设置',
   Focus: '专注',
   WORKSPACE: '工作空间',
@@ -63,7 +63,10 @@ const zh: Record<string, string> = {
   CANCELLED: '已取消',
 };
 const en: Record<string, string> = {
+  Notes: 'Ideas & notes',
   记录灵感: 'Capture an idea',
+  查看灵感: 'View ideas',
+  '在主页记录的灵感都会保存在这里。': 'Ideas captured on the homepage are saved here.',
   角色动画: 'Character animation',
   '认识更多面的 Nia': 'Meet the many moods of Nia',
   'Nia 状态预览': 'Nia expression preview',

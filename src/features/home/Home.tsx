@@ -87,6 +87,10 @@ export default function Home({
               <NotebookPen size={16} />
               <L text="记录灵感" />
             </button>
+            <button className="idea-button" onClick={() => onAction('Notes')}>
+              <L text="查看灵感" />
+              <ArrowUpRight size={16} />
+            </button>
           </div>
         </div>
         <div className="hero-orbit">

@@ -315,7 +315,14 @@ export default function App() {
         {task && (
           <TaskEditor task={task} workspace={workspace} onClose={() => setTask(null)} />
         )}{' '}
-        {note && <NoteEditor note={note} workspace={workspace} onClose={() => setNote(null)} />}{' '}
+        {note && (
+          <NoteEditor
+            note={note}
+            workspace={workspace}
+            onClose={() => setNote(null)}
+            onSaved={() => setPage('Notes')}
+          />
+        )}{' '}
         {schedule && (
           <EventEditor event={schedule} workspace={workspace} onClose={() => setSchedule(null)} />
         )}

@@ -1,6 +1,6 @@
 # 项目开发接续说明
 
-核对日期：2026-09-21。开发起点：`main` / `1eb9364`，当前应用版本 `0.3.0`（版本标签 `v0.3.0`）。工作目录：`D:\ProjectNia\nexus-companion`。
+核对日期：2026-09-21。开发起点：`main` / `1eb9364`，当前应用版本 `0.3.1`（版本标签 `v0.3.1`）。工作目录：`D:\ProjectNia\nexus-companion`。
 
 本文基于现有源码、配置、测试和发布文件整理，用于后续在本机继续开发。当前发布验收见 VERIFICATION.md；本次已实现的优化与后续候选项分别记录。修改功能后应同步更新相关说明。
 
@@ -171,7 +171,7 @@ flowchart TD
 - 专注时长支持 1–480 分钟，暂停保存剩余秒数；运行中通过 deadline 恢复。结束记录与任务 `actualTime` 目前没有自动累加联动。
 - Nia 状态优先级是失败 → 审批 → 工作/专注 → 等待 → 近期完成 → 深夜 → 空闲。失败状态保留五分钟，活动观测和完成反馈保留两分钟；每 15 秒更新状态，避免旧记录持续影响当前表情。
 - `Home.tsx` 中有 WidgetDefinition 和 widgets 声明，但当前布局是固定 JSX，尚无组件排序/显隐设置。
-- 快速记录无前缀时固定创建任务；主页「记录灵感」直接进入笔记编辑器，独立于快捷键输入前缀。
+- 快速记录无前缀时固定创建任务；主页「记录灵感」直接进入笔记编辑器，独立于快捷键输入前缀；保存后打开「灵感笔记」，主页「查看灵感」也可进入。左右侧栏仅保留左侧专注按钮。
 
 ## 7. 本机开发环境
 
@@ -184,7 +184,7 @@ flowchart TD
 | Git              | `D:\Git\cmd\git.exe` 可用                                                                  |
 | VS Code          | `D:\Microsoft VS Code\Code.exe` 存在，`code.cmd` 在 PATH 中                                |
 | Windows Terminal | `wt.exe` 启动入口在 PATH 中；未额外测试交互窗口                                            |
-| 发布文件         | 0.3.0 安装版、便携版、解包程序和 SHA256SUMS；旧 0.2.0 文件保留                             |
+| 发布文件         | 0.3.1 安装版、便携版、解包程序和 SHA256SUMS；旧版本文件保留                                |
 
 Node 的当前位置为 `C:\Users\123\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe`。这是本次任务可用的运行时，不能据此认定用户另开的终端已经具备完整开发环境。
 
@@ -268,7 +268,7 @@ node node_modules/electron-builder/out/cli/cli.js --win nsis portable --prepacka
 本次实际验证（2026-09-21）：
 
 - doctor 环境检查通过；完整自主 harness 的 16 个阶段全部通过，包括 20 项单元测试和 12 组桌面测试。
-- Nia 专项覆盖主页笔记保存/重启、八状态预览、帧推进、系统减少动态效果、窗口隐藏恢复、动画开关持久化、深浅主题、英文和最小宽度布局。验收截图保存在 .test-data。
+- Nia 专项覆盖主页笔记保存后跳转、查看/取消、重启后查找、唯一侧栏专注入口、八状态预览、帧推进、系统减少动态效果、窗口隐藏恢复、动画开关持久化、深浅主题、英文和最小宽度布局。验收截图保存在 .test-data。
 - 受限执行环境会导致 Electron 渲染进程崩溃，真实桌面验收使用获准的非受限执行；数据仍隔离在 .test-data。
 - 最终打包复测及文件哈希以 [VERIFICATION.md](VERIFICATION.md) / [PROJECT_STATUS.md](PROJECT_STATUS.md) 为准。安装器不会在验收中自动安装。
 - 直接加载领域 TypeScript 单测时有 Node 模块类型提示，不影响结果。角色素材和实现详见 [NIA_ANIMATION.md](NIA_ANIMATION.md)。

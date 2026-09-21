@@ -190,11 +190,6 @@ export default function Companion({
         <p className="quiet">
           {focus ? '你正在为重要的事情留出时间。' : '一次只做一件事，就很好。'}
         </p>
-        <button className="focus-button" onClick={() => onAction('Focus')}>
-          <Timer size={19} />
-          {focus ? '返回专注' : '开始一段专注'}
-          <span>↗</span>
-        </button>
       </div>
       <div className="rail-footer">
         <span>✧</span> From ideas to reality.

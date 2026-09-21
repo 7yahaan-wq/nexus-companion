@@ -4,6 +4,10 @@
 
 `npm run doctor` checks Node, pinned Electron runtime, assets and lockfile. `npm run verify` builds, runs all domain tests, then launches real Electron windows through Playwright for milestones 1–8 and the full user journey. Every test uses isolated data directories. Reports: `.test-data/verification.json`.
 
+## 0.3.1 verification (2026-09-21)
+
+All 16 harness stages passed again: 20 unit tests and 12 real desktop suites. Nia regression checks now verify automatic navigation after saving an idea, cancel staying on the homepage, the renamed notes navigation, homepage View ideas in Chinese/English, reopening saved ideas after restart, and a single visible sidebar focus entry that opens focus mode. Home screenshots were reviewed in dark and light/narrow layouts. The packaged 0.3.1 runtime passed E2E, usability and Nia suites; the actual portable executable passed its smoke test. Archive audit verified version/assets and excluded private files. Hashes are recorded in PROJECT_STATUS.md.
+
 ## 0.3.0 verification (2026-09-21)
 
 - Environment checks passed with Node 24.19.0 and Electron 39.8.10. TypeScript and Vite production builds passed.

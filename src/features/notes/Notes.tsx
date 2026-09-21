@@ -10,10 +10,12 @@ export function NoteEditor({
   note,
   workspace,
   onClose,
+  onSaved,
 }: {
   note: Entity;
   workspace: WorkspaceActions;
   onClose: () => void;
+  onSaved?: () => void;
 }) {
   return (
     <EntityForm
@@ -33,7 +35,10 @@ export function NoteEditor({
         },
         { key: 'tags', label: '标签（逗号分隔）' },
       ]}
-      onSave={(n) => workspace.save('notes', n)}
+      onSave={async (n) => {
+        await workspace.save('notes', n);
+        onSaved?.();
+      }}
       onDelete={
         workspace.data.notes.some((n) => n.id === note.id)
           ? () => workspace.remove('notes', note.id)
@@ -53,6 +58,9 @@ export default function Notes({ workspace }: { workspace: WorkspaceActions }) {
   const note = notes.find((n) => n.id === selected) || notes[0];
   return (
     <>
+      <p className="quiet">
+        <L text="在主页记录的灵感都会保存在这里。" />
+      </p>
       <div className="toolbar">
         <div className="search-field">
           <Search size={15} />

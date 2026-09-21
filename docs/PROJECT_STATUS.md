@@ -1,21 +1,21 @@
 # Project status
 
-## Current release: 0.3.0 (2026-09-21)
+## Current release: 0.3.1 (2026-09-21)
 
-- Delivered homepage inspiration capture, a transparent 16-frame Nia atlas with four drawn action groups mapped to eight states, expression previews, persistent animation settings, reduced-motion support and hidden-window pause/resume. Old failures no longer hold Nia in an error state indefinitely.
+- Delivered clear inspiration discovery: renamed Ideas & notes navigation, homepage View ideas, automatic navigation after saving, and a single sidebar focus entry. The 0.3.0 Nia animations and settings remain available.
 - All 16 verification stages passed: 20 unit tests and 12 desktop suites, plus builds. Doctor and source formatting checks passed. Reports: `.test-data/verification.json` and `.test-data/release-verification.json`.
-- The packaged 0.3.0 runtime passed complete E2E, usability and Nia suites. The actual portable executable passed self-extract, startup, bridge, onboarding and clean-exit smoke tests. The installer was built but was not installed into the user's system.
-- ASAR audit: 4559 entries; no user database, sessions, test data or credentials bundled. Packaged version is 0.3.0, and the atlas matches the source SHA-256 `4f4c00192f430d729777e34ed4b627091805935b4c508734619a2c030123bf6b`.
-- Visual review covered the homepage, idle/typing/thinking/sleepy poses, light/dark themes and the minimum-width English layout. Research and asset provenance are documented in OPEN_SOURCE_RESEARCH.md and NIA_ANIMATION.md.
+- The packaged 0.3.1 runtime passed complete E2E, usability and Nia suites. The actual portable executable passed self-extract, startup, bridge, onboarding and clean-exit smoke tests. The installer was built but was not installed into the user's system.
+- ASAR audit: 4559 entries; no user database, sessions, test data or credentials bundled. Packaged version is 0.3.1, and the atlas matches the source SHA-256 `4f4c00192f430d729777e34ed4b627091805935b4c508734619a2c030123bf6b`.
+- Visual review covered the new homepage entries, renamed notes navigation, removed right-side focus button, and light/dark minimum-width English layout. Research and asset provenance are documented in OPEN_SOURCE_RESEARCH.md and NIA_ANIMATION.md.
 
 ## Release artifacts
 
 | Artifact                                 |     Bytes | SHA-256                                                            |
 | ---------------------------------------- | --------: | ------------------------------------------------------------------ |
-| `dist/NexusCompanion-Portable-0.3.0.exe` | 102519979 | `d9e1c3f7230a85d5544aeb0e6af401a15138350198140971e199fdbea96d0945` |
-| `dist/NexusCompanion-Setup-0.3.0.exe`    | 102729923 | `89d05f315ddf1b63c0115d9e626b3865b3a9f5f18ad5c7714fc8b7f0d6ee61e7` |
+| `dist/NexusCompanion-Portable-0.3.1.exe` | 102519885 | `4959046e11168e07c098375e22bf0ffd9c85344c19fb1c33a1a9e5e4571f2283` |
+| `dist/NexusCompanion-Setup-0.3.1.exe`    | 102729857 | `709f0f735c63ee9bc3876864fb57845de5373eb0a7dce8fe035227aee4ec0ad5` |
 
-Companion files: `dist/README.md`, `dist/RELEASE_0.3.0.md`, `dist/RELEASE_STATUS.md`, `dist/USER_GUIDE.md` and `dist/SHA256SUMS-0.3.0.txt`. Source and tests remain in the workspace. All tests use isolated local data directories. Prior 0.2.0 artifacts are retained separately.
+Companion files: `dist/README.md`, `dist/RELEASE_0.3.1.md`, `dist/RELEASE_STATUS.md`, `dist/USER_GUIDE.md` and `dist/SHA256SUMS-0.3.1.txt`. Source and tests remain in the workspace. All tests use isolated local data directories. Prior 0.2.0 and 0.3.0 artifacts are retained separately.
 
 ## Known limitations
 
@@ -32,7 +32,7 @@ Companion files: `dist/README.md`, `dist/RELEASE_0.3.0.md`, `dist/RELEASE_STATUS
 ## Documentation
 
 - User documentation: `docs/USER_GUIDE.md`
-- Release notes: `docs/RELEASE_0.3.0.md`
+- Release notes: `docs/RELEASE_0.3.1.md`
 - Animation and assets: `docs/NIA_ANIMATION.md`
 - Architecture: `docs/ARCHITECTURE.md`
 - Verification: `docs/VERIFICATION.md`
