@@ -17,7 +17,7 @@ const commands = [
         .map((f) => 'tests/' + f),
     ],
   ],
-  ...['desktop', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'e2e', 'polish', 'usability'].map(
+  ...['desktop', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'e2e', 'polish', 'usability', 'nia'].map(
     (name) => [name, ['tests/' + name + '.cjs']],
   ),
 ];

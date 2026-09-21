@@ -6,4 +6,9 @@ contextBridge.exposeInMainWorld('nexus', {
     ipcRenderer.on('command', fn);
     return () => ipcRenderer.removeListener('command', fn);
   },
+  onVisibility: (callback) => {
+    const fn = (_, visible) => callback(visible);
+    ipcRenderer.on('window-visibility', fn);
+    return () => ipcRenderer.removeListener('window-visibility', fn);
+  },
 });

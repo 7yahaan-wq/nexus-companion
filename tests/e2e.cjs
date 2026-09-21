@@ -80,7 +80,7 @@ async function launch() {
     );
     await p.getByRole('button', { name: '导入 Avatar Pack' }).click();
     await p.waitForFunction(() =>
-      document.querySelector('.avatar-render img')?.src.startsWith('data:image'),
+      document.querySelector('.companion-rail .avatar-render img')?.src.startsWith('data:image'),
     );
     await p.getByLabel('主题', { exact: true }).selectOption('light');
     await p.waitForFunction(() => document.querySelector('.app').dataset.theme === 'light');

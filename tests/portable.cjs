@@ -6,7 +6,8 @@ const assert = require('node:assert/strict');
   const root = path.join(__dirname, '..'),
     data = path.join(root, '.test-data/portable-' + Date.now());
   await fs.mkdir(data, { recursive: true });
-  const executable = path.join(root, 'dist/NexusCompanion-Portable-0.2.0.exe');
+  const version = require('../package.json').version;
+  const executable = path.join(root, `dist/NexusCompanion-Portable-${version}.exe`);
   const child = spawn(executable, ['--smoke'], {
     env: { ...process.env, NEXUS_DATA_DIR: data },
     windowsHide: true,

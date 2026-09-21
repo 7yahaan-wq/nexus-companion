@@ -8,6 +8,7 @@ import {
   Check,
   AlertCircle,
   FolderKanban,
+  NotebookPen,
 } from 'lucide-react';
 import { today } from '../../domain/api';
 import { L } from '../../domain/i18n';
@@ -76,11 +77,17 @@ export default function Home({
           <p>
             <L text="任务、Agent 与灵感，终于在同一个地方。" />
           </p>
-          <button className="primary" onClick={() => onTask()}>
-            <Plus size={16} />
-            <L text="添加今日任务" />
-            <ArrowUpRight size={16} />
-          </button>
+          <div className="hero-actions">
+            <button className="primary" onClick={() => onTask()}>
+              <Plus size={16} />
+              <L text="添加今日任务" />
+              <ArrowUpRight size={16} />
+            </button>
+            <button className="idea-button" onClick={() => onAction('note')}>
+              <NotebookPen size={16} />
+              <L text="记录灵感" />
+            </button>
+          </div>
         </div>
         <div className="hero-orbit">
           <Orbit size={155} strokeWidth={0.6} />

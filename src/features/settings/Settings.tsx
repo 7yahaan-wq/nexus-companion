@@ -6,6 +6,7 @@ import DataSafety from './DataSafety';
 import type { Entity } from '../../domain/types';
 import { useI18n } from '../../domain/i18n';
 import Connections from './Connections';
+import AvatarPreview from '../../avatar/AvatarPreview';
 export const defaultSettings: Entity = {
   id: 'appearance',
   theme: 'dark',
@@ -18,6 +19,7 @@ export const defaultSettings: Entity = {
   backgroundOpacity: 35,
   panelOpacity: 95,
   avatar: 'nia',
+  avatarMotion: true,
   notifications: { completed: true, failed: true, approval: true, calendar: true, focus: true },
   onboarded: false,
 };
@@ -189,7 +191,19 @@ export default function Settings({
           <L text="导入 Avatar Pack" />
         </button>
         <p>
-          选择 avatar.json。支持 8 种状态的本地图片资源，配合轻量动画。Live2D / Spine 为后续适配器。
+          <L text="Nia 会眨眼、打字和回应你的进展。也可以导入自己的八状态角色图片。" />
+        </p>
+        <label>
+          <L text="角色动画" />
+          <input
+            type="checkbox"
+            aria-label="角色动画"
+            checked={settings.avatarMotion !== false}
+            onChange={(e) => change('avatarMotion', e.target.checked)}
+          />
+        </label>
+        <p>
+          <L text="遵循系统的减少动态效果设置；关闭后仍会显示对应状态的表情。" />
         </p>
         <h3>{t('Notifications')}</h3>
         {[
@@ -224,6 +238,7 @@ export default function Settings({
           <L text="发送测试通知" />
         </button>
       </section>
+      <AvatarPreview settings={settings} />
       <section className="panel settings-wide">
         <h2>
           <ShieldCheck size={17} />
@@ -231,7 +246,12 @@ export default function Settings({
         </h2>
         <p>项目、日程、笔记、Agent 记录与设置均保存在此电脑，不自动上传。</p>
         <div className="path-text">{info.dataPath}</div>
-        {info.ready && info.shortcut === false && <p role="status">全局快捷键被其他程序或 Nexus 实例占用。窗口内仍可使用 Ctrl + Shift + Space，也可从托盘打开快速记录。</p>}
+        {info.ready && info.shortcut === false && (
+          <p role="status">
+            全局快捷键被其他程序或 Nexus 实例占用。窗口内仍可使用 Ctrl + Shift +
+            Space，也可从托盘打开快速记录。
+          </p>
+        )}
         <p>
           选择文件夹后，应用会在其中创建
           NexusCompanion-Data。下次启动时复制并校验数据，旧目录保留；应用缓存仍由系统管理。

@@ -6,19 +6,19 @@
 
 最终构建位于 `dist/`：
 
-- `NexusCompanion-Setup-0.2.0.exe`：安装版。
-- `NexusCompanion-Portable-0.2.0.exe`：免安装启动版，默认使用 AppData，可在设置中选择数据位置。
+- `NexusCompanion-Setup-0.3.0.exe`：安装版。
+- `NexusCompanion-Portable-0.3.0.exe`：免安装启动版，默认使用 AppData，可在设置中选择数据位置。
 - `win-unpacked/Nexus Companion.exe`：解包版本，可直接启动；整个目录需要一起保留。
 
 首次启动会引导选择项目目录、主题和角色。没有演示任务或随机 Agent 数据。安装包未签名，Windows 可能显示发布者未验证；目前未提供代码签名证书。
 
-完整的安装、功能和故障排查说明见 [Nexus Companion 0.2.0 使用手册](docs/USER_GUIDE.md)。
+完整的安装、功能和故障排查说明见 [Nexus Companion 0.3.0 使用手册](docs/USER_GUIDE.md)。
 
 ## 已实现
 
-0.2.0 新增数据目录选择与重启迁移、界面语言选项、中文导航和状态标签、Codex 连接设置，修正弹窗关闭与 Morning 配色，并提供专注页面返回入口。详见 [版本说明](docs/RELEASE_0.2.0.md)。
+0.3.0 在主页加入「记录灵感」，为 Nia 增加 16 帧、四组动作与八种状态反馈，以及设置中的状态预览、动画开关和隐藏窗口暂停。修正过期失败记录持续影响表情的问题。详见 [版本说明](docs/RELEASE_0.3.0.md)。
 
-- Home：今日任务、最近 Agent 观测、等待处理项、日程、项目进度和真实统计。
+- Home：一键记录灵感、今日任务、最近 Agent 观测、等待处理项、日程、项目进度和真实统计。
 - Projects：创建/编辑/删除，Godot/Unity 识别，目录/VS Code/终端/项目启动，重要文档，Git 分支、未提交文件、最近提交（只读）。外部程序未安装时显示错误。
 - Tasks：6 种状态，拖拽列与手动排序，优先级、项目、标签、日期、预计/实际时长、关联 Agent，搜索过滤。
 - Calendar：月/周/日视图，创建/编辑/删除，任务拖入时间块，拖动日程，拖动底边调整结束时间，每天/周/月重复。跨午夜分段和重叠事件分栏。**编辑、拖动、调整重复日程会修改整个系列**；单次例外编辑尚未提供。
@@ -26,7 +26,7 @@
 - Timeline / Daily Report：真实本地操作和 Agent 事件，按日期/项目/Agent/任务过滤，Markdown 复制和导出。
 - Notes：轻量 Markdown、项目、标签、搜索；不执行 HTML、不加载远程图片。
 - Focus：25/50/自定义 1–480 分钟，暂停/继续/结束，主进程计时、重启恢复、完成通知、每日统计。
-- Nia：透明 2D 素材，8 种状态的动画与提示；可切换简洁 Core 或导入 Avatar Pack。角色菜单连接任务、Agent、笔记和专注。
+- Nia：16 帧透明图集，眨眼、打字、思考、困倦四组动作表达八种状态；设置可预览和关闭动画，遵循系统减少动态效果设置。可切换 Core 或导入 Avatar Pack。角色菜单连接任务、Agent、笔记和专注。
 - Appearance：深浅主题、强调色、渐变/纯色/本地图片、模糊/亮度/可见度/面板透明度。
 - 全局 `Ctrl + Shift + Space` 快速记录；`TODO 内容` 建任务、`NOTE 内容` 建笔记。窗口内 `Ctrl + K` 搜索所有主要实体和命令。
 - 托盘：打开、Agent、快速记录、专注、退出。关闭窗口默认隐藏到托盘；计时和监控继续工作。
@@ -83,10 +83,12 @@ npm run package  # NSIS 安装版 + portable
 
 ## 工程文档
 
+- [开发接续说明与本机环境](docs/DEVELOPMENT_HANDOFF.md)
 - [架构](docs/ARCHITECTURE.md)
 - [详细使用手册](docs/USER_GUIDE.md)
 - [进度与验收](docs/PROJECT_STATUS.md)
 - [Avatar Pack](docs/AVATAR_PACK.md)
+- [Nia 动画、素材来源与扩展入口](docs/NIA_ANIMATION.md)
 - [开源项目学习与落地](docs/OPEN_SOURCE_RESEARCH.md)
 - [测试与交付边界](docs/VERIFICATION.md)
 

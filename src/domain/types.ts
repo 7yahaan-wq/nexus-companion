@@ -57,6 +57,7 @@ declare global {
     nexus: {
       call: (method: string, ...args: any[]) => Promise<{ ok: boolean; data: any; error?: string }>;
       onCommand: (callback: (value: string) => void) => () => void;
+      onVisibility: (callback: (visible: boolean) => void) => () => void;
     };
   }
 }

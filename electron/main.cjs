@@ -30,7 +30,8 @@ let agentCache = null,
   agentCacheAt = 0;
 const storedObservations = new Map();
 let connection = { enabled: true, root: null };
-const defaultCodexRoot = process.env.CODEX_HOME || path.join(require('node:os').homedir(), '.codex');
+const defaultCodexRoot =
+  process.env.CODEX_HOME || path.join(require('node:os').homedir(), '.codex');
 async function saveActivities(run, projectRows) {
   if (storedObservations.get(run.id) === run.observedAt) return;
   for (const activity of run.activities || []) {
@@ -123,6 +124,7 @@ async function log(level, message) {
     .catch(() => {});
 }
 const handlers = {
+  windowVisible: () => !!win && win.isVisible() && !win.isMinimized(),
   connectionInfo: async () => {
     const result = await handlers.agents(true);
     return {
@@ -393,6 +395,9 @@ async function start() {
     },
   });
   win.setMenuBarVisibility(false);
+  for (const event of ['show', 'hide', 'minimize', 'restore']) {
+    win.on(event, () => win.webContents.send('window-visibility', handlers.windowVisible()));
+  }
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   win.webContents.session.setPermissionRequestHandler((_webContents, _permission, callback) =>
     callback(false),

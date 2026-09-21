@@ -161,3 +161,28 @@
 .hero {
   min-height: 247px;
 }
+.hero-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+.hero-actions .primary {
+  margin-top: 0;
+}
+.idea-button {
+  border: 1px solid #b6b3ec66;
+  background: #b6b3ec12;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 600;
+}
+.idea-button:hover {
+  background: #b6b3ec28;
+}
+.app[data-theme='light'] .idea-button {
+  border-color: #8270ac;
+  color: #514279;
+  background: #ffffff99;
+}

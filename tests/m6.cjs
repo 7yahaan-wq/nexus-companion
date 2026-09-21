@@ -12,9 +12,11 @@ const assert = require('node:assert/strict');
   });
   try {
     const p = await app.firstWindow();
-    await p.locator('.avatar-render img').waitFor();
+    await p.locator('.companion-rail .avatar-render img').waitFor();
     assert.equal(
-      await p.locator('.avatar-render img').evaluate((i) => i.complete && i.naturalWidth > 0),
+      await p
+        .locator('.companion-rail .avatar-render img')
+        .evaluate((i) => i.complete && i.naturalWidth > 0),
       true,
     );
     await p.getByRole('button', { name: 'Nia 快捷操作' }).click();
@@ -22,7 +24,7 @@ const assert = require('node:assert/strict');
     await p.locator('[data-page="Settings"]').click();
     await p.getByLabel('角色', { exact: true }).selectOption('orb');
     await p.waitForTimeout(200);
-    assert.equal(await p.locator('.avatar-render img').count(), 0);
+    assert.equal(await p.locator('.companion-rail .avatar-render img').count(), 0);
     await p.getByLabel('角色', { exact: true }).selectOption('nia');
     await p.screenshot({ path: path.join(__dirname, '../.test-data/m6-avatar.png') });
     console.log(

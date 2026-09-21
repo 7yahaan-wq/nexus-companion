@@ -3,20 +3,11 @@ import { useEffect, useState, useRef } from 'react';
 import { Orbit, Timer, ListTodo, NotebookPen, Boxes, LayoutDashboard } from 'lucide-react';
 import { api } from '../domain/api';
 import type { AgentRun, AvatarState, Entity } from '../domain/types';
-export function resolveAvatarState(runs: AgentRun[], focus = false): AvatarState {
-  if (runs.some((r) => r.status === 'FAILED')) return 'error';
-  if (runs.some((r) => r.status === 'WAITING_APPROVAL')) return 'warning';
-  if (focus || runs.some((r) => r.status === 'RUNNING')) return 'working';
-  if (runs.some((r) => ['WAITING', 'STARTING'].includes(r.status))) return 'thinking';
-  const recent = runs.filter(
-    (r) =>
-      r.status === 'COMPLETED' && r.endTime && Date.now() - new Date(r.endTime).getTime() < 120000,
-  );
-  if (recent.length > 1) return 'celebrate';
-  if (recent.length) return 'happy';
-  if (new Date().getHours() >= 23 || new Date().getHours() < 6) return 'sleepy';
-  return 'idle';
-}
+import { avatarLabels, niaAnimations, resolveAvatarState } from '../domain/avatar';
+import { useSpritePlayback } from './useSpritePlayback';
+import { useI18n } from '../domain/i18n';
+import { niaFrames } from './niaFrames';
+export { resolveAvatarState } from '../domain/avatar';
 export const stateText: Record<AvatarState, string> = {
   idle: '慢慢来，我们一起完成。',
   working: '我在这里，陪你专注。',
@@ -36,33 +27,60 @@ export function Avatar({
   state?: AvatarState;
   large?: boolean;
 }) {
-  const [src, setSrc] = useState('');
+  const { t } = useI18n();
+  const [asset, setAsset] = useState({ id: '', src: '' });
+  const [failedSheet, setFailedSheet] = useState('');
+  const id = settings.avatar === 'custom' ? settings.avatarPack?.states?.[state] : null;
+  const animation = niaAnimations[state];
+  const { frame, playing } = useSpritePlayback(animation, settings.avatarMotion !== false);
+  const crop = niaFrames[animation.row][frame];
   useEffect(() => {
     let valid = true;
-    const id = settings.avatar === 'custom' ? settings.avatarPack?.states?.[state] : null;
     if (id)
       api<string>('asset', id)
         .then((s) => {
-          if (valid) setSrc(s);
+          if (valid) setAsset({ id, src: s });
         })
         .catch(() => {
-          if (valid) setSrc('');
+          if (valid) setAsset({ id, src: '' });
         });
-    else setSrc('');
     return () => {
       valid = false;
     };
-  }, [settings.avatar, settings.avatarPack, state]);
+  }, [id]);
+  const customSrc = id === asset.id ? asset.src : '';
+  const builtin = settings.avatar !== 'custom' && failedSheet !== animation.sheet;
   return (
-    <div className={`avatar-render ${state} ${large ? 'large' : ''}`} data-state={state}>
+    <div
+      className={`avatar-render mood-${state} ${large ? 'large' : ''}`}
+      data-state={state}
+      data-motion={playing ? 'playing' : 'still'}
+      role="img"
+      aria-label={`${settings.avatar === 'orb' ? 'Nexus Core' : settings.avatarPack && settings.avatar === 'custom' ? settings.avatarPack.name : 'Nia'} · ${t(avatarLabels[state])}`}
+    >
       {settings.avatar === 'orb' ? (
         <div className="avatar-orb">
           <Orbit size={110} strokeWidth={1} />
         </div>
+      ) : builtin ? (
+        <div className="nia-sprite" data-frame={frame} data-row={animation.row}>
+          <img
+            src={animation.sheet}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            style={{
+              left: `${(crop.left / 350) * 100}%`,
+              top: `${(crop.top / 350) * 100}%`,
+              clipPath: crop.clip,
+            }}
+            onError={() => setFailedSheet(animation.sheet)}
+          />
+        </div>
       ) : (
-        <img src={src || './assets/nia.png'} alt={`Nia · ${state}`} draggable={false} />
+        <img src={customSrc || './assets/nia.png'} alt="" aria-hidden="true" draggable={false} />
       )}
-      <span className="avatar-state-mark">
+      <span className="avatar-state-mark" aria-hidden="true">
         {
           {
             idle: '✧',
@@ -91,6 +109,11 @@ export default function Companion({
   onAction: (action: string) => void;
 }) {
   const [menu, setMenu] = useState(false);
+  const [, setClock] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setClock((value) => value + 1), 15000);
+    return () => clearInterval(timer);
+  }, []);
   const menuRoot = useRef<HTMLElement>(null);
   useEffect(() => {
     if (!menu) return;

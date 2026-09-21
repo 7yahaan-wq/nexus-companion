@@ -63,6 +63,34 @@ const zh: Record<string, string> = {
   CANCELLED: '已取消',
 };
 const en: Record<string, string> = {
+  记录灵感: 'Capture an idea',
+  角色动画: 'Character animation',
+  '认识更多面的 Nia': 'Meet the many moods of Nia',
+  'Nia 状态预览': 'Nia expression preview',
+  悠闲陪伴: 'At ease',
+  专心工作: 'Working',
+  认真思考: 'Thinking',
+  开心回应: 'Happy',
+  温柔提醒: 'Gentle reminder',
+  一起解决: 'Here to help',
+  困困休息: 'Sleepy',
+  庆祝完成: 'Celebrating',
+  '眨眨眼，敲敲键盘，也会为你的小小进展开心。':
+    'Blinking, typing, and cheering on every little step.',
+  '这里可以预览表情；工作伙伴会根据你的工作状态自动变化。':
+    'Preview expressions here. Your companion follows your work automatically.',
+  'Nia 会眨眼、打字和回应你的进展。也可以导入自己的八状态角色图片。':
+    'Nia blinks, types, and responds to your progress. You can also import your own eight-state character pack.',
+  '遵循系统的减少动态效果设置；关闭后仍会显示对应状态的表情。':
+    'Respects reduced motion. When off, each state keeps its own still expression.',
+  '慢慢来，我们一起完成。': 'One step at a time. We will get there.',
+  '我在这里，陪你专注。': 'Right here, keeping you company.',
+  '留一点空间，让想法发生。': 'Give your ideas a little room.',
+  '又向前一步，做得很好。': 'Another little step forward.',
+  '有一件事，需要你看一眼。': 'Something needs your attention.',
+  '遇到一点问题，我们一起看看。': 'Let us work through this together.',
+  '夜深了，也记得照顾自己。': 'It is getting late. Take care of yourself.',
+  '今天的努力，正在开花。': 'Your efforts are coming to life.',
   快速搜索: 'Quick search',
   进入专注模式: 'Enter focus mode',
   把想法变成作品: 'From ideas to reality',
