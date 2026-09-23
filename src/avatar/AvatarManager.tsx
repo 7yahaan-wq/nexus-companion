@@ -6,7 +6,6 @@ import type { AgentRun, AvatarState, Entity } from '../domain/types';
 import { avatarLabels, niaAnimations, resolveAvatarState } from '../domain/avatar';
 import { useSpritePlayback } from './useSpritePlayback';
 import { useI18n } from '../domain/i18n';
-import { niaFrames } from './niaFrames';
 export { resolveAvatarState } from '../domain/avatar';
 export const stateText: Record<AvatarState, string> = {
   idle: '慢慢来，我们一起完成。',
@@ -33,7 +32,6 @@ export function Avatar({
   const id = settings.avatar === 'custom' ? settings.avatarPack?.states?.[state] : null;
   const animation = niaAnimations[state];
   const { frame, playing } = useSpritePlayback(animation, settings.avatarMotion !== false);
-  const crop = niaFrames[animation.row][frame];
   useEffect(() => {
     let valid = true;
     if (id)
@@ -63,16 +61,15 @@ export function Avatar({
           <Orbit size={110} strokeWidth={1} />
         </div>
       ) : builtin ? (
-        <div className="nia-sprite" data-frame={frame} data-row={animation.row}>
+        <div className="nia-sprite" data-frame={frame} data-state={state}>
           <img
             src={animation.sheet}
             alt=""
             aria-hidden="true"
             draggable={false}
             style={{
-              left: `${(crop.left / 350) * 100}%`,
-              top: `${(crop.top / 350) * 100}%`,
-              clipPath: crop.clip,
+              left: String(-(frame % 4) * 100) + '%',
+              top: String(-Math.floor(frame / 4) * 100) + '%',
             }}
             onError={() => setFailedSheet(animation.sheet)}
           />

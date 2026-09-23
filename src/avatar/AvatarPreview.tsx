@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { AvatarState, Entity } from '../domain/types';
-import { avatarLabels, avatarStates } from '../domain/avatar';
+import { avatarLabels, avatarStates, avatarTriggers } from '../domain/avatar';
 import { L, useI18n } from '../domain/i18n';
 import { Avatar, stateText } from './AvatarManager';
 
@@ -19,6 +19,10 @@ export default function AvatarPreview({ settings }: { settings: Entity }) {
         <div className="nia-preview-stage">
           <Avatar settings={{ ...settings, avatar: 'nia' }} state={state} />
           <p>{t(stateText[state])}</p>
+          <div className="nia-preview-trigger" aria-live="polite">
+            <strong>{t(avatarLabels[state])}</strong>
+            <span>{t(avatarTriggers[state])}</span>
+          </div>
         </div>
         <div className="nia-state-options" role="group" aria-label={t('Nia 状态预览')}>
           {avatarStates.map((value) => (
@@ -28,7 +32,7 @@ export default function AvatarPreview({ settings }: { settings: Entity }) {
               data-preview-state={value}
               onClick={() => setState(value)}
             >
-              <span className={`state-swatch mood-${value}`} />
+              <span className={'state-swatch mood-' + value} />
               <L text={avatarLabels[value]} />
             </button>
           ))}

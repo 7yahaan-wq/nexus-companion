@@ -34,3 +34,9 @@
 | [eSheep sprite sheet 文档](https://adrianotiger.github.io/desktopPet/2019/07/02/sprite-sheets.html) / [仓库](https://github.com/Adrianotiger/desktopPet) | 用透明图集组织帧动画，通过不同帧表达动作               | 自有 Nia 16 帧图集、每帧位置与轮廓、定时播放；窗口隐藏与减少动态效果时暂停 |
 
 主页「记录灵感」沿用现有笔记编辑与保存流程。八种状态并不对应八组独立绘制动作：开心和庆祝复用笑脸帧，提醒和错误复用思考帧，见 [素材与动作说明](NIA_ANIMATION.md)。新增四项状态/素材单测和 Nia 桌面套件，覆盖保存、重启、帧推进、暂停、主题和布局。
+
+## v0.3.3 独立序列帧修复（2026-09-23）
+
+参考 [VS Code Chat Pet 精灵制作规范](https://github.com/microsoft/vscode/blob/main/.github/skills/chat-pet-sprite-creation/SKILL.md) 对固定帧尺寸、稳定基线、静态代表帧、逐帧时长以及一次性动作与循环动作的区分；参考 [Desktop Pet/eSheep](https://github.com/Adrianotiger/desktopPet) 的透明图集组织；参考 [vscode-codex-pet](https://github.com/Dinohouse-Digital-LLC/vscode-codex-pet) 的每动作帧数、播放速度和循环元数据。落地时改为 Nia 自有八张 4×3 图集、每状态 12 张独立画面和单帧裁剪播放，删除透明叠图。以上仅学习组织与播放原则，没有复制开源项目的代码或人物素材。
+
+上一版 0.3.2 的透明叠图虽然提供 12 个显示步骤，但角色边缘产生闪烁，不能等同于新增独立美术帧。0.3.3 以新绘制图集替换；保留 res/Nia.png 作为用户设定图，并在 AGENTS.md 与可执行 harness 中固化跨机器资源与验证规则。

@@ -35,36 +35,28 @@ test('nighttime mood uses local time and active focus remains working', async ()
   assert.equal(state([], false, new Date('2026-09-22T06:00:00').getTime()), 'idle');
 });
 
-test('every Nia state references shipped transparent atlas cells with valid timing and a still pose', async () => {
-  const { niaAnimations, avatarStates } = await import('../src/domain/avatar.ts');
-  const { niaFrames } = await import('../src/avatar/niaFrames.ts');
-  assert.equal(niaFrames.length, 4);
-  assert.ok(
-    niaFrames.every(
-      (row) =>
-        row.length === 4 &&
-        row.every(
-          (frame) =>
-            Number.isFinite(frame.left) &&
-            Number.isFinite(frame.top) &&
-            frame.clip.startsWith('polygon('),
-        ),
-    ),
-  );
+test('every Nia state has a distinct 12-cell transparent sheet and correct playback contract', async () => {
+  const { niaAnimations, avatarStates, avatarTriggers } = await import('../src/domain/avatar.ts');
   assert.deepEqual(Object.keys(niaAnimations).sort(), [...avatarStates].sort());
+  assert.deepEqual(Object.keys(avatarTriggers).sort(), [...avatarStates].sort());
+  assert.equal(new Set(Object.values(niaAnimations).map((animation) => animation.sheet)).size, 8);
   for (const animation of Object.values(niaAnimations)) {
     const file = path.join(__dirname, '../public', animation.sheet);
     const bytes = fs.readFileSync(file);
     assert.equal(bytes.subarray(1, 4).toString(), 'PNG');
     assert.equal(bytes[25], 6, 'RGBA alpha must be preserved');
-    assert.equal(bytes.readUInt32BE(16), bytes.readUInt32BE(20));
-    assert.equal(bytes.readUInt32BE(16), 1254, 'frame coordinates must match the original atlas');
-    assert.ok(animation.row >= 0 && animation.row < 4);
-    assert.ok(animation.still >= 0 && animation.still < 4);
-    assert.equal(animation.frames.length, animation.durations.length);
-    assert.ok(
-      animation.frames.every((frame) => Number.isInteger(frame) && frame >= 0 && frame < 4),
+    assert.equal(bytes.readUInt32BE(16), 1448, 'four 362px columns');
+    assert.equal(bytes.readUInt32BE(20), 1086, 'three 362px rows');
+    assert.deepEqual(
+      animation.frames,
+      Array.from({ length: 12 }, (_, index) => index),
     );
+    assert.equal(animation.durations.length, 12);
+    assert.ok(animation.still >= 0 && animation.still < 12);
     assert.ok(animation.durations.every((duration) => duration >= 100 && duration <= 5000));
+    assert.equal(typeof animation.loop, 'boolean');
+  }
+  for (const state of ['happy', 'warning', 'error', 'celebrate']) {
+    assert.equal(niaAnimations[state].loop, false);
   }
 });

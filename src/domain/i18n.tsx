@@ -80,6 +80,22 @@ const en: Record<string, string> = {
   庆祝完成: 'Celebrating',
   '眨眨眼，敲敲键盘，也会为你的小小进展开心。':
     'Blinking, typing, and cheering on every little step.',
+  '白天没有近期 Agent 活动，也没有进行中的专注时出现。':
+    'Appears during the day when there is no recent Agent activity or active focus session.',
+  '正在专注，或最近 2 分钟内观测到 Codex 会话运行时出现。':
+    'Appears during focus or when a Codex session was observed running within the last 2 minutes.',
+  '最近 2 分钟内观测到会话启动或等待时出现；当前本地适配器不保证识别这些状态。':
+    'Appears when a session was observed starting or waiting within 2 minutes. The local adapter may not detect these states.',
+  '最近 2 分钟内有一个 Codex 会话完成时出现。':
+    'Appears for 2 minutes after one Codex session completes.',
+  '最近 2 分钟内观测到会话等待审批时出现；当前本地适配器不保证识别审批状态。':
+    'Appears when a session was observed waiting for approval within 2 minutes. The local adapter may not detect approvals.',
+  'Codex 会话失败后的 5 分钟内出现，优先于其他状态。':
+    'Appears for 5 minutes after a Codex session fails and takes priority over other moods.',
+  '本地时间 23:00 至次日 06:00，且没有更高优先级状态时出现。':
+    'Appears between 23:00 and 06:00 local time when no higher-priority state applies.',
+  '最近 2 分钟内有多个 Codex 会话完成时出现。':
+    'Appears for 2 minutes after multiple Codex sessions complete.',
   '这里可以预览表情；工作伙伴会根据你的工作状态自动变化。':
     'Preview expressions here. Your companion follows your work automatically.',
   'Nia 会眨眼、打字和回应你的进展。也可以导入自己的八状态角色图片。':

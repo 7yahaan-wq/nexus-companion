@@ -6,17 +6,17 @@
 
 最终构建位于 `dist/`：
 
-- `NexusCompanion-Setup-0.3.1.exe`：安装版。
-- `NexusCompanion-Portable-0.3.1.exe`：免安装启动版，默认使用 AppData，可在设置中选择数据位置。
+- `NexusCompanion-Setup-0.3.3.exe`：安装版。
+- `NexusCompanion-Portable-0.3.3.exe`：免安装启动版，默认使用 AppData，可在设置中选择数据位置。
 - `win-unpacked/Nexus Companion.exe`：解包版本，可直接启动；整个目录需要一起保留。
 
 首次启动会引导选择项目目录、主题和角色。没有演示任务或随机 Agent 数据。安装包未签名，Windows 可能显示发布者未验证；目前未提供代码签名证书。
 
-完整的安装、功能和故障排查说明见 [Nexus Companion 0.3.1 使用手册](docs/USER_GUIDE.md)。
+完整的安装、功能和故障排查说明见 [Nexus Companion 0.3.3 使用手册](docs/USER_GUIDE.md)。
 
 ## 已实现
 
-0.3.1 增加主页「查看灵感」，将笔记入口明确为「灵感笔记」，保存后直接进入列表；保留左侧专注按钮，移除右侧重复按钮。Nia 延续 16 帧、四组动作与八种状态反馈。详见 [版本说明](docs/RELEASE_0.3.1.md)。
+0.3.3 为 Nia 的八种状态分别提供 12 张独立序列帧，修复透明叠图闪烁；设置预览显示状态触发条件。主页可记录、查看灵感。详见 [版本说明](docs/RELEASE_0.3.3.md)。
 
 - Home：一键记录和查看灵感、今日任务、最近 Agent 观测、等待处理项、日程、项目进度和真实统计。
 - Projects：创建/编辑/删除，Godot/Unity 识别，目录/VS Code/终端/项目启动，重要文档，Git 分支、未提交文件、最近提交（只读）。外部程序未安装时显示错误。
@@ -64,7 +64,7 @@
 
 ```powershell
 npm ci
-npm run doctor
+npm run harness  # 跨机器核心规则、构建与 Nia 桌面验收
 npm run build
 npm start
 ```
@@ -73,8 +73,8 @@ npm start
 
 ```powershell
 npm test          # 领域 / 存储 / 安全测试
-npm run verify   # 完整自主 harness：构建、单测、Electron 桌面回归
-npm run package  # NSIS 安装版 + portable
+npm run harness -- --full  # 完整桌面回归
+npm run package  # 清理旧版 dist、生成 NSIS/portable 与 SHA-256
 ```
 
 测试仅写 `.test-data/`，可通过 `.test-data/verification.json` 检查每个阶段。截图也在此目录。正式包不会包含测试数据、Codex 记录或个人备份。构建依赖由 `package-lock.json` 固定。

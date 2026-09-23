@@ -42,12 +42,18 @@ export function useSpritePlayback(animation: SpriteAnimation, enabled: boolean) 
     if (!playing) return;
     let frame = 0;
     let timer: ReturnType<typeof setTimeout>;
+    let nextAt = performance.now();
     const advance = () => {
       setCursor({ animation, frame: animation.frames[frame] });
-      timer = setTimeout(() => {
-        frame = (frame + 1) % animation.durations.length;
-        advance();
-      }, animation.durations[frame]);
+      if (!animation.loop && frame === animation.frames.length - 1) return;
+      nextAt = Math.max(nextAt, performance.now()) + animation.durations[frame];
+      timer = setTimeout(
+        () => {
+          frame = (frame + 1) % animation.frames.length;
+          advance();
+        },
+        Math.max(0, nextAt - performance.now()),
+      );
     };
     advance();
     return () => clearTimeout(timer);

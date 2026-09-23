@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const root = path.resolve(__dirname, '..'),
   results = [];
 const commands = [
+  ['project contract', ['scripts/check-project.cjs']],
   ['build', ['node_modules/typescript/bin/tsc', '--noEmit']],
   ['domain build', ['scripts/build-domain.cjs']],
   ['renderer build', ['node_modules/vite/bin/vite.js', 'build']],

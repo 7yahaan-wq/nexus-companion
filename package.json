@@ -1,6 +1,6 @@
 {
   "name": "nexus-companion",
-  "version": "0.3.1",
+  "version": "0.3.3",
   "private": true,
   "description": "Local-first desktop AI development companion",
   "author": "Nexus Companion",
@@ -11,9 +11,10 @@
     "start": "electron .",
     "test": "node --test tests/*.test.cjs",
     "verify": "node scripts/verify.cjs",
+    "harness": "node scripts/harness.cjs",
     "doctor": "node scripts/doctor.cjs",
     "smoke": "electron . --smoke",
-    "package": "npm run build && electron-builder --win nsis portable"
+    "package": "npm run build && node scripts/check-project.cjs && node scripts/clean-dist.cjs && electron-builder --win nsis portable && node scripts/finalize-release.cjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

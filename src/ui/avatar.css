@@ -203,8 +203,8 @@
 }
 .nia-sprite img {
   position: absolute;
-  width: calc(1254 / 350 * 100%);
-  height: calc(1254 / 350 * 100%);
+  width: 400%;
+  height: 300%;
   max-width: none;
   object-fit: fill;
   filter: none;
@@ -279,4 +279,26 @@
     grid-template-columns: 1fr;
     gap: 8px;
   }
+}
+
+.nia-preview-trigger {
+  display: grid;
+  gap: 6px;
+  width: min(100%, 390px);
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  text-align: left;
+}
+
+.nia-preview-trigger strong {
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.nia-preview-trigger span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
 }

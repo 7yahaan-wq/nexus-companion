@@ -1,5 +1,7 @@
 # 项目开发接续说明
 
+> Historical handoff snapshot from the 0.3.1 machine (2026-09-21). Paths, installed tools, version and Nia animation details below may be stale. For current cross-machine rules use the repository root AGENTS.md; for current release state use PROJECT_STATUS.md and NIA_ANIMATION.md.
+
 核对日期：2026-09-21。开发起点：`main` / `1eb9364`，当前应用版本 `0.3.1`（版本标签 `v0.3.1`）。工作目录：`D:\ProjectNia\nexus-companion`。
 
 本文基于现有源码、配置、测试和发布文件整理，用于后续在本机继续开发。当前发布验收见 VERIFICATION.md；本次已实现的优化与后续候选项分别记录。修改功能后应同步更新相关说明。

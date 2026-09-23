@@ -1,39 +1,32 @@
 # Project status
 
-## Current release: 0.3.1 (2026-09-21)
+## Current local build: 0.3.3 (2026-09-23)
 
-- Delivered clear inspiration discovery: renamed Ideas & notes navigation, homepage View ideas, automatic navigation after saving, and a single sidebar focus entry. The 0.3.0 Nia animations and settings remain available.
-- All 16 verification stages passed: 20 unit tests and 12 desktop suites, plus builds. Doctor and source formatting checks passed. Reports: `.test-data/verification.json` and `.test-data/release-verification.json`.
-- The packaged 0.3.1 runtime passed complete E2E, usability and Nia suites. The actual portable executable passed self-extract, startup, bridge, onboarding and clean-exit smoke tests. The installer was built but was not installed into the user's system.
-- ASAR audit: 4559 entries; no user database, sessions, test data or credentials bundled. Packaged version is 0.3.1, and the atlas matches the source SHA-256 `4f4c00192f430d729777e34ed4b627091805935b4c508734619a2c030123bf6b`.
-- Visual review covered the new homepage entries, renamed notes navigation, removed right-side focus button, and light/dark minimum-width English layout. Research and asset provenance are documented in OPEN_SOURCE_RESEARCH.md and NIA_ANIMATION.md.
+- Nia has eight state-specific, transparent 12-frame sprite sheets made from the project character reference res/Nia.png and prior Nia art. The renderer displays one authored frame at a time; the 0.3.2 transparent cross-fade was removed.
+- The expression preview explains each state's real trigger. STARTING, WAITING and WAITING_APPROVAL remain dependent on what the local Codex files expose.
+- The repository now includes AGENTS.md and npm run harness to carry product and asset rules across machines. npm run package safely removes recognized older versioned files from dist and produces the current checksums.
+- Core harness and full desktop verification passed: 20 unit tests, the desktop suites, and Nia checks. The packaged 0.3.3 runtime passed Nia desktop testing. The actual portable EXE passed startup, bridge, onboarding and clean exit. The installer was built but not installed.
+- Source and reference images are in the workspace. The two EXEs are local dist artifacts and have not been uploaded to GitHub.
 
-## Release artifacts
+| Current artifact                       |     Bytes | SHA-256                                                          |
+| -------------------------------------- | --------: | ---------------------------------------------------------------- |
+| dist/NexusCompanion-Setup-0.3.3.exe    | 121332076 | d61e3c64543226ba08af3d8793ce44359196eafd9cf7142aa2163332c631fc8d |
+| dist/NexusCompanion-Portable-0.3.3.exe | 121122104 | d0e713f6f97d46b830dba86abe8b71314aba6b5512aae2a402f740125a292626 |
 
-| Artifact                                 |     Bytes | SHA-256                                                            |
-| ---------------------------------------- | --------: | ------------------------------------------------------------------ |
-| `dist/NexusCompanion-Portable-0.3.1.exe` | 102519885 | `4959046e11168e07c098375e22bf0ffd9c85344c19fb1c33a1a9e5e4571f2283` |
-| `dist/NexusCompanion-Setup-0.3.1.exe`    | 102729857 | `709f0f735c63ee9bc3876864fb57845de5373eb0a7dce8fe035227aee4ec0ad5` |
+Only the current version's installer, portable EXE, blockmap, checksum and companion documentation remain in dist. Historical release notes in docs describe previous builds and are not current verification.
 
-Companion files: `dist/README.md`, `dist/RELEASE_0.3.1.md`, `dist/RELEASE_STATUS.md`, `dist/USER_GUIDE.md` and `dist/SHA256SUMS-0.3.1.txt`. Source and tests remain in the workspace. All tests use isolated local data directories. Prior 0.2.0 and 0.3.0 artifacts are retained separately.
+## Known boundaries
 
-## Known limitations
-
-- Codex local observations cannot guarantee cross-process live state or support stop/retry.
-- Nexus does not provide an integrated account login; authentication remains in the official Codex app, CLI or IDE extension.
-- English covers the primary UI, while some detailed help remains Chinese.
-- Four drawn action groups are reused across eight semantic states. Imported GIF animation is independent of the character animation toggle. Current local Codex records do not guarantee STARTING/WAITING/WAITING_APPROVAL observations; these states can be previewed without claiming live approval support.
+- Codex integration reads local sessions. It does not log into accounts or control another app's live sessions.
+- Some local records do not expose STARTING, WAITING or WAITING_APPROVAL; previewing those moods does not imply live approval support.
+- Imported GIF motion is independent of the built-in Nia animation toggle.
 - Single-occurrence calendar exceptions, Live2D/Spine, external calendars and owned App Server session management are not implemented.
-- A Windows signing certificate has not been supplied.
-- The installer was built and its packaged runtime tested, but no unattended installation was performed. The portable executable was directly executed and verified.
-- Windows notification API support/calls were tested; OS Do Not Disturb and notification preferences determine actual toast visibility.
-- `extract-zip` retains an upstream development-dependency audit advisory. It is not a runtime application dependency, and the build script only extracts Electron archives that match the official hash.
+- Installer binaries are unsigned, and the installer itself was not installed during verification. OS notification preferences determine toast visibility.
 
-## Documentation
+## Reference
 
-- User documentation: `docs/USER_GUIDE.md`
-- Release notes: `docs/RELEASE_0.3.1.md`
-- Animation and assets: `docs/NIA_ANIMATION.md`
-- Architecture: `docs/ARCHITECTURE.md`
-- Verification: `docs/VERIFICATION.md`
-- Open-source research: `docs/OPEN_SOURCE_RESEARCH.md`
+- Developer rules and harness: AGENTS.md
+- User guide: docs/USER_GUIDE.md
+- Nia assets and animation: docs/NIA_ANIMATION.md
+- Open-source research: docs/OPEN_SOURCE_RESEARCH.md
+- Current release note: docs/RELEASE_0.3.3.md

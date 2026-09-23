@@ -63,6 +63,16 @@ async function launch(first = true) {
     const preview = p.locator('.nia-preview-stage .avatar-render');
     const sprite = preview.locator('.nia-sprite');
     await p.emulateMedia({ reducedMotion: 'reduce' });
+    const triggerKeywords = {
+      idle: '白天',
+      working: '专注',
+      thinking: '启动或等待',
+      happy: '一个 Codex',
+      warning: '等待审批',
+      error: '失败',
+      sleepy: '23:00',
+      celebrate: '多个 Codex',
+    };
     for (const state of [
       'idle',
       'working',
@@ -76,8 +86,39 @@ async function launch(first = true) {
       await p.locator(`[data-preview-state="${state}"]`).click();
       assert.equal(await preview.getAttribute('data-state'), state);
       assert.equal(await preview.getAttribute('data-motion'), 'still');
-      await sprite.locator('img').evaluate(async (img) => img.decode());
-      assert.ok(await sprite.locator('img').evaluate((img) => img.naturalWidth >= 1024));
+      await sprite
+        .locator('img')
+        .first()
+        .evaluate(async (img) => img.decode());
+      assert.equal(await sprite.locator('img').count(), 1);
+      const distinctCells = await sprite
+        .locator('img')
+        .first()
+        .evaluate((img) => {
+          if (img.naturalWidth !== 1448 || img.naturalHeight !== 1086) return -1;
+          const canvas = document.createElement('canvas');
+          canvas.width = canvas.height = 362;
+          const context = canvas.getContext('2d');
+          const signatures = new Set();
+          for (let row = 0; row < 3; row++) {
+            for (let col = 0; col < 4; col++) {
+              context.clearRect(0, 0, 362, 362);
+              context.drawImage(img, col * 362, row * 362, 362, 362, 0, 0, 362, 362);
+              signatures.add(canvas.toDataURL());
+            }
+          }
+          return signatures.size;
+        });
+      assert.equal(distinctCells, 12, state + ' must contain twelve different drawn cells');
+      assert.ok(
+        await sprite
+          .locator('img')
+          .first()
+          .evaluate((img) => img.naturalWidth >= 1024),
+      );
+      assert.ok(
+        (await p.locator('.nia-preview-trigger span').innerText()).includes(triggerKeywords[state]),
+      );
       await p.locator('.nia-preview').screenshot({ path: path.join(base, `preview-${state}.png`) });
     }
     await p.locator('[data-preview-state="working"]').click();
