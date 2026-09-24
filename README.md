@@ -1,22 +1,24 @@
+> 0.3.11 当前状态：悠闲保持原样，其余七种状态改为独立 24 帧表情动画；图集预解码和首帧切换修复。旧版本中“全部共用 idle”的说明已被本次实现替代。新美术仍待人工验收。开发接续见 [另一台电脑继续开发](docs/START_ON_NEW_PC.md)，画面细节见 [Nia 动画说明](docs/NIA_ANIMATION.md)。
+
 # Nexus Companion
 
 一个 Local First 的 Windows 11 桌面工作中枢：项目、任务、日历、Codex 本地观测、专注计时与 Nia 伙伴。
 
 ## 直接使用
 
-最终构建位于 `dist/`：
+本机打包后生成的文件位于 `dist/`；该目录不进入 Git。GitHub 上的源码可以重新打包，安装文件通过私有 Release 单独提供：
 
-- `NexusCompanion-Setup-0.3.3.exe`：安装版。
-- `NexusCompanion-Portable-0.3.3.exe`：免安装启动版，默认使用 AppData，可在设置中选择数据位置。
+- `NexusCompanion-Setup-0.3.11.exe`：安装版。
+- `NexusCompanion-Portable-0.3.11.exe`：免安装启动版，默认使用 AppData，可在设置中选择数据位置。
 - `win-unpacked/Nexus Companion.exe`：解包版本，可直接启动；整个目录需要一起保留。
 
 首次启动会引导选择项目目录、主题和角色。没有演示任务或随机 Agent 数据。安装包未签名，Windows 可能显示发布者未验证；目前未提供代码签名证书。
 
-完整的安装、功能和故障排查说明见 [Nexus Companion 0.3.3 使用手册](docs/USER_GUIDE.md)。
+完整的安装、功能和故障排查说明见 [Nexus Companion 0.3.11 使用手册](docs/USER_GUIDE.md)。
 
 ## 已实现
 
-0.3.3 为 Nia 的八种状态分别提供 12 张独立序列帧，修复透明叠图闪烁；设置预览显示状态触发条件。主页可记录、查看灵感。详见 [版本说明](docs/RELEASE_0.3.3.md)。
+0.3.11 完整保留已认可的悠闲画面，其他七种状态分别使用独立 24 帧完整画面，区分眼神、眉毛、嘴型和机器人表情。新美术等待人工验收。详见 [版本说明](docs/RELEASE_0.3.11.md)。
 
 - Home：一键记录和查看灵感、今日任务、最近 Agent 观测、等待处理项、日程、项目进度和真实统计。
 - Projects：创建/编辑/删除，Godot/Unity 识别，目录/VS Code/终端/项目启动，重要文档，Git 分支、未提交文件、最近提交（只读）。外部程序未安装时显示错误。
@@ -26,7 +28,7 @@
 - Timeline / Daily Report：真实本地操作和 Agent 事件，按日期/项目/Agent/任务过滤，Markdown 复制和导出。
 - Notes：轻量 Markdown、项目、标签、搜索；不执行 HTML、不加载远程图片。
 - Focus：25/50/自定义 1–480 分钟，暂停/继续/结束，主进程计时、重启恢复、完成通知、每日统计。
-- Nia：16 帧透明图集，眨眼、打字、思考、困倦四组动作表达八种状态；设置可预览和关闭动画，遵循系统减少动态效果设置。可切换 Core 或导入 Avatar Pack。角色菜单连接任务、Agent、笔记和专注。
+- Nia：保留悠闲原画，其他七种状态使用独立表情序列；可切换八种状态立绘，设置可预览和关闭动画，遵循系统减少动态效果设置。可切换 Core 或导入 Avatar Pack。角色菜单连接任务、Agent、笔记和专注。
 - Appearance：深浅主题、强调色、渐变/纯色/本地图片、模糊/亮度/可见度/面板透明度。
 - 全局 `Ctrl + Shift + Space` 快速记录；`TODO 内容` 建任务、`NOTE 内容` 建笔记。窗口内 `Ctrl + K` 搜索所有主要实体和命令。
 - 托盘：打开、Agent、快速记录、专注、退出。关闭窗口默认隐藏到托盘；计时和监控继续工作。
@@ -82,6 +84,9 @@ npm run package  # 清理旧版 dist、生成 NSIS/portable 与 SHA-256
 `scripts/download-electron.cjs` 为下载受限环境提供校验下载：优先官方 GitHub，失败后使用镜像，但始终与 Electron npm 包的 SHA-256 校验值比较，不接受未校验的运行时。当前使用 Electron 39.8.10。开发依赖 `extract-zip` 的上游审计警告仍存在；它不包含在应用运行时，构建脚本只解压已通过官方哈希校验的 Electron 压缩包。
 
 ## 工程文档
+
+- [另一台电脑继续开发](docs/START_ON_NEW_PC.md)
+- [实际使用体验与后续建议](docs/UX_REVIEW_2026-09-24.md)
 
 - [开发接续说明与本机环境](docs/DEVELOPMENT_HANDOFF.md)
 - [架构](docs/ARCHITECTURE.md)

@@ -29,9 +29,12 @@ export function Avatar({
   const { t } = useI18n();
   const [asset, setAsset] = useState({ id: '', src: '' });
   const [failedSheet, setFailedSheet] = useState('');
+  const [failedPortrait, setFailedPortrait] = useState('');
   const id = settings.avatar === 'custom' ? settings.avatarPack?.states?.[state] : null;
   const animation = niaAnimations[state];
-  const { frame, playing } = useSpritePlayback(animation, settings.avatarMotion !== false);
+  const portrait = settings.avatar === 'nia' && settings.avatarDisplay === 'portrait';
+  const portraitSrc = './assets/nia/portraits/' + state + '.png';
+  const { frame, playing } = useSpritePlayback(animation, settings.avatarMotion !== false && !portrait);
   useEffect(() => {
     let valid = true;
     if (id)
@@ -53,6 +56,7 @@ export function Avatar({
       className={`avatar-render mood-${state} ${large ? 'large' : ''}`}
       data-state={state}
       data-motion={playing ? 'playing' : 'still'}
+      data-display={portrait ? 'portrait' : 'animation'}
       role="img"
       aria-label={`${settings.avatar === 'orb' ? 'Nexus Core' : settings.avatarPack && settings.avatar === 'custom' ? settings.avatarPack.name : 'Nia'} · ${t(avatarLabels[state])}`}
     >
@@ -60,16 +64,19 @@ export function Avatar({
         <div className="avatar-orb">
           <Orbit size={110} strokeWidth={1} />
         </div>
+      ) : portrait && failedPortrait !== portraitSrc ? (
+        <img className="nia-portrait" src={portraitSrc} alt="" aria-hidden="true" draggable={false} onError={() => setFailedPortrait(portraitSrc)} />
       ) : builtin ? (
         <div className="nia-sprite" data-frame={frame} data-state={state}>
           <img
+            key={animation.sheet}
             src={animation.sheet}
             alt=""
             aria-hidden="true"
             draggable={false}
             style={{
-              left: String(-(frame % 4) * 100) + '%',
-              top: String(-Math.floor(frame / 4) * 100) + '%',
+              left: String(-(frame % 6) * 100) + '%',
+              top: String(-Math.floor(frame / 6) * 100) + '%',
             }}
             onError={() => setFailedSheet(animation.sheet)}
           />
@@ -99,12 +106,15 @@ export default function Companion({
   runs,
   focus,
   onAction,
+  onDisplayChange,
 }: {
   settings: Entity;
   runs: AgentRun[];
   focus?: boolean;
   onAction: (action: string) => void;
+  onDisplayChange: (display: 'animation' | 'portrait') => void;
 }) {
+  const { t } = useI18n();
   const [menu, setMenu] = useState(false);
   const [, setClock] = useState(0);
   useEffect(() => {
@@ -131,8 +141,12 @@ export default function Companion({
   return (
     <aside className="companion-rail" ref={menuRoot}>
       <div className="rail-title">
-        <L text="YOUR COMPANION" />
-        <span>✦</span>
+        <span className="rail-heading"><L text="YOUR COMPANION" /></span>
+        {settings.avatar === 'nia' && (
+          <button type="button" className="nia-display-toggle" aria-label={t('切换 Nia 展示方式', 'Switch Nia display')} onClick={() => onDisplayChange(settings.avatarDisplay === 'portrait' ? 'animation' : 'portrait')}>
+            {settings.avatarDisplay === 'portrait' ? t('立绘', 'Portrait') : t('动画', 'Animation')}
+          </button>
+        )}
       </div>
       <button className="companion-art" aria-label="Nia 快捷操作" onClick={() => setMenu(!menu)}>
         <Avatar settings={settings} state={state} />

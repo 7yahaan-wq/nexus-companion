@@ -1,6 +1,6 @@
 {
   "name": "nexus-companion",
-  "version": "0.3.3",
+  "version": "0.3.11",
   "private": true,
   "description": "Local-first desktop AI development companion",
   "author": "Nexus Companion",

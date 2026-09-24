@@ -20,6 +20,7 @@ export const defaultSettings: Entity = {
   panelOpacity: 95,
   avatar: 'nia',
   avatarMotion: true,
+  avatarDisplay: 'animation',
   notifications: { completed: true, failed: true, approval: true, calendar: true, focus: true },
   onboarded: false,
 };
@@ -238,7 +239,7 @@ export default function Settings({
           <L text="发送测试通知" />
         </button>
       </section>
-      <AvatarPreview settings={settings} />
+      <AvatarPreview settings={settings} update={update} />
       <section className="panel settings-wide">
         <h2>
           <ShieldCheck size={17} />

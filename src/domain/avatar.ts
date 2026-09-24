@@ -41,55 +41,28 @@ export interface SpriteAnimation {
   loop: boolean;
 }
 
-const twelveFrames = Array.from({ length: 12 }, (_, index) => index);
-const animation = (
-  state: AvatarState,
-  durations: readonly number[],
-  still: number,
-  loop: boolean,
-): SpriteAnimation => ({
-  sheet: './assets/nia/animations/' + state + '.png',
-  frames: twelveFrames,
-  durations,
-  still,
-  loop,
+// Idle remains byte-for-byte accepted art. The seven independent sequences
+// are complete generated cels, pending the user's visual acceptance.
+const sequence = (state: string, duration: number, loop: boolean, still = 23): SpriteAnimation => ({
+  sheet: './assets/nia/animations-hires/' + state + '.png',
+  frames: Array.from({ length: 24 }, (_, i) => i),
+  durations: [500, ...Array(22).fill(duration), 600], still, loop,
 });
-
 export const niaAnimations: Record<AvatarState, SpriteAnimation> = {
-  idle: animation('idle', [950, 135, 135, 240, 135, 135, 170, 135, 135, 180, 135, 260], 0, true),
-  working: animation(
-    'working',
-    [180, 140, 140, 150, 140, 140, 150, 140, 140, 150, 140, 220],
-    3,
-    true,
-  ),
-  thinking: animation(
-    'thinking',
-    [300, 160, 160, 290, 160, 160, 290, 160, 160, 240, 160, 250],
-    5,
-    true,
-  ),
-  happy: animation('happy', [160, 140, 140, 220, 170, 170, 260, 170, 170, 180, 160, 230], 5, false),
-  warning: animation(
-    'warning',
-    [160, 140, 140, 220, 170, 170, 250, 170, 170, 180, 150, 220],
-    5,
-    false,
-  ),
-  error: animation('error', [180, 140, 140, 230, 170, 170, 260, 180, 180, 180, 150, 240], 5, false),
-  sleepy: animation(
-    'sleepy',
-    [450, 230, 230, 390, 230, 230, 430, 230, 230, 390, 230, 480],
-    7,
-    true,
-  ),
-  celebrate: animation(
-    'celebrate',
-    [140, 130, 130, 190, 140, 140, 230, 150, 150, 170, 150, 240],
-    5,
-    false,
-  ),
+  idle: {
+    sheet: './assets/nia/animations/idle.png',
+    frames: Array.from({ length: 12 }, (_, i) => i * 2),
+    durations: [700, ...Array(11).fill(115)], still: 0, loop: true,
+  },
+  working: sequence('working', 110, true, 0),
+  thinking: sequence('thinking', 125, true, 0),
+  happy: sequence('happy', 115, false),
+  warning: sequence('warning', 120, false),
+  error: sequence('error', 130, false),
+  sleepy: sequence('sleepy', 160, true, 19),
+  celebrate: sequence('celebrate', 105, false),
 };
+
 export function resolveAvatarState(runs: AgentRun[], focus = false, now = Date.now()): AvatarState {
   const recent = (value: string | null | undefined, limit: number) => {
     const age = now - new Date(value || '').getTime();

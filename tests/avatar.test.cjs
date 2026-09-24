@@ -35,7 +35,7 @@ test('nighttime mood uses local time and active focus remains working', async ()
   assert.equal(state([], false, new Date('2026-09-22T06:00:00').getTime()), 'idle');
 });
 
-test('every Nia state has a distinct 12-cell transparent sheet and correct playback contract', async () => {
+test('idle stays unchanged and seven states use independent complete 24-cel sequences', async () => {
   const { niaAnimations, avatarStates, avatarTriggers } = await import('../src/domain/avatar.ts');
   assert.deepEqual(Object.keys(niaAnimations).sort(), [...avatarStates].sort());
   assert.deepEqual(Object.keys(avatarTriggers).sort(), [...avatarStates].sort());
@@ -45,16 +45,22 @@ test('every Nia state has a distinct 12-cell transparent sheet and correct playb
     const bytes = fs.readFileSync(file);
     assert.equal(bytes.subarray(1, 4).toString(), 'PNG');
     assert.equal(bytes[25], 6, 'RGBA alpha must be preserved');
-    assert.equal(bytes.readUInt32BE(16), 1448, 'four 362px columns');
-    assert.equal(bytes.readUInt32BE(20), 1086, 'three 362px rows');
-    assert.deepEqual(
-      animation.frames,
-      Array.from({ length: 12 }, (_, index) => index),
-    );
-    assert.equal(animation.durations.length, 12);
-    assert.ok(animation.still >= 0 && animation.still < 12);
+    assert.equal(bytes.readUInt32BE(16), 2172, 'six 362px columns');
+    assert.equal(bytes.readUInt32BE(20), 1448, 'four 362px rows');
+
+    assert.ok(animation.frames.every((frame) => frame >= 0 && frame < 24));
+    assert.equal(animation.durations.length, animation.frames.length);
+    assert.ok(animation.still >= 0 && animation.still < 24);
     assert.ok(animation.durations.every((duration) => duration >= 100 && duration <= 5000));
     assert.equal(typeof animation.loop, 'boolean');
+  }
+  assert.deepEqual(niaAnimations.idle.frames, Array.from({ length: 12 }, (_, i) => i * 2));
+  assert.deepEqual(niaAnimations.idle.durations, [700, ...Array(11).fill(115)]);
+  assert.equal(niaAnimations.idle.still, 0);
+  assert.equal(niaAnimations.idle.sheet, './assets/nia/animations/idle.png');
+  for (const state of avatarStates.filter((state) => state !== 'idle')) {
+    assert.deepEqual(niaAnimations[state].frames, Array.from({length:24}, (_,i)=>i));
+    assert.ok(niaAnimations[state].sheet.endsWith('/'+state+'.png'));
   }
   for (const state of ['happy', 'warning', 'error', 'celebrate']) {
     assert.equal(niaAnimations[state].loop, false);
