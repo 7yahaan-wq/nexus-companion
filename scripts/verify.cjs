@@ -3,6 +3,8 @@ const path = require('node:path');
 const fs = require('node:fs');
 const root = path.resolve(__dirname, '..'),
   results = [];
+const codexHome = path.join(root, '.test-data', 'verify-codex');
+fs.mkdirSync(path.join(codexHome, 'sessions'), { recursive: true });
 const commands = [
   ['build', ['node_modules/typescript/bin/tsc', '--noEmit']],
   ['domain build', ['scripts/build-domain.cjs']],
@@ -17,9 +19,24 @@ const commands = [
         .map((f) => 'tests/' + f),
     ],
   ],
-  ...['desktop', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'e2e', 'polish', 'usability', 'nia'].map(
-    (name) => [name, ['tests/' + name + '.cjs']],
-  ),
+  ...[
+    'desktop',
+    'm2',
+    'm3',
+    'm4',
+    'm5',
+    'm6',
+    'm7',
+    'm8',
+    'e2e',
+    'polish',
+    'usability',
+    'nia',
+    'notes-flow',
+    'focus-flow',
+    'planning-flow',
+    'workflow',
+  ].map((name) => [name, ['tests/' + name + '.cjs']]),
 ];
 for (const [name, args] of commands) {
   console.log(`\nVERIFY ${name}`);
@@ -27,7 +44,7 @@ for (const [name, args] of commands) {
   const result = spawnSync(process.execPath, args, {
     cwd: root,
     stdio: 'inherit',
-    env: process.env,
+    env: { ...process.env, CODEX_HOME: codexHome },
     timeout: 180000,
   });
   results.push({ name, passed: result.status === 0, durationMs: Date.now() - begin });

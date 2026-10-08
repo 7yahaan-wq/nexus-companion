@@ -82,8 +82,6 @@ export default function Settings({
           )}
         </p>
       </section>
-      <Connections setError={setError} />
-      <DataSafety setError={setError} />
       <section className="panel">
         <h2>
           {t('Appearance')}{' '}
@@ -239,6 +237,8 @@ export default function Settings({
         </button>
       </section>
       <AvatarPreview settings={settings} />
+      <Connections setError={setError} />
+      <DataSafety setError={setError} />
       <section className="panel settings-wide">
         <h2>
           <ShieldCheck size={17} />

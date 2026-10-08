@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Search, GripVertical, CalendarPlus } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Plus, Search, GripVertical, CalendarPlus, Timer, NotebookPen } from 'lucide-react';
 import EntityForm from '../../components/EntityForm';
 import { uid, today } from '../../domain/api';
 import type { Entity } from '../../domain/types';
@@ -16,6 +16,11 @@ export function TaskEditor({
   onClose: () => void;
 }) {
   const { data, save, remove } = workspace;
+  const timeEdit = useRef({
+    id: uid(),
+    revision: Number(task.actualTimeEditRevision) || 0,
+    baseline: Number(task.actualTime) || 0,
+  });
   return (
     <EntityForm
       title="任务"
@@ -23,7 +28,7 @@ export function TaskEditor({
       onClose={onClose}
       fields={[
         { key: 'title', label: '任务标题', required: true },
-        { key: 'description', label: '描述', type: 'textarea' },
+        { key: 'description', label: '描述', type: 'textarea', advanced: true },
         {
           key: 'project',
           label: '项目',
@@ -38,19 +43,22 @@ export function TaskEditor({
           label: '优先级',
           options: ['Low', 'Medium', 'High', 'Urgent'].map((s) => ({ value: s, label: s })),
         },
-        { key: 'tags', label: '标签（逗号分隔）' },
-        { key: 'startDate', label: '开始日期', type: 'date' },
+        { key: 'tags', label: '标签（逗号分隔）', advanced: true },
+        { key: 'startDate', label: '开始日期', type: 'date', advanced: true },
         { key: 'dueDate', label: '截止日期', type: 'date' },
         { key: 'estimatedTime', label: '预计时长（分钟）', type: 'number' },
-        { key: 'actualTime', label: '实际时长（分钟）', type: 'number' },
-        { key: 'relatedAgent', label: '关联 Agent' },
-        { key: 'relatedAgentTask', label: '关联 Agent Task ID' },
+        { key: 'actualTime', label: '实际时长（分钟）', type: 'number', advanced: true },
+        { key: 'relatedAgent', label: '关联 Agent', advanced: true },
+        { key: 'relatedAgentTask', label: '关联 Agent Task ID', advanced: true },
       ]}
       onSave={async (t) => {
         if (t.startDate && t.dueDate && t.dueDate < t.startDate)
           throw Error('截止日期不能早于开始日期');
         await save('tasks', {
           ...t,
+          actualTimeBaseline: timeEdit.current.baseline,
+          actualTimeEditId: timeEdit.current.id,
+          actualTimeEditRevision: timeEdit.current.revision,
           completedAt: t.status === 'Done' ? t.completedAt || new Date().toISOString() : null,
         });
       }}
@@ -63,9 +71,13 @@ export function TaskEditor({
 export default function Tasks({
   workspace,
   onSchedule,
+  onFocus,
+  onNote,
 }: {
   workspace: WorkspaceActions;
   onSchedule: (task: Entity) => void;
+  onFocus?: (task: Entity) => void;
+  onNote?: (id: string) => void;
 }) {
   const { data, save, setError } = workspace;
   const [editing, setEditing] = useState<Entity | null>(null),
@@ -177,6 +189,26 @@ export default function Tasks({
                       <L text={t.priority || 'Medium'} />
                     </span>
                     <GripVertical size={12} />
+                  </div>
+                  <div className="task-workflow-actions">
+                    {!['Done', 'Cancelled'].includes(t.status) && onFocus && (
+                      <button aria-label={`专注 ${t.title}`} onClick={() => onFocus(t)}>
+                        <Timer size={13} />
+                        <L text="专注" />
+                      </button>
+                    )}
+                    {t.sourceNote && onNote && data.notes.some((n) => n.id === t.sourceNote) && (
+                      <button
+                        aria-label={`来源灵感 ${t.title}`}
+                        onClick={() => onNote(t.sourceNote)}
+                      >
+                        <NotebookPen size={13} />
+                        <L text="来源灵感" />
+                      </button>
+                    )}
+                    {Number(t.actualTime) > 0 && (
+                      <small>{Math.round(t.actualTime * 10) / 10} min</small>
+                    )}
                   </div>
                   <button className="task-title" onClick={() => setEditing(t)}>
                     {t.title}

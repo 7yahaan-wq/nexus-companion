@@ -35,7 +35,13 @@ async function launch() {
     await p.getByLabel('快速记录内容').fill('TODO Drag calendar acceptance');
     await p.getByRole('button', { name: '保存记录' }).click();
     await p.locator('[data-page="Calendar"]').click();
-    await p.locator('.calendar-task').first().dragTo(p.locator('.hour-slot').nth(10));
+    const source = p.locator('.calendar-task').first();
+    const target = p.locator('.hour-slot').nth(10);
+    // Scroll before mouse-down: scrolling the outer window during drag cancels
+    // Chromium's native drag initiation. Use the visible grip on the task card.
+    await target.scrollIntoViewIfNeeded();
+    await source.scrollIntoViewIfNeeded();
+    await source.dragTo(target, { sourcePosition: { x: 8, y: 15 } });
     await p.getByLabel('日程标题', { exact: true }).waitFor();
     assert.equal(
       await p.getByLabel('日程标题', { exact: true }).inputValue(),
@@ -112,6 +118,15 @@ async function launch() {
     console.log(
       'PASS E2E: onboarding + project, real drag task→calendar, background/pack import, themes, report export, denied IPC, restart persistence; zero renderer errors',
     );
+  } catch (error) {
+    const page = await app.firstWindow();
+    await fs.writeFile(path.join(dataDir, 'failure.txt'), await page.locator('body').innerText());
+    const png = await app.evaluate(async ({ BrowserWindow }) =>
+      (await BrowserWindow.getAllWindows()[0].webContents.capturePage()).toPNG().toString('base64'),
+    );
+    await fs.writeFile(path.join(dataDir, 'failure.png'), Buffer.from(png, 'base64'));
+    console.error('E2E artifacts:', dataDir);
+    throw error;
   } finally {
     await app.close();
   }

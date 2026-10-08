@@ -36,7 +36,16 @@ export function useWorkspace() {
   }, [refresh]);
   const save = useCallback(
     async (kind: string, value: Entity) => {
-      await api('save', kind, value);
+      // Structural task updates must preserve focus time accrued since the UI snapshot.
+      const payload =
+        kind === 'tasks'
+          ? {
+              ...value,
+              actualTime: Number(value.actualTime) || 0,
+              actualTimeBaseline: value.actualTimeBaseline ?? (Number(value.actualTime) || 0),
+            }
+          : value;
+      await api('save', kind, payload);
       await refresh();
     },
     [refresh],

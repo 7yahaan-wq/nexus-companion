@@ -5,9 +5,10 @@ const assert = require('node:assert/strict');
 (async () => {
   const root = path.join(__dirname, '..');
   const dataDir = path.join(root, '.test-data', 'polish-' + Date.now());
+  const codex = await require('./support/codex-fixture.cjs')(dataDir);
   const app = await electron.launch({
     args: [root],
-    env: { ...process.env, NEXUS_TEST_MODE: '1', NEXUS_DATA_DIR: dataDir },
+    env: { ...process.env, NEXUS_TEST_MODE: '1', NEXUS_DATA_DIR: dataDir, CODEX_HOME: codex },
   });
   try {
     const p = await app.firstWindow();
@@ -57,7 +58,7 @@ const assert = require('node:assert/strict');
     await p.locator('.agent-card').first().filter({ hasText: 'My Programmer' }).waitFor();
     assert.ok((await p.locator('.agent-card').first().innerText()).includes('★'));
     console.log(
-      'PASS polish: task board drag, backup export/preview/restore, real-session role labels and pinning',
+      'PASS polish: task board drag, backup export/preview/restore, isolated session role labels and pinning',
     );
   } finally {
     await app.close();

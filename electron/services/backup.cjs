@@ -15,12 +15,51 @@ const collections = [
 function checksum(data) {
   return crypto.createHash('sha256').update(JSON.stringify(data)).digest('hex');
 }
+function portableSetting(value) {
+  const id = value?.id;
+  return (
+    typeof id === 'string' &&
+    (['appearance', 'agent-profiles', 'capture-preferences'].includes(id) ||
+      /^daily-plan:\d{4}-\d{2}-\d{2}$/.test(id) ||
+      /^draft:(note:[^:\s]{1,180}|capture)$/.test(id))
+  );
+}
+function validatePortableSetting(value) {
+  if (!portableSetting(value)) throw Error('不能导入运行中的内部状态');
+  if (
+    value.id.startsWith('daily-plan:') &&
+    (value.date !== value.id.slice(11) ||
+      !Array.isArray(value.topTaskIds) ||
+      value.topTaskIds.length > 3 ||
+      value.topTaskIds.some((id) => typeof id !== 'string' || id.length > 200) ||
+      !Number.isFinite(value.capacityMinutes) ||
+      value.capacityMinutes < 0 ||
+      value.capacityMinutes > 1440)
+  )
+    throw Error('无效每日计划');
+  if (value.id.startsWith('draft:')) {
+    validate('settings', value.value);
+    if (typeof value.revision !== 'string' || !value.revision || value.revision.length > 200)
+      throw Error('无效草稿');
+    if (
+      value.id.startsWith('draft:note:') &&
+      value.id !== 'draft:note:new' &&
+      value.value.id !== value.id.slice(11)
+    )
+      throw Error('草稿与笔记不匹配');
+    if (
+      value.id === 'draft:capture' &&
+      (!['notes', 'tasks'].includes(value.value.kind) || typeof value.value.text !== 'string')
+    )
+      throw Error('无效快速记录草稿');
+  }
+  if (value.id === 'capture-preferences' && !['notes', 'tasks'].includes(value.kind))
+    throw Error('无效快速记录类型');
+}
 async function createBackup(store, assetsRoot) {
   const records = await store.snapshot();
   const filtered = records.filter(
-    (r) =>
-      collections.includes(r.kind) &&
-      (r.kind !== 'settings' || ['appearance', 'agent-profiles'].includes(r.value.id)),
+    (r) => collections.includes(r.kind) && (r.kind !== 'settings' || portableSetting(r.value)),
   );
   const ids = new Set();
   for (const r of filtered) {
@@ -55,8 +94,7 @@ function validateBackup(bundle) {
     throw Error('备份记录数量无效');
   for (const r of bundle.data.records) {
     if (!collections.includes(r.kind)) throw Error('不支持的备份数据类型');
-    if (r.kind === 'settings' && !['appearance', 'agent-profiles'].includes(r.value?.id))
-      throw Error('不能导入运行中的内部状态');
+    if (r.kind === 'settings') validatePortableSetting(r.value);
     validate(r.kind, r.value);
   }
   for (const [id, base64] of Object.entries(bundle.data.assets || {})) {

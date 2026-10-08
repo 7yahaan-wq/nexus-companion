@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Activity, Download, Copy, FileText } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { L } from '../../domain/i18n';
+import { L, useI18n } from '../../domain/i18n';
 import { api, today } from '../../domain/api';
 import { makeReport } from '../../domain/report';
 import type { WorkspaceActions } from '../../domain/useWorkspace';
@@ -13,6 +13,15 @@ export default function Timeline({
   workspace: WorkspaceActions;
   agents: AgentRun[];
 }) {
+  const { t } = useI18n();
+  const kindName = (kind: string) =>
+    ({
+      tasks: t('任务', 'Task'),
+      notes: t('灵感笔记', 'Idea'),
+      projects: t('项目', 'Project'),
+      events: t('日程', 'Event'),
+      focus: t('专注', 'Focus'),
+    })[kind] || kind;
   const { data, save, setError } = workspace;
   const [date, setDate] = useState(today()),
     [project, setProject] = useState(''),
@@ -130,10 +139,12 @@ export default function Timeline({
                 </span>
                 <i />
                 <div>
-                  <strong>{e.title}</strong>
+                  <strong>
+                    {String(e.title || '').replace(/^(tasks|notes|projects|events) · /, '')}
+                  </strong>
                   <p>
-                    {e.agent || e.kind} ·{' '}
-                    {data.projects.find((p) => p.id === e.project)?.name || e.project || 'Personal'}
+                    {e.agent || kindName(e.kind)} ·{' '}
+                    {data.projects.find((p) => p.id === e.project)?.name || t('个人', 'Personal')}
                   </p>
                 </div>
               </div>

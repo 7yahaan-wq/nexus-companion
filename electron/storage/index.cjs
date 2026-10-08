@@ -30,6 +30,9 @@ class Store {
   save(kind, value) {
     return this.call('save', kind, value);
   }
+  finishFocus(record) {
+    return this.call('finishFocus', 'focus', record);
+  }
   delete(kind, id) {
     return this.call('delete', kind, id);
   }

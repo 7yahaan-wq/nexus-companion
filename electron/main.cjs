@@ -285,7 +285,7 @@ const handlers = {
         time: new Date().toISOString(),
         kind,
         entityId: value.id,
-        project: value.project || value.id,
+        project: kind === 'projects' ? value.id : value.project || '',
         title: `${kind} · ${value.title || value.name || 'Updated'}`,
       });
     return result;

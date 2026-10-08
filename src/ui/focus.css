@@ -186,3 +186,103 @@
 .capture-input:focus {
   border-color: var(--accent);
 }
+
+.focus-bar,
+.focus-completion {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: 12px;
+}
+.focus-bar {
+  position: sticky;
+  top: 8px;
+  z-index: 20;
+}
+.focus-bar-open {
+  flex: 1;
+  min-width: 140px;
+  padding: 0;
+  justify-content: flex-start;
+  text-align: left;
+}
+.focus-bar-open > span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.focus-bar-open small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.focus-bar-open strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+}
+.focus-bar-clock {
+  font-size: 23px;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+.focus-bar-controls,
+.focus-completion-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.focus-bar-controls button,
+.focus-completion-actions button {
+  padding: 8px 10px;
+  font-size: 12px;
+}
+.focus-completion-copy {
+  flex: 1;
+  min-width: 220px;
+}
+.focus-completion-copy strong {
+  font-size: 14px;
+}
+.focus-completion-copy p {
+  color: var(--muted);
+  margin: 6px 0 0;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.focus-error {
+  flex-basis: 100%;
+  color: #e17b85;
+  margin: 0;
+  font-size: 12px;
+}
+.focus-page .focus-error {
+  flex-basis: auto;
+  margin-bottom: 16px;
+}
+.focus-page button:disabled,
+.focus-bar button:disabled,
+.focus-completion button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+@media (max-width: 1100px) {
+  .focus-page {
+    padding: 24px;
+  }
+  .focus-page .avatar-render {
+    width: 170px;
+    height: 170px;
+  }
+  .focus-bar-controls {
+    margin-left: auto;
+  }
+}

@@ -1,6 +1,15 @@
 import { L } from '../domain/i18n';
 import { useEffect, useState, useRef } from 'react';
-import { Orbit, Timer, ListTodo, NotebookPen, Boxes, LayoutDashboard } from 'lucide-react';
+import {
+  Orbit,
+  Timer,
+  ListTodo,
+  NotebookPen,
+  Boxes,
+  LayoutDashboard,
+  PanelRightClose,
+  PanelRightOpen,
+} from 'lucide-react';
 import { api } from '../domain/api';
 import type { AgentRun, AvatarState, Entity } from '../domain/types';
 import { avatarLabels, niaAnimations, resolveAvatarState } from '../domain/avatar';
@@ -102,12 +111,15 @@ export default function Companion({
   runs,
   focus,
   onAction,
+  onCompact,
 }: {
   settings: Entity;
   runs: AgentRun[];
   focus?: boolean;
   onAction: (action: string) => void;
+  onCompact?: () => void;
 }) {
+  const { t } = useI18n();
   const [menu, setMenu] = useState(false);
   const [, setClock] = useState(0);
   useEffect(() => {
@@ -132,7 +144,26 @@ export default function Companion({
   }, [menu]);
   const state = resolveAvatarState(runs, focus);
   return (
-    <aside className="companion-rail" ref={menuRoot}>
+    <aside
+      className={`companion-rail ${settings.companionCompact ? 'is-compact' : ''}`}
+      ref={menuRoot}
+    >
+      <button
+        className="companion-toggle"
+        onClick={onCompact}
+        aria-label={
+          settings.companionCompact
+            ? t('展开伙伴', 'Expand companion')
+            : t('收起伙伴', 'Collapse companion')
+        }
+        title={
+          settings.companionCompact
+            ? t('展开伙伴', 'Expand companion')
+            : t('收起伙伴', 'Collapse companion')
+        }
+      >
+        {settings.companionCompact ? <PanelRightOpen size={17} /> : <PanelRightClose size={17} />}
+      </button>
       <div className="rail-title">
         <L text="YOUR COMPANION" />
         <span>✦</span>
@@ -166,29 +197,31 @@ export default function Companion({
               }}
             >
               <Icon size={14} />
-              {label}
+              {t(label)}
             </button>
           ))}
         </div>
       )}
       <div className="speech">
         <span>“</span>
-        <h3>{stateText[state]}</h3>
+        <h3>{t(stateText[state])}</h3>
         <p>
-          {state === 'error'
-            ? '打开 Agent 面板查看真实错误记录。'
-            : '把复杂的工作，变成一个个轻盈的小步骤。'}
+          {t(
+            state === 'error'
+              ? '打开 Agent 面板查看真实错误记录。'
+              : '把复杂的工作，变成一个个轻盈的小步骤。',
+          )}
         </p>
       </div>
       <div className="rail-section">
         <h3>
-          今日节奏{' '}
+          {t('今日节奏', 'Today’s pace')}{' '}
           <span>
             <L text="YOUR PACE" />
           </span>
         </h3>
         <p className="quiet">
-          {focus ? '你正在为重要的事情留出时间。' : '一次只做一件事，就很好。'}
+          {t(focus ? '你正在为重要的事情留出时间。' : '一次只做一件事，就很好。')}
         </p>
       </div>
       <div className="rail-footer">

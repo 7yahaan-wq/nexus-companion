@@ -13,6 +13,12 @@ export function dateKey(date: Date) {
 export function localInput(date: Date) {
   return `${dateKey(date)}T${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
+export function nextQuarterHour(date = new Date()) {
+  const next = new Date(date);
+  const minutes = next.getMinutes() + (next.getSeconds() || next.getMilliseconds() ? 1 : 0);
+  next.setMinutes(Math.ceil(minutes / 15) * 15, 0, 0);
+  return next;
+}
 export function addDays(date: Date, n: number) {
   const d = new Date(date);
   d.setDate(d.getDate() + n);

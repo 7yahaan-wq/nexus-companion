@@ -29,7 +29,7 @@ import Timeline from '../features/timeline/Timeline';
 import Notes, { NoteEditor } from '../features/notes/Notes';
 import Settings, { defaultSettings } from '../features/settings/Settings';
 import Companion from '../avatar/AvatarManager';
-import Focus, { useFocus } from '../features/focus/Focus';
+import Focus, { useFocus, FocusBar, FocusCompletion } from '../features/focus/Focus';
 import CommandPalette from '../components/CommandPalette';
 import QuickCapture from '../components/QuickCapture';
 import Onboarding from '../components/Onboarding';
@@ -57,6 +57,10 @@ export default function App() {
     [schedule, setSchedule] = useState<Entity | null>(null),
     [task, setTask] = useState<Entity | null>(null),
     [note, setNote] = useState<Entity | null>(null),
+    [selectedNoteId, setSelectedNoteId] = useState(''),
+    [noteSelectionRevision, setNoteSelectionRevision] = useState(0),
+    [focusTaskId, setFocusTaskId] = useState(''),
+    [notice, setNotice] = useState(''),
     [background, setBackground] = useState('');
   useEffect(() => {
     api<Entity[]>('list', 'settings')
@@ -111,9 +115,16 @@ export default function App() {
     window.addEventListener('keydown', back);
     return () => window.removeEventListener('keydown', back);
   }, [page, action]);
-  useEffect(() => window.nexus?.onCommand(action), [action]);
+  useEffect(
+    () =>
+      window.nexus?.onCommand((value) => {
+        if (!document.querySelector('dialog[open]')) action(value);
+      }),
+    [action],
+  );
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
+      if (document.querySelector('dialog[open]')) return;
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setPalette((v) => !v);
@@ -128,6 +139,24 @@ export default function App() {
   }, []);
   const taskEditor = (value?: Entity) =>
     setTask(value || { id: uid(), status: 'Planned', priority: 'Medium', dueDate: today() });
+  const openNote = (id: string) => {
+    setSelectedNoteId(id);
+    setNoteSelectionRevision((revision) => revision + 1);
+    setPage('Notes');
+  };
+  const savedNote = (value: Entity) => {
+    openNote(value.id);
+    setNotice(t('灵感已保存', 'Idea saved'));
+  };
+  const openFocus = (value: Entity) => {
+    setFocusTaskId(value.id);
+    setPage('Focus');
+  };
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(''), 4500);
+    return () => clearTimeout(timer);
+  }, [notice]);
   const bg =
     settings.backgroundType === 'image' && background
       ? `url("${background}")`
@@ -139,6 +168,7 @@ export default function App() {
       <div
         className="app"
         data-theme={settings.theme}
+        data-companion-compact={settings.companionCompact ? 'true' : 'false'}
         style={
           {
             '--accent':
@@ -193,7 +223,7 @@ export default function App() {
           <div className="sidebar-bottom">
             <button onClick={() => setPage('Focus')}>
               <Timer size={18} />
-              <L text="进入专注模式" />
+              {focus.session ? t('返回专注', 'Return to focus') : t('进入专注模式')}
               <ArrowUpRight size={14} />
             </button>
             <div className="local">
@@ -233,6 +263,21 @@ export default function App() {
             </button>
           )}
           <div className="content">
+            {notice && (
+              <p className="success-notice" role="status">
+                {notice}
+              </p>
+            )}
+            {page !== 'Focus' && (
+              <FocusBar workspace={workspace} focus={focus} onOpen={() => setPage('Focus')} />
+            )}
+            {(settings.notifications?.focus !== false || page === 'Focus') && (
+              <FocusCompletion
+                workspace={workspace}
+                focus={focus}
+                onOpen={() => setPage('Focus')}
+              />
+            )}
             <div className="page-heading">
               <div className="eyebrow">{t('A LITTLE CLARITY. A LOT OF POSSIBILITY.')}</div>
               <h1>
@@ -252,12 +297,27 @@ export default function App() {
               </p>
             </div>
             {page === 'Home' ? (
-              <Home workspace={workspace} agents={agents} onAction={action} onTask={taskEditor} />
+              <Home
+                workspace={workspace}
+                agents={agents}
+                onAction={action}
+                onTask={taskEditor}
+                onNote={openNote}
+                onFocus={openFocus}
+              />
             ) : page === 'Projects' ? (
-              <Projects {...workspace} runs={agents.runs} />
+              <Projects
+                {...workspace}
+                runs={agents.runs}
+                onTask={taskEditor}
+                onNote={openNote}
+                onFocus={openFocus}
+              />
             ) : page === 'Tasks' ? (
               <Tasks
                 workspace={workspace}
+                onFocus={openFocus}
+                onNote={openNote}
                 onSchedule={(t) => {
                   setPage('Calendar');
                   setSchedule(eventForTask(t));
@@ -270,7 +330,13 @@ export default function App() {
             ) : page === 'Timeline' ? (
               <Timeline workspace={workspace} agents={agents.runs} />
             ) : page === 'Notes' ? (
-              <Notes workspace={workspace} />
+              <Notes
+                workspace={workspace}
+                selectedNoteId={selectedNoteId}
+                selectionRevision={noteSelectionRevision}
+                onSelectNote={setSelectedNoteId}
+                onTask={taskEditor}
+              />
             ) : page === 'Settings' ? (
               <Settings
                 settings={settings}
@@ -283,6 +349,7 @@ export default function App() {
                 settings={settings}
                 runs={agents.runs}
                 focus={focus}
+                initialTaskId={focusTaskId}
                 onClose={() => action('Home')}
               />
             )}
@@ -293,6 +360,11 @@ export default function App() {
           runs={agents.runs}
           focus={!!focus.session && !focus.session.paused}
           onAction={action}
+          onCompact={() =>
+            update({ ...settings, companionCompact: !settings.companionCompact }).catch((e) =>
+              setError(e.message),
+            )
+          }
         />
         {settingsLoaded && !settings.onboarded && (
           <Onboarding settings={settings} update={update} workspace={workspace} />
@@ -311,16 +383,34 @@ export default function App() {
             }}
           />
         )}{' '}
-        {capture && <QuickCapture workspace={workspace} onClose={() => setCapture(false)} />}
+        {capture && (
+          <QuickCapture
+            workspace={workspace}
+            onClose={() => setCapture(false)}
+            onSaved={(kind, value) => {
+              if (kind === 'notes') savedNote(value);
+              else {
+                setPage('Tasks');
+                setNotice(t('任务已保存到收集箱', 'Task saved to Inbox'));
+              }
+            }}
+          />
+        )}
         {task && (
-          <TaskEditor task={task} workspace={workspace} onClose={() => setTask(null)} />
+          <TaskEditor
+            key={task.id}
+            task={task}
+            workspace={workspace}
+            onClose={() => setTask(null)}
+          />
         )}{' '}
         {note && (
           <NoteEditor
+            key={note.id}
             note={note}
             workspace={workspace}
             onClose={() => setNote(null)}
-            onSaved={() => setPage('Notes')}
+            onSaved={savedNote}
           />
         )}{' '}
         {schedule && (

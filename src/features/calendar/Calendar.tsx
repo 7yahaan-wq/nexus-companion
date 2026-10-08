@@ -9,6 +9,7 @@ import {
   addDays,
   dateKey,
   localInput,
+  nextQuarterHour,
   occurrences,
   validateEvent,
   layoutDay,
@@ -90,9 +91,9 @@ export function EventEditor({
     />
   );
 }
-export function eventForTask(task: Entity, date = new Date()) {
-  const start = new Date(date);
-  start.setMinutes(0, 0, 0);
+export function eventForTask(task: Entity, date?: Date) {
+  const start = date ? new Date(date) : nextQuarterHour();
+  start.setSeconds(0, 0);
   return {
     id: uid(),
     title: task.title,
@@ -283,7 +284,9 @@ export default function Calendar({ workspace }: { workspace: WorkspaceActions })
       </p>
       <div className="calendar-layout">
         <aside className="calendar-tasks">
-          <h3>待安排任务</h3>
+          <h3>
+            <L text="任务 · 可多次安排" />
+          </h3>
           {data.tasks
             .filter((t) => !['Done', 'Cancelled'].includes(t.status))
             .map((t) => (
@@ -294,7 +297,16 @@ export default function Calendar({ workspace }: { workspace: WorkspaceActions })
                 onDragStart={(e) => e.dataTransfer.setData('nexus/task', t.id)}
               >
                 <GripVertical size={12} />
-                <button onClick={() => setEditing(eventForTask(t, date))}>{t.title}</button>
+                <button
+                  onClick={() => {
+                    const start =
+                      dateKey(date) === dateKey(new Date()) ? undefined : new Date(date);
+                    if (start) start.setHours(9, 0, 0, 0);
+                    setEditing(eventForTask(t, start));
+                  }}
+                >
+                  {t.title}
+                </button>
               </div>
             ))}
           {!data.tasks.length && <p>先创建一个任务，再拖入日历。</p>}

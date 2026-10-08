@@ -1,5 +1,11 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+test('new time blocks start at the next quarter hour, including midnight rollover', async () => {
+  const { nextQuarterHour, localInput } = await import('../src/domain/calendar.ts');
+  assert.equal(localInput(nextQuarterHour(new Date('2026-10-08T20:55:00'))), '2026-10-08T21:00');
+  assert.equal(localInput(nextQuarterHour(new Date('2026-10-08T23:59:59'))), '2026-10-09T00:00');
+  assert.equal(localInput(nextQuarterHour(new Date('2026-10-08T10:15:01'))), '2026-10-08T10:30');
+});
 test('recurrence respects range, month ends and repeat limit', async () => {
   const { occurrences } = await import('../src/domain/calendar.ts');
   const e = {

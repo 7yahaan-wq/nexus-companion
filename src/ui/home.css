@@ -186,3 +186,184 @@
   color: #514279;
   background: #ffffff99;
 }
+.hero.home-hero {
+  min-height: 0;
+  padding: 20px 24px;
+  align-items: center;
+  gap: 22px;
+}
+.home-hero h2 {
+  font-size: 21px;
+  line-height: 1.4;
+  margin: 7px 0;
+}
+.home-hero p {
+  margin-bottom: 0;
+}
+.home-hero .hero-actions {
+  margin-top: 0;
+  justify-content: flex-end;
+  max-width: 380px;
+}
+.home-work {
+  margin-top: 14px;
+  align-items: start;
+}
+.home-work .panel {
+  padding: 18px;
+  min-width: 0;
+}
+.home-work h2 {
+  padding-bottom: 12px;
+}
+.today-work-list {
+  max-height: 244px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+.home-work .home-task {
+  min-height: 57px;
+  gap: 8px;
+}
+.home-work .home-task > button:nth-child(2) {
+  font-size: 12px;
+  min-width: 0;
+}
+.home-task > button:nth-child(2) > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.home-task small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 4px;
+}
+.home-task small + svg,
+.home-task > button:nth-child(2) svg {
+  color: var(--accent);
+  margin-right: 5px;
+}
+.home-task .check-button {
+  width: 19px;
+  height: 19px;
+}
+.home-task .reschedule-today {
+  font-size: 10px;
+  white-space: nowrap;
+  padding: 5px;
+  color: var(--accent);
+}
+.overdue-hint {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: #d9b071;
+  margin: 10px 0 0;
+}
+.app[data-theme='light'] .overdue-hint {
+  color: #835c25;
+}
+.home-work .compact-empty {
+  padding: 20px 10px;
+}
+.home-work .compact-empty h3 {
+  margin: 9px 0;
+}
+.home-work .compact-empty p {
+  font-size: 11px;
+}
+.panel-link {
+  padding: 11px 0 0;
+  color: var(--accent);
+  font-size: 11px;
+}
+.next-event {
+  width: 100%;
+  align-items: flex-start;
+  flex-direction: column;
+  text-align: left;
+  gap: 9px;
+  padding: 17px 0 8px;
+}
+.next-event small {
+  font-size: 11px;
+  color: var(--accent);
+}
+.next-event strong {
+  font-size: 17px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.next-event span {
+  font-size: 11px;
+  color: var(--muted);
+}
+.home-work .agenda-row {
+  padding: 13px 0;
+}
+.home-stats {
+  margin: 17px 0;
+}
+.home-stats .stat {
+  padding: 13px 16px;
+}
+.home-stats .stat strong {
+  font-size: 24px;
+  padding: 7px 0 4px;
+}
+.agent-empty-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.agent-empty-inline > span {
+  flex: 1;
+}
+.agent-empty-inline > button {
+  color: var(--accent);
+  font-size: 11px;
+}
+.home-recent-notes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+.home-recent-notes > span {
+  color: var(--muted);
+  font-size: 11px;
+}
+.home-recent-notes button {
+  font-size: 11px;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 1150px) {
+  .hero.home-hero {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .home-hero .hero-actions {
+    justify-content: flex-start;
+    max-width: none;
+  }
+  .home-hero h2 {
+    font-size: 19px;
+  }
+  .home-work {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 12px;
+  }
+  .home-task .reschedule-today {
+    max-width: 52px;
+    white-space: normal;
+  }
+}

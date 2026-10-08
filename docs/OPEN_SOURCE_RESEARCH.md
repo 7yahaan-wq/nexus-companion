@@ -34,3 +34,9 @@
 | [eSheep sprite sheet 文档](https://adrianotiger.github.io/desktopPet/2019/07/02/sprite-sheets.html) / [仓库](https://github.com/Adrianotiger/desktopPet) | 用透明图集组织帧动画，通过不同帧表达动作               | 自有 Nia 16 帧图集、每帧位置与轮廓、定时播放；窗口隐藏与减少动态效果时暂停 |
 
 主页「记录灵感」沿用现有笔记编辑与保存流程。八种状态并不对应八组独立绘制动作：开心和庆祝复用笑脸帧，提醒和错误复用思考帧，见 [素材与动作说明](NIA_ANIMATION.md)。新增四项状态/素材单测和 Nia 桌面套件，覆盖保存、重启、帧推进、暂停、主题和布局。
+
+## v0.4 工作流（2026-10-08）
+
+- 查阅 [Super Productivity Task Attributes](https://github.com/super-productivity/super-productivity/wiki/4.09-Task-Attributes) 与 [First Steps](https://github.com/super-productivity/super-productivity/wiki/1.01-First-Steps)，采用任务与实际用时联动、先简后繁的表单、每日负荷估算思路；根据 Nexus 的单库架构实现自己的事务和去重机制。
+- 查阅 [Joplin Note History](https://joplinapp.org/help/apps/note_history/)，重视用户内容的可恢复性。本轮实现本地草稿与明确丢弃，不把草稿冒称完整版本历史。
+- 未复制开源代码或素材，未引入外部同步服务或新依赖。新增四组桌面流程覆盖草稿、计时、计划与布局；旧 Agent 验收改用隔离 JSONL 文件夹，避免依赖个人会话。

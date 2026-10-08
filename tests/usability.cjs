@@ -67,13 +67,14 @@ function luminance(rgb) {
     await p.getByRole('button', { name: '添加今日任务', exact: true }).first().click();
     await p.getByLabel('任务标题', { exact: true }).fill('Dialog closure regression');
     await p.keyboard.press('Escape');
+    await p.getByRole('button', { name: '放弃修改', exact: true }).click();
     await p.waitForFunction(() => !document.querySelector('dialog[open]'));
     await p.getByRole('button', { name: '进入专注模式' }).click();
     await p.getByRole('button', { name: '开始专注', exact: true }).click();
     await p.getByRole('button', { name: '结束并记录' }).waitFor();
     await p.getByRole('button', { name: '← 返回工作台 · Esc' }).click();
     assert.ok((await p.evaluate(() => window.nexus.call('focusState'))).data);
-    await p.getByRole('button', { name: '进入专注模式' }).click();
+    await p.locator('.sidebar-bottom').getByRole('button', { name: '返回专注' }).click();
     await p.keyboard.press('Escape');
     await p.locator('.hero').waitFor();
     await p.locator('[data-page="Settings"]').click();

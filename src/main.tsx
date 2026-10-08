@@ -11,6 +11,9 @@ import './ui/avatar.css';
 import './ui/home.css';
 import './ui/focus.css';
 import './ui/light.css';
+import './ui/notes.css';
+import './ui/planning.css';
+import './ui/workflow.css';
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>

@@ -24,6 +24,7 @@ __export(calendar_exports, {
   dateKey: () => dateKey,
   layoutDay: () => layoutDay,
   localInput: () => localInput,
+  nextQuarterHour: () => nextQuarterHour,
   occurrences: () => occurrences,
   validateEvent: () => validateEvent
 });
@@ -33,6 +34,12 @@ function dateKey(date) {
 }
 function localInput(date) {
   return `${dateKey(date)}T${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+}
+function nextQuarterHour(date = /* @__PURE__ */ new Date()) {
+  const next = new Date(date);
+  const minutes = next.getMinutes() + (next.getSeconds() || next.getMilliseconds() ? 1 : 0);
+  next.setMinutes(Math.ceil(minutes / 15) * 15, 0, 0);
+  return next;
 }
 function addDays(date, n) {
   const d = new Date(date);
@@ -126,6 +133,7 @@ function layoutDay(events, day) {
   dateKey,
   layoutDay,
   localInput,
+  nextQuarterHour,
   occurrences,
   validateEvent
 });

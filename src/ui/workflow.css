@@ -1,0 +1,127 @@
+.success-notice {
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  font-size: 13px;
+}
+.capture-kind {
+  margin: 12px 0;
+}
+.capture-kind button {
+  min-width: 90px;
+}
+.capture-input {
+  width: 100%;
+  resize: vertical;
+}
+.task-workflow-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+.task-workflow-actions button {
+  font-size: 10px;
+  padding: 5px;
+  gap: 4px;
+}
+.task-workflow-actions small {
+  color: var(--muted);
+  font-size: 10px;
+}
+.companion-toggle {
+  align-self: flex-end;
+  padding: 6px;
+  color: var(--muted);
+}
+.app[data-companion-compact='true'] {
+  grid-template-columns: 218px minmax(590px, 1fr) 82px;
+}
+.companion-rail.is-compact {
+  width: 82px;
+  padding: 20px 6px;
+}
+.companion-rail.is-compact .rail-title,
+.companion-rail.is-compact .speech,
+.companion-rail.is-compact .rail-section,
+.companion-rail.is-compact .rail-footer,
+.companion-rail.is-compact .online-label {
+  display: none;
+}
+.companion-rail.is-compact .companion-art {
+  height: 76px;
+  margin-top: 14px;
+}
+.companion-rail.is-compact .avatar-render {
+  width: 70px;
+  height: 70px;
+}
+.companion-rail.is-compact .companion-menu {
+  top: 124px;
+  left: auto;
+  right: 8px;
+  width: 170px;
+}
+@media (max-width: 1200px) {
+  .app,
+  .app[data-companion-compact='true'] {
+    grid-template-columns: 185px minmax(580px, 1fr) 76px;
+  }
+  .companion-rail,
+  .companion-rail.is-compact {
+    position: sticky;
+    top: 0;
+    bottom: auto;
+    right: auto;
+    width: 76px;
+    height: 100vh;
+    padding: 18px 3px;
+    border: 0;
+    border-left: 1px solid var(--line);
+    border-radius: 0;
+    box-shadow: none;
+    z-index: 4;
+  }
+  .companion-rail .companion-toggle,
+  .companion-rail .online-label {
+    display: none;
+  }
+  .companion-rail .companion-art,
+  .companion-rail.is-compact .companion-art {
+    height: 76px;
+    margin-top: 12px;
+  }
+  .companion-rail .avatar-render {
+    height: 70px;
+    width: 70px;
+  }
+  .companion-rail .companion-menu {
+    top: 110px;
+    bottom: auto;
+    left: auto;
+    right: 6px;
+    width: 165px;
+  }
+  .content {
+    padding: 24px;
+  }
+  .sidebar {
+    padding-top: 24px;
+    padding-bottom: 14px;
+  }
+  .sidebar .search-button {
+    margin: 23px 0 14px;
+  }
+  .sidebar nav button {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .sidebar .local {
+    padding: 16px 3px;
+  }
+  .sidebar .profile {
+    padding-top: 13px;
+  }
+}

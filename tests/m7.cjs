@@ -16,6 +16,7 @@ const assert = require('node:assert/strict');
     await p.keyboard.press('Control+Shift+Space');
     await p.getByLabel('快速记录内容').fill('TODO Capture acceptance');
     await p.getByRole('button', { name: '保存记录' }).click();
+    await p.waitForFunction(() => !document.querySelector('dialog[open]'));
     await p.keyboard.press('Control+k');
     await p.getByLabel('全局搜索').fill('Capture acceptance');
     await p.getByRole('button', { name: 'Capture acceptance tasks' }).click();

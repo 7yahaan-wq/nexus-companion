@@ -97,15 +97,17 @@ export default function Onboarding({
             <h2>
               <L text="你的第一个项目" />
             </h2>
-            <label>
-              <L text="项目名称" />
-              <input
-                aria-label="首个项目名称"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="My next creation"
-              />
-            </label>
+            {directory && (
+              <label>
+                <L text="项目名称" />
+                <input
+                  aria-label="首个项目名称"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="My next creation"
+                />
+              </label>
+            )}
             <p>{directory || '尚未选择目录，可以进入应用后再创建项目。'}</p>
           </>
         ) : step === 3 ? (
