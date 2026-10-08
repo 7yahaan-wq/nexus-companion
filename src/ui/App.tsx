@@ -365,6 +365,9 @@ export default function App() {
               setError(e.message),
             )
           }
+          onDisplayChange={(display) =>
+            update({ ...settings, avatarDisplay: display }).catch((e) => setError(e.message))
+          }
         />
         {settingsLoaded && !settings.onboarded && (
           <Onboarding settings={settings} update={update} workspace={workspace} />

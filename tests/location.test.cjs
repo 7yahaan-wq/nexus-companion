@@ -2,6 +2,11 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
+const testRoot = path.resolve(__dirname, '../.test-data');
+async function testDirectory(prefix) {
+  await fs.mkdir(testRoot, { recursive: true });
+  return fs.mkdtemp(path.join(testRoot, prefix));
+}
 const { Store } = require('../electron/storage/index.cjs');
 const {
   scheduleLocation,
@@ -9,7 +14,7 @@ const {
   readLocation,
 } = require('../electron/storage/location.cjs');
 test('data relocation preserves records, active timer, assets and original; refuses collisions', async () => {
-  const base = await fs.mkdtemp(path.resolve('.test-data/location-'));
+  const base = await testDirectory('location-');
   const source = path.join(base, 'source');
   const parent = path.join(base, 'destination');
   await fs.mkdir(parent);
@@ -38,7 +43,7 @@ test('data relocation preserves records, active timer, assets and original; refu
   }
 });
 test('failed migration retains source pointer and does not overwrite target', async () => {
-  const base = await fs.mkdtemp(path.resolve('.test-data/location-failure-'));
+  const base = await testDirectory('location-failure-');
   const source = path.join(base, 'source');
   const parent = path.join(base, 'target');
   await fs.mkdir(parent);

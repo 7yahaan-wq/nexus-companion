@@ -2,6 +2,7 @@ const { _electron: electron } = require('@playwright/test');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const assert = require('node:assert/strict');
+const { Store } = require('../electron/storage/index.cjs');
 const root = path.join(__dirname, '..');
 const base = path.join(root, '.test-data/notes-flow-' + Date.now());
 const errors = [];
@@ -21,9 +22,6 @@ async function launch() {
   const page = await app.firstWindow();
   page.on('pageerror', (error) => errors.push(error.message));
   await page.waitForFunction(async () => (await window.nexus.call('info')).data.ready);
-  const welcome = page.getByRole('heading', { name: '欢迎使用 Nexus', exact: true });
-  if (await welcome.isVisible())
-    await page.getByRole('button', { name: '关闭', exact: true }).click();
   await page.locator('[data-page="Home"]').waitFor();
   return { app, page };
 }
@@ -44,6 +42,11 @@ async function save(page) {
 
 (async () => {
   await fs.mkdir(path.join(base, 'codex/sessions'), { recursive: true });
+  // Use the same persisted fixture for development and packaged apps. A one-off
+  // isVisible check races the asynchronous initial settings/onboarding load.
+  const store = new Store(path.join(base, 'profile', 'nexus.sqlite'));
+  await store.save('settings', { id: 'appearance', onboarded: true, language: 'zh-CN' });
+  await store.close();
   let { app, page: p } = await launch();
   try {
     await newIdea(p);

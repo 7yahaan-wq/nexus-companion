@@ -4,3 +4,11 @@ dist/
 .test-data/
 .npm-cache/
 test-results/
+
+# Rejected, inactive Nia generation experiments kept locally for provenance.
+# Active art and its source frames are committed under art/nia-state-hires.
+/art/nia-drawn-sheets/
+/art/nia-frames/
+/art/nia-state-v2/
+/public/assets/nia/animations-v2/
+/scripts/split-nia-frames.py

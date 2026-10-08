@@ -89,7 +89,7 @@ async function audit() {
   const archiveFiles = new Set();
   for (const entry of entries) {
     if (isPrivateEntry(entry)) report.forbiddenEntries.push(entry);
-    const info = asar.statFile(archivePath, entry, false);
+    const info = asar.statFile(archivePath, path.normalize(entry), false);
     if (!('files' in info)) archiveFiles.add(entry);
   }
   report.fileCount = archiveFiles.size;
@@ -115,7 +115,7 @@ async function audit() {
     };
     try {
       // Do not follow a link in place of a shipped source file.
-      const packagedFile = asar.extractFile(archivePath, entry, false);
+      const packagedFile = asar.extractFile(archivePath, path.normalize(entry), false);
       result.archiveSha256 = sha256(packagedFile);
       result.matches = result.sha256 === result.archiveSha256;
       if (!result.matches) report.errors.push(`Packaged file differs from workspace: ${entry}`);
@@ -145,7 +145,10 @@ async function audit() {
   const sums = `SHA256SUMS-${manifest.version}.txt`;
   fs.writeFileSync(
     path.join(dist, sums),
-    report.artifacts.map((item) => `${item.sha256}  ${item.path}`).join('\n') + '\n',
+    report.artifacts
+      .filter((item) => item.path.endsWith('.exe'))
+      .map((item) => `${item.sha256}  ${item.path}`)
+      .join('\n') + '\n',
     'utf8',
   );
   report.checksumsFile = `dist/${sums}`;

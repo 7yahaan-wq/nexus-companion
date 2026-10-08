@@ -11,9 +11,11 @@
     "start": "electron .",
     "test": "node --test tests/*.test.cjs",
     "verify": "node scripts/verify.cjs",
+    "verify:packaged": "node scripts/verify-packaged.cjs",
+    "harness": "node scripts/harness.cjs",
     "doctor": "node scripts/doctor.cjs",
     "smoke": "electron . --smoke",
-    "package": "npm run build && electron-builder --win nsis portable"
+    "package": "npm run build && node scripts/check-project.cjs && electron-builder --win nsis portable && node scripts/finalize-release.cjs && node scripts/verify-release.cjs && node scripts/clean-dist.cjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

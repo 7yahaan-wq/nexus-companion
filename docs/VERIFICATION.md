@@ -4,6 +4,21 @@
 
 `npm run doctor` checks Node, pinned Electron runtime, assets and lockfile. `npm run verify` builds, runs all domain tests, then launches real Electron windows through Playwright for milestones 1–8 and the full user journey. Every test uses isolated data directories. Reports: `.test-data/verification.json`.
 
+## 0.4.0 verification (2026-10-08)
+
+The final code integrates remote `c1a7d42` / 0.3.11 with the idea-to-focus workflow changes. `node scripts/harness.cjs --full` passed: environment checks plus all 21 verify stages (project asset contract, three builds, 35 unit tests and 16 desktop suites). The final renderer bundle is `index-_YOTWZ6p.js`; reports and screenshots use isolated `.test-data` profiles and controlled Codex fixtures.
+
+- Notes: autosaved drafts across close, entry points and restart; failed saves retain content; explicit discard; existing/new note selection clears stale filters, including same-note renaming through search; note-to-task deduplication and source links; dirty-close protection and focus after asynchronous draft loading.
+- Focus: pause/restart recovery, fractional elapsed time, atomic finish/credit/cleanup, rollback, duplicate requests, manual-time edit receipts, cross-page controls and explicit completion/another-round/break choices. No historical backfill or automatic task completion.
+- Planning: overdue and upcoming work visible first, deliberate rescheduling, at most three priorities, automatic budget/reflection persistence, deleted priority slots, project next-step persistence, linked ideas and visible panels after opening. Wide/compact/narrow and dark/light/English screenshots were reviewed.
+- Regression: task/calendar dragging, onboarding, backup export/restore, data relocation, tray, settings, denied IPC, Markdown, Nia animation/portrait switching, reduced motion and hidden-window pause. The calendar drag harness scrolls its destination before mouse-down so window scrolling cannot cancel native drag initiation.
+- Release: the NSIS installer and portable EXE were built. `node scripts/verify-packaged.cjs` passed seven packaged desktop suites (`e2e`, `usability`, `nia`, `notes-flow`, `focus-flow`, `planning-flow`, `workflow`) and the real self-extracting portable startup/SQLite bridge/onboarding/clean-exit check. Record: `.test-data/packaged-verification.json`.
+- Archive audit: `node scripts/verify-release.cjs` passed, comparing all 45 files under `build/` and `electron/` byte-for-byte with the ASAR, checking 4,585 entries and excluding application test data, databases and session files. EXE hashes are in PROJECT_STATUS.md and `dist/SHA256SUMS-0.4.0.txt`; ASAR hash and detailed comparisons are in `.test-data/release-audit.json`.
+
+The focused independent review found and fixed invalid capture-draft types, stale selection after renaming, asynchronous autofocus, retrying manual time changes and missing priority slots. Existing CSP, isolated IPC and local-only data boundaries remain. No new dependencies or artwork were added by this release's workflow implementation; remote 0.3.11 art was retained unchanged. Only idle artwork has user visual acceptance; seven non-idle sequences remain candidates regardless of automated test results. The installer wizard was not run.
+
+`npm run package` now audits the new build before removing recognized old top-level generated release files. `npm run verify:packaged` repeats artifact-runtime validation. No user data or source-art directories are cleaned.
+
 ## 0.3.1 verification (2026-09-21)
 
 All 16 harness stages passed again: 20 unit tests and 12 real desktop suites. Nia regression checks now verify automatic navigation after saving an idea, cancel staying on the homepage, the renamed notes navigation, homepage View ideas in Chinese/English, reopening saved ideas after restart, and a single visible sidebar focus entry that opens focus mode. Home screenshots were reviewed in dark and light/narrow layouts. The packaged 0.3.1 runtime passed E2E, usability and Nia suites; the actual portable executable passed its smoke test. Archive audit verified version/assets and excluded private files. Hashes are recorded in PROJECT_STATUS.md.
@@ -20,7 +35,7 @@ All 16 harness stages passed again: 20 unit tests and 12 real desktop suites. Ni
 
 The generated art contains four drawn action groups / 16 frames, reused across eight semantic states. Imported GIF playback is not controlled by the animation toggle. The installer installation flow is not executed during validation. Packaged runtime results and artifact hashes are recorded in [PROJECT_STATUS.md](PROJECT_STATUS.md).
 
-Desktop tests require a normal Windows desktop process. The restricted execution environment crashed Electron; the same checks passed in the approved unrestricted environment. Some existing suites read real local Codex sessions, so the full harness is not entirely machine-independent. Test data and screenshots stay under `.test-data` and are excluded from Git and release archives.
+Desktop tests require a normal Windows desktop process. The restricted execution environment crashed Electron; the checks passed in the approved unrestricted environment. Since 0.4.0, the full harness isolates Codex directories and supplies controlled session fixtures. Test data and screenshots stay under `.test-data` and are excluded from Git and release archives.
 
 ## Verified before packaging
 

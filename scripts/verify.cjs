@@ -6,6 +6,7 @@ const root = path.resolve(__dirname, '..'),
 const codexHome = path.join(root, '.test-data', 'verify-codex');
 fs.mkdirSync(path.join(codexHome, 'sessions'), { recursive: true });
 const commands = [
+  ['project contract', ['scripts/check-project.cjs']],
   ['build', ['node_modules/typescript/bin/tsc', '--noEmit']],
   ['domain build', ['scripts/build-domain.cjs']],
   ['renderer build', ['node_modules/vite/bin/vite.js', 'build']],

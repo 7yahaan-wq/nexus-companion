@@ -1,10 +1,12 @@
+> 0.4.0 已完成：灵感、每日计划、任务与专注工作流，保留远端 0.3.11 的跨机器 harness、Nia 单格动画及立绘切换。完整 harness、打包程序复测和便携 EXE 验收均通过。只有 idle 动画已获用户视觉接受；其余七组独立 24 格动画仍是候选。开发接续见 [另一台电脑继续开发](docs/START_ON_NEW_PC.md)，素材约束见 [Nia 动画说明](docs/NIA_ANIMATION.md) 和 [AGENTS.md](AGENTS.md)。
+
 # Nexus Companion
 
 一个 Local First 的 Windows 11 桌面工作中枢：项目、任务、日历、Codex 本地观测、专注计时与 Nia 伙伴。
 
 ## 直接使用
 
-最终构建位于 `dist/`：
+本机已生成并验证的文件位于 `dist/`；该目录不进入 Git。GitHub 上的源码可以重新打包，安装文件作为 Release 资源上传需要相应授权。校验值见 [发布记录](docs/PROJECT_STATUS.md)：
 
 - `NexusCompanion-Setup-0.4.0.exe`：安装版。
 - `NexusCompanion-Portable-0.4.0.exe`：免安装启动版，默认使用 AppData，可在设置中选择数据位置。
@@ -16,7 +18,7 @@
 
 ## 已实现
 
-0.4.0 增加可恢复草稿、灵感转任务、每日三件事与收工回顾、项目下一步、跨页专注计时及任务用时联动。首页突出今日与逾期工作，Nia 在窄窗口下不遮挡内容。详见 [版本说明](docs/RELEASE_0.4.0.md)。
+0.4.0 增加可恢复草稿、灵感转任务、每日三件事与收工回顾、项目下一步、跨页专注计时及任务用时联动。首页突出今日与逾期工作，Nia 在窄窗口下不遮挡内容。远端引入的图集预解码、单格切换与八状态立绘继续保留；七组非 idle 动画尚待用户视觉验收。详见 [版本说明](docs/RELEASE_0.4.0.md)。
 
 - Home：一键记录和查看灵感、今日任务、最近 Agent 观测、等待处理项、日程、项目进度和真实统计。
 - Projects：创建/编辑/删除，Godot/Unity 识别，目录/VS Code/终端/项目启动，重要文档，Git 分支、未提交文件、最近提交（只读）。外部程序未安装时显示错误。
@@ -26,7 +28,7 @@
 - Timeline / Daily Report：真实本地操作和 Agent 事件，按日期/项目/Agent/任务过滤，Markdown 复制和导出。
 - Notes：轻量 Markdown、项目、标签、搜索；不执行 HTML、不加载远程图片。
 - Focus：25/50/自定义 1–480 分钟，暂停/继续/结束，主进程计时、重启恢复、完成通知、每日统计。
-- Nia：16 帧透明图集，眨眼、打字、思考、困倦四组动作表达八种状态；设置可预览和关闭动画，遵循系统减少动态效果设置。可切换 Core 或导入 Avatar Pack。角色菜单连接任务、Agent、笔记和专注。
+- Nia：完整保护已接受的 idle 图集、12 个偶数格顺序与时长；其余七种状态使用独立 24 格候选序列，预解码后一次只显示一个格子，不叠图、不局部变形、不补帧。可切换八状态立绘，设置可预览和关闭动画，遵循减少动态效果及窗口隐藏暂停。Core 和自定义 Avatar Pack 继续支持。
 - Appearance：深浅主题、强调色、渐变/纯色/本地图片、模糊/亮度/可见度/面板透明度。
 - 全局 `Ctrl + Shift + Space` 快速记录；可选择灵感或任务，记住上次类型并保留草稿；兼容 `TODO 内容` 和 `NOTE 内容`。窗口内 `Ctrl + K` 搜索所有主要实体和命令。
 - 托盘：打开、Agent、快速记录、专注、退出。关闭窗口默认隐藏到托盘；计时和监控继续工作。
@@ -64,7 +66,7 @@
 
 ```powershell
 npm ci
-npm run doctor
+npm run harness  # 跨机器核心规则、构建与 Nia 桌面验收
 npm run build
 npm start
 ```
@@ -73,15 +75,21 @@ npm start
 
 ```powershell
 npm test          # 领域 / 存储 / 安全测试
-npm run verify   # 完整自主 harness：构建、单测、Electron 桌面回归
-npm run package  # NSIS 安装版 + portable
+npm run harness -- --full  # 完整桌面回归
+npm run package  # 生成并审计 NSIS/portable，成功后清理识别到的旧版生成文件
+npm run verify:packaged  # 打包后7组桌面流程 + 便携EXE启动
 ```
 
 测试仅写 `.test-data/`，可通过 `.test-data/verification.json` 检查每个阶段。截图也在此目录。正式包不会包含测试数据、Codex 记录或个人备份。构建依赖由 `package-lock.json` 固定。
 
+先阅读根目录 `AGENTS.md`。`res/Nia.png`、`public/assets/nia/calm.png` 与已接受的 idle 素材受保护；其他早期图集只能作为历史材料。`npm run harness` 验证环境、资源契约、单元测试、构建和 Nia 桌面行为，`--full` 增加完整回归。当前完整回归使用隔离 Codex 目录和受控会话样例；个人数据库不参与测试。打包脚本不递归删除 `dist` 或工作目录，仅移除已识别的旧版生成文件。
+
 `scripts/download-electron.cjs` 为下载受限环境提供校验下载：优先官方 GitHub，失败后使用镜像，但始终与 Electron npm 包的 SHA-256 校验值比较，不接受未校验的运行时。当前使用 Electron 39.8.10。开发依赖 `extract-zip` 的上游审计警告仍存在；它不包含在应用运行时，构建脚本只解压已通过官方哈希校验的 Electron 压缩包。
 
 ## 工程文档
+
+- [另一台电脑继续开发](docs/START_ON_NEW_PC.md)
+- [实际使用体验与后续建议](docs/UX_REVIEW_2026-09-24.md)
 
 - [开发接续说明与本机环境](docs/DEVELOPMENT_HANDOFF.md)
 - [架构](docs/ARCHITECTURE.md)

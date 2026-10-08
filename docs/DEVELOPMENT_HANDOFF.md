@@ -1,6 +1,8 @@
 # 项目开发接续说明
 
-核对日期：2026-10-08。当前源码版本 `0.4.0`，基于此前发布的 `v0.3.1` 继续开发。工作目录：`D:\ProjectNia\nexus-companion`。主代理正在执行本次完整验证；源码版本号不代表已经完成发布或 Git 同步。
+核对日期：2026-10-08。当前版本 `0.4.0`，本轮工作流已与远端 `c1a7d42` / `0.3.11` 的素材、播放器和跨机器开发规则整合。工作目录：`D:\ProjectNia\nexus-companion`。完整 harness、打包程序复测、便携 EXE 与归档审计均已通过，版本标签为 `v0.4.0`；具体产物和哈希见 PROJECT_STATUS.md。
+
+先读根目录 [AGENTS.md](../AGENTS.md)；跨机器启动见 [START_ON_NEW_PC.md](START_ON_NEW_PC.md)。本文的源码说明已按 0.4.0 更新，第 7 节的机器路径和安装工具仍是历史环境记录，不能直接套用到另一台电脑。
 
 本文基于现有源码、配置、测试和发布文件整理，用于后续在本机继续开发。当前发布验收见 VERIFICATION.md；本次已实现的优化与后续候选项分别记录。修改功能后应同步更新相关说明。
 
@@ -12,7 +14,7 @@ Nexus Companion 是面向 Windows 的本地桌面工作中枢，组合项目、�
 
 - 应用没有独立账号系统、云同步、遥测或模型请求。外部链接通过系统浏览器打开。
 - Codex 集成读取本地会话文件，展示最近观测；没有发送提示、创建会话、停止、重试、实时审批能力。
-- 内置 Nia 使用 16 帧透明图集，四组动作表达八种状态，支持预览、动画开关与窗口隐藏暂停；自定义角色包支持八种状态图片。Live2D / Spine 尚未接入。
+- Nia 保留已接受的 idle 图集与播放顺序；其余七种状态使用独立 24 格候选图集。一次显示一个完整格子，图集预解码后推进时间轴，并支持八状态静态立绘和显示模式持久化。只有 idle 已获用户视觉接受，其他七组仍待接受，不能用测试通过代替艺术判断。Core 和自定义角色包继续支持；Live2D / Spine 尚未接入。
 - 日历支持本地重复系列，不支持单次例外、外部日历同步或显式时区管理。
 - 安装版和便携版均以本地数据目录为基础；便携版默认数据并不跟随 EXE 保存。
 
@@ -42,7 +44,7 @@ src/
   components/              弹窗、实体表单、搜索、快速记录、首次引导、日志列表
   domain/                  通用类型、接口、工作区状态、日历算法、日报、翻译
   providers/               Agent 观测状态与轮询
-  avatar/                  图集渲染、帧坐标、播放、预览、菜单
+  avatar/                  单格裁剪、预解码、逐格播放、立绘、预览、菜单
 electron/
   main.cjs                 生命周期、接口分发、托盘、快捷键、后台调度
   preload.cjs              window.nexus 桥接
@@ -50,13 +52,15 @@ electron/
   providers/               Codex 适配器及线程封装
   services/                项目、资源、备份、专注、通知
   generated/calendar.cjs   从领域源码生成的 Node 端日历逻辑
-scripts/                   构建、环境检查、验收、Electron 下载与恢复、图标生成
+scripts/                   构建、环境/素材契约、harness、受限发布清理、打包收尾、Electron 下载
 tests/                     单元测试及桌面验收
 public/assets/             Nia 图片与应用图标
+art/                       受保护 idle、历史原图、七组候选源页/单格、提示词与 manifest
+res/Nia.png                受保护的用户角色设计参考
 docs/                      架构、用户手册、发布记录等
 ```
 
-`build/` 是 Vite 界面产物；`dist/` 是安装包输出；两者不可混淆。`node_modules/`、`build/`、`dist/`、`.test-data/` 均被 Git 忽略。当前仓库未发现 `AGENTS.md`、CI 工作流或独立 lint 配置；已有 Prettier 配置。
+`build/` 是 Vite 界面产物；`dist/` 是安装包输出；两者不可混淆。`node_modules/`、`build/`、`dist/`、`.test-data/` 均被 Git 忽略。根 `AGENTS.md` 随 Git 版本化，规定素材保护、隔离测试和发布清理边界；已有 Prettier 配置。
 
 ## 3. 运行与数据流
 
@@ -145,7 +149,7 @@ flowchart TD
 
 主要 settings ID：
 
-- `appearance`：主题、语言、图片、Avatar Pack、avatarMotion 动画开关、通知开关、首次引导状态。
+- `appearance`：主题、语言、图片、Avatar Pack、`avatarMotion` 动画开关、`avatarDisplay` 动画/立绘模式、伙伴紧凑偏好、通知开关、首次引导状态。
 - `codex-connection`：读取是否启用、自定义 Codex 根目录。
 - `agent-profiles`：按真实会话 ID 保存显示名、角色与置顶。
 - `active-focus`：运行中专注状态；不等同于已结束的 `focus` 记录。
@@ -178,6 +182,8 @@ flowchart TD
 - 专注时长支持 1–480 分钟，暂停保存剩余秒数；运行中通过 deadline 恢复。正常完成或提前结束时，记录、关联任务 `actualTime` 增量和活动计时状态清理在同一 SQLite 事务内提交，同一专注记录不会重复累计。秒数转换为分钟，因此实际时长可能有小数；原有手填用时保留。
 - 修改任务时，`actualTimeBaseline` 与编辑请求标识用于保护编辑期间新增的专注用时，并防止重试重复累计。旧版本已结束的专注不追溯回填。专注结束不会自动将任务改为完成；由用户选择完成、继续或休息。
 - Nia 状态优先级是失败 → 审批 → 工作/专注 → 等待 → 近期完成 → 深夜 → 空闲。失败状态保留五分钟，活动观测和完成反馈保留两分钟；每 15 秒更新状态，避免旧记录持续影响当前表情。
+- idle 源帧、运行图集哈希、帧序列 `[0,2,...,22]`、首格 700 ms 和其余 115 ms 均受保护。七组候选源页/单格位于 `art/nia-state-hires/`，运行图集位于 `public/assets/nia/animations-hires/`；只能从原格对整张画面统一缩放和平移，禁止脸部补丁、局部形变、插帧、交叉淡化或反复重采样。
+- 连续 idle/working/thinking/sleepy 状态循环，完成与警告反应播放一次后停留。`AvatarPreview` 展示触发语义并提供动画/立绘选择；公开绘制资料、源页计数和固定锚点指标不等于用户视觉验收。详见 `AGENTS.md` 与 `NIA_ANIMATION.md`。
 - `Home.tsx` 中有 WidgetDefinition 和 widgets 声明，但当前布局是固定 JSX，尚无组件排序/显隐设置。
 - 快速记录提供「灵感 / 任务」类型选择和保存位置提示，首次默认灵感，之后沿用上次成功保存类型；`TODO` / `NOTE` 前缀优先决定类型。关闭保留草稿。主页「记录灵感」直接打开笔记编辑器，保存后打开并选中该笔记，清除可能隐藏它的旧筛选。
 - 灵感转任务会保留原笔记，生成带 `sourceNote` 的关联任务；再次操作打开已有任务。任务和项目提供专注入口，开始前仍可确认时长；全局计时条提供跨页面查看、暂停与结束。
@@ -196,7 +202,7 @@ flowchart TD
 | Git              | `D:\Git\cmd\git.exe` 可用                                                                  |
 | VS Code          | `D:\Microsoft VS Code\Code.exe` 存在，`code.cmd` 在 PATH 中                                |
 | Windows Terminal | `wt.exe` 启动入口在 PATH 中；未额外测试交互窗口                                            |
-| 发布文件         | 历史 0.3.1 文件保留；0.4.0 的打包、哈希和发布状态由主代理本次验证后更新                    |
+| 发布文件         | 0.4.0 安装版、便携版、解包程序与 SHA256SUMS 已生成并验证；仅清理识别到的旧版生成文件       |
 
 Node 的当前位置为 `C:\Users\123\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe`。这是本次任务可用的运行时，不能据此认定用户另开的终端已经具备完整开发环境。
 
@@ -223,8 +229,7 @@ npm.cmd run doctor
 
 ```powershell
 npm ci
-npm run doctor
-npm run build
+npm run harness
 $env:NEXUS_DATA_DIR = Join-Path (Get-Location) '.test-data\development'
 npm start
 ```
@@ -253,12 +258,15 @@ npm start
 | ------------------------- | -------------------------------------------------------- |
 | `npm test`                | 执行 `tests/*.test.cjs`，包含新增规划及专注存储回归测试  |
 | `npm run build`           | TypeScript 检查 → Node 日历模块生成 → Vite 构建          |
-| `npm run verify`          | 当前编排 20 阶段：3 个构建阶段、单元测试、16 组桌面测试  |
+| `npm run harness`         | 环境、素材/项目契约、单元测试、构建与 Nia 桌面检查       |
+| `npm run verify`          | 项目契约、3 个构建阶段、单元测试、16 组桌面测试          |
 | `npm run smoke`           | 开发入口的 Electron 隐藏窗口启动检查，前提是已有构建产物 |
 | `node tests/portable.cjs` | 直接执行现有 portable EXE，检查页面、桥接、引导和退出    |
 | `npm run package`         | 重新构建并生成 NSIS 安装器与 portable EXE                |
 
 `verify` 中的桌面套件为 desktop、m2–m8、e2e、polish、usability、nia、notes-flow、focus-flow、planning-flow、workflow。它不包含 `tests/portable.cjs`，也不自动完成安装器安装验收。
+
+`npm run harness -- --full` 在环境与资源契约检查后运行完整 `verify`。`npm run package` 生成新包和配套文档，完成源码/归档审计后，才删除名称匹配规则的旧版安装器、便携版、blockmap、校验和及版本说明。`npm run verify:packaged` 执行七组打包桌面流程和实际便携 EXE 检查。不得递归清空 `dist`，不得将不受 Git 跟踪的目录当作临时垃圾。
 
 `e2e.cjs`、`usability.cjs` 与 `nia.cjs` 可用 `NEXUS_PACKAGED_EXE` 指定已解包的应用测试。`NEXUS_TEST_MODE=1` 仅在未打包应用中用于跳过首次引导；完整用户路径测试保留首次引导。
 
@@ -285,7 +293,7 @@ node node_modules/electron-builder/out/cli/cli.js --win nsis portable --prepacka
 - 最终打包复测及文件哈希以 [VERIFICATION.md](VERIFICATION.md) / [PROJECT_STATUS.md](PROJECT_STATUS.md) 为准。安装器不会在验收中自动安装。
 - 直接加载领域 TypeScript 单测时有 Node 模块类型提示，不影响结果。角色素材和实现详见 [NIA_ANIMATION.md](NIA_ANIMATION.md)。
 
-本次 0.4.0 验证状态（2026-10-08）：主代理正在执行完整 harness 并调查日历拖拽回归的失败原因，尚不能标记全套通过。完成修复后需重建并重跑受影响套件，再更新最终验收报告与发布文件哈希。本文不将历史截图、旧安装包或局部类型检查当作最终发布验收。
+本次 0.4.0 验证状态（2026-10-08）：与远端 0.3.11 整合后的 `harness --full` 通过，内部 verify 的 21 阶段包含项目契约、构建、35 项单元测试与 16 组桌面套件。另通过七组打包桌面流程和便携 EXE 检查；45 个应用文件与归档一致，审计 4,585 个条目。结果见 `.test-data/verification.json`、`packaged-verification.json` 和 `release-audit.json`；发布哈希见 PROJECT_STATUS.md。素材检查不能替代用户对七组候选动画的视觉接受。
 
 ## 9. 后续优化候选
 
@@ -293,16 +301,16 @@ node node_modules/electron-builder/out/cli/cli.js --win nsis portable --prepacka
 
 | 方向           | 已观察到的实现                                                                                             | 后续处理入口                                            |
 | -------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| 开发环境复现   | 已补齐项目工具链；0.3.1 曾完成桌面回归，0.4.0 本次完整回归仍在进行；系统 npm 尚需确认                      | 长期开发准备完整 Node/npm，可进一步建立 CI              |
+| 开发环境复现   | 已补齐项目工具链，整合后的 0.4.0 完整 harness 已通过；跨机器安装工具仍需自行确认                           | 长期开发准备完整 Node/npm，可进一步建立 CI              |
 | 本机程序发现   | VS Code 安装在 D 盘，应用只检查两个默认位置                                                                | `electron/services/projects.cjs`                        |
 | 后台数据刷新   | Agent 扫描会写数据库时间线，但 `useWorkspace` 只在初次加载和自身增删改后刷新；打开时间线页面也没有额外刷新 | 主进程变更通知或有针对性的刷新策略                      |
 | Agent 详情更新 | 详情页保存打开时的 run 对象，日志仅在打开时读取；列表更新不会自动更新已有详情                              | `Agents.tsx` 的选择状态与日志刷新                       |
 | 看板批量写入   | 一次拖动逐条保存整列任务，每条都刷新七个集合并写入时间线                                                   | 批量事务、一次刷新、区分排序与业务活动                  |
 | 项目关联一致性 | 主进程 Agent→项目匹配只转小写，项目页还会统一斜杠；删除不清理引用                                          | 统一路径规范化及关联处理规则                            |
-| 角色动画扩展   | 四组绘制动作复用于八种语义状态；旧失败时效已修正                                                           | 增加独立的庆祝/提醒动作，更新图集和帧坐标               |
+| 角色视觉验收   | 仅 idle 已接受；七组独立 24 格新动画为候选，单格播放器和立绘模式已合入                                     | 依规则逐格、接缝和实际显示尺寸复核，等待用户视觉接受    |
 | 类型与数据演进 | 通用 Entity / IPC 大量使用 any，数据库只有 schema 标记                                                     | 按功能逐步定义实体/接口，新增字段时考虑旧数据和备份兼容 |
 | 国际化与外观   | 仍有中文硬编码；浅色 CSS 覆盖部分透明度规则                                                                | 翻译覆盖、CSS 变量与视觉回归                            |
-| 测试可复现性   | 已隔离 Codex 目录并为需要会话的测试生成固定样例；当前完整验证仍在进行                                      | 继续分离受控回归与可选真实集成测试                      |
+| 测试可复现性   | 已隔离 Codex 目录并提供固定会话样例；整合后 21 阶段及打包产物复测通过                                      | 继续分离受控回归与可选真实集成测试                      |
 
 功能扩展如重复日程单次例外、可自定义工作台、Live2D / Spine、外部日历、可管理自有会话的 Agent 后端，均应作为独立需求设计，不应将当前预留接口或状态当作已接入功能。
 

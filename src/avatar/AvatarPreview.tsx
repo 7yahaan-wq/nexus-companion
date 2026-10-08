@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import type { AvatarState, Entity } from '../domain/types';
-import { avatarLabels, avatarStates } from '../domain/avatar';
+import { avatarLabels, avatarStates, avatarTriggers } from '../domain/avatar';
 import { L, useI18n } from '../domain/i18n';
 import { Avatar, stateText } from './AvatarManager';
 
-export default function AvatarPreview({ settings }: { settings: Entity }) {
+export default function AvatarPreview({ settings, update }: { settings: Entity; update: (settings: Entity) => Promise<void> }) {
   const [state, setState] = useState<AvatarState>('idle');
   const { t } = useI18n();
   return (
     <section className="panel settings-wide nia-preview">
-      <h2>
-        <L text="认识更多面的 Nia" />
-      </h2>
+      <div className="nia-preview-header">
+        <h2><L text="认识更多面的 Nia" /></h2>
+        <button type="button" className="nia-display-toggle" aria-label={t('切换 Nia 展示方式', 'Switch Nia display')} onClick={() => void update({ ...settings, avatarDisplay: settings.avatarDisplay === 'portrait' ? 'animation' : 'portrait' })}>
+          {settings.avatarDisplay === 'portrait' ? t('立绘', 'Portrait') : t('动画', 'Animation')}
+        </button>
+      </div>
       <p>
         <L text="眨眨眼，敲敲键盘，也会为你的小小进展开心。" />
       </p>
@@ -19,6 +22,10 @@ export default function AvatarPreview({ settings }: { settings: Entity }) {
         <div className="nia-preview-stage">
           <Avatar settings={{ ...settings, avatar: 'nia' }} state={state} />
           <p>{t(stateText[state])}</p>
+          <div className="nia-preview-trigger" aria-live="polite">
+            <strong>{t(avatarLabels[state])}</strong>
+            <span>{t(avatarTriggers[state])}</span>
+          </div>
         </div>
         <div className="nia-state-options" role="group" aria-label={t('Nia 状态预览')}>
           {avatarStates.map((value) => (
@@ -28,7 +35,7 @@ export default function AvatarPreview({ settings }: { settings: Entity }) {
               data-preview-state={value}
               onClick={() => setState(value)}
             >
-              <span className={`state-swatch mood-${value}`} />
+              <span className={'state-swatch mood-' + value} />
               <L text={avatarLabels[value]} />
             </button>
           ))}
