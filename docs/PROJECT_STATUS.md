@@ -1,78 +1,54 @@
-> 0.4.0 is built and verified, preserving the workflow changes and remote 0.3.11 single-cel renderer, portraits and cross-machine harness. Only idle animation is visually accepted; seven non-idle sequences remain candidates. See [AGENTS.md](../AGENTS.md), [START_ON_NEW_PC.md](START_ON_NEW_PC.md) and [NIA_ANIMATION.md](NIA_ANIMATION.md).
-
 # Project status
 
-## Current release: 0.4.0 (2026-10-08)
+## Current release: 0.4.1 (2026-10-08)
 
-Version 0.4.0 integrates the workflow implementation with remote main at `c1a7d42` (0.3.11). The combined code passed the full harness, packaged desktop journeys, portable executable smoke test and archive audit. Source release tag: `v0.4.0`. Binaries are local build artifacts under ignored `dist/`; a Git source push does not upload EXEs.
+This maintenance release removes redundant old release documents, screenshots and unused derived artwork while preserving the complete idea-to-focus workflow. The full harness, current package audit and packaged application journeys passed after cleanup. The evidence below belongs to this 0.4.1 build.
 
-### Implemented behavior
+Source is private at [7yahaan-wq/nexus-companion](https://github.com/7yahaan-wq/nexus-companion). Generated EXEs live in ignored `dist/`; pushing source does not upload release binaries.
 
-- Notes and quick capture retain local drafts. Saving a note selects that note and clears a stale search filter. A note can create a linked task; repeating the action opens the existing task, and the task links back to its source note.
-- Home gives today's work, unfinished overdue tasks and the next calendar event priority over the welcome and empty Agent areas. A user explicitly chooses “Move to today” to change a due date. Statistics no longer imply an action with nonfunctional arrows.
-- Daily planning stores up to three priorities, available minutes, a workload estimate, start/close state and a reflection for each local date. The review and capacity save automatically. Deleted tasks release priority slots; closing a day does not complete or silently reschedule work.
-- Focus can begin from a task or project, remains visible across pages, and supports pause/resume and restart recovery. Completed or stopped sessions credit task time once, in the same SQLite transaction as their receipt and active-state cleanup. Existing manually entered time remains; historic pre-0.4.0 receipts are not backfilled.
-- Project details show linked tasks and notes, a resume action and an automatically saved “Next first step”. Writes merge the latest project record so an asynchronous inspection cannot overwrite new text.
-- Quick capture offers an explicit idea/task choice and save destination. First use defaults to ideas, later use remembers the last successful type, and TODO/NOTE prefixes still take precedence.
-- Task forms fold secondary fields into More options. Forms without automatic drafts protect unsaved edits, and saves prevent duplicate submissions. Calendar task scheduling starts at the next quarter-hour instead of a time already passed.
-- Nia supports a saved compact preference; narrow windows reserve a small companion column instead of covering content. Remote 0.3.11 contributes seven independent 24-cel candidate sequences, decoded before playback and rendered one whole cel at a time, plus eight state portraits and a persistent animation/portrait switch. Idle source, atlas, sequence `[0,2,...,22]` and 700/115 ms timing stay protected. Core and imported Avatar Packs remain supported.
-- Backups now include daily plans, note/capture drafts and the capture preference, while continuing to exclude runtime state and credentials. Verification uses isolated Codex directories and generated session fixtures.
+## Current product
 
-### Integrated verification
+- Notes and quick capture keep local drafts across closing and restart. Saving selects the note and clears stale filters, including when renaming the selected note. Ideas create linked tasks without duplicates; tasks link back to their source.
+- Home prioritizes today's work, unfinished overdue tasks and the next calendar event. Daily plans hold up to three priorities, available minutes and a saved reflection. Rescheduling and task completion remain explicit actions.
+- Focus starts from tasks or projects and remains visible across pages. Pause/restart recovery, exact-once time credit and manual-time edit receipts protect task totals. Older completed sessions are not backfilled.
+- Projects show linked tasks and notes, a resume action and an automatically saved next step. Task forms keep secondary fields under More options and protect unsaved edits. Calendar task scheduling defaults to the next quarter-hour.
+- Nia supports compact layout, single-cel playback, eight state portraits and a persistent animation/portrait switch. Only idle animation has user visual acceptance; seven non-idle sequences remain candidates. Core and imported Avatar Packs remain supported.
+- Backups include daily plans, drafts and capture preferences. Runtime state and credentials stay excluded. Codex integration observes local files and does not control live sessions.
 
-- Before the remote merge, the workflow branch passed 35 unit tests and sixteen desktop suites. Those results apply only to its pre-merge checkpoint.
-- `npm run harness` checks environment, asset contracts, units, builds and Nia desktop playback. `npm run harness -- --full` runs the broader verification, which now also includes the project contract and the four workflow suites.
-- The combined `harness --full` passed on 2026-10-08: verify records 21 stages, including the project contract, builds, 35 unit tests and sixteen desktop suites. Evidence: `.test-data/verification.json`.
-- Seven packaged desktop suites and actual portable startup/bridge/onboarding/exit passed; report: `.test-data/packaged-verification.json`. The installer was built but not installed through its wizard.
-- Archive audit checked 4,585 entries and matched all 45 application source/build files. Report: `.test-data/release-audit.json`. No application database, personal sessions or test data shipped. Recognized previous top-level generated release files were removed only after the new archive passed audit.
+## Cleanup boundaries
 
-| Current artifact                         |     Bytes | SHA-256                                                            |
-| ---------------------------------------- | --------: | ------------------------------------------------------------------ |
-| `dist/NexusCompanion-Portable-0.4.0.exe` | 143694619 | `441927dd11c0517d3657e21a834a50d77915787971f7d400a4fbad7f39f93a2b` |
-| `dist/NexusCompanion-Setup-0.4.0.exe`    | 143904561 | `189003b3c2c2f992f9ae753fc714732f1a76e5bdb7ead85e0f06cc60ac38d128` |
+Keep the user reference `res/Nia.png`, `public/assets/nia/calm.png`, original `art/nia-source/` sheets, accepted idle sources/atlas, current hires candidate sources/frames/manifests and all current portraits. Remove only the enumerated unused derivatives and obsolete documentation approved for this cleanup; user databases, imported assets and backups are outside its scope.
 
-Release notes: [RELEASE_0.4.0.md](RELEASE_0.4.0.md). Verification scope and limitations: [VERIFICATION.md](VERIFICATION.md). Checksums: `dist/SHA256SUMS-0.4.0.txt`.
+Current development instructions, functional tests and release harness stay in place. Historical changes remain discoverable through Git rather than duplicate release notes in the current documentation tree. Release documentation uses `dist/README.md`, `dist/AGENTS.md` and a single current `dist/docs/` directory.
 
-## Previously released: 0.3.1 (2026-09-21)
+The enumerated cleanup removed 5,833 files (441,085,128 bytes), including 175 inactive derivatives, 20 obsolete source documents/screenshots, 20 duplicate distribution documents, 5,595 older generated test files and 23 obsolete analysis files. After the new archive audit passed, packaging removed five old 0.4.0 release artifacts (287,754,732 bytes). These are deleted-file totals; new binaries and current test evidence also occupy disk space. The current portable EXE is 6,082,451 bytes smaller than 0.4.0.
 
-These are historical release results:
+## Current verification
 
-- Delivered Ideas & notes navigation, homepage View ideas, navigation after saving and one sidebar focus entry, retaining 0.3.0 Nia animation support.
-- Its 16 verification stages passed: 20 unit tests, 12 desktop suites and builds. Its packaged runtime passed E2E, usability and Nia checks; the portable executable passed startup and clean-exit checks. The installer was built but not installed into the user's system.
-- Its ASAR audit found no user database, sessions, test data or credentials. These checks apply to the old release only.
+| Check                                                 | Status / evidence                                                                                         |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Documentation references and protected asset contract | Passed; original inputs, idle and current resources retained                                              |
+| `npm run harness -- --full`                           | Passed: 37 unit tests, 21 verify stages including 16 desktop suites; `.test-data/verification.json`       |
+| `npm run package` and archive/source audit            | Passed: 38 application source files match, 4,578 archive entries checked; `.test-data/release-audit.json` |
+| `npm run verify:packaged`                             | Passed: seven desktop suites and actual portable EXE; `.test-data/packaged-verification.json`             |
+| Installer wizard                                      | Not installed or tested by the packaging command                                                          |
 
-| Historical artifact                      |     Bytes | SHA-256                                                            |
-| ---------------------------------------- | --------: | ------------------------------------------------------------------ |
-| `dist/NexusCompanion-Portable-0.3.1.exe` | 102519885 | `4959046e11168e07c098375e22bf0ffd9c85344c19fb1c33a1a9e5e4571f2283` |
-| `dist/NexusCompanion-Setup-0.3.1.exe`    | 102729857 | `709f0f735c63ee9bc3876864fb57845de5373eb0a7dce8fe035227aee4ec0ad5` |
+The first full run timed out during native mouse task-to-calendar drag. The unchanged E2E case, final full harness and packaged E2E subsequently passed. The first-run record remains locally at `.test-data/verification-first-run-0.4.1.json`; this intermittent test result should be retained for future harness diagnosis.
 
-The hashes above are historical provenance, not an assertion that old binaries remain in `dist`. Packaging retains current-version output and removes only recognized older generated release files.
+| Artifact                            |       Bytes | SHA-256                                                            |
+| ----------------------------------- | ----------: | ------------------------------------------------------------------ |
+| `NexusCompanion-Portable-0.4.1.exe` | 137,612,168 | `cb4bd86bcbe0d08bcc2e6021cd6a689efca39bbd2aba70505654b7c60190318b` |
+| `NexusCompanion-Setup-0.4.1.exe`    | 137,822,138 | `85f487a73a6be897bb611cf9983050b4c15cc713f3abad29d842302b04010bcf` |
 
-## Remote 0.3.11 provenance
+Both files are in `dist/`; checksums are also recorded in `dist/SHA256SUMS-0.4.1.txt`. Seven unused atlases are absent from the rebuilt archive, which contains no application databases, personal sessions or test data.
 
-The merged remote documentation records its own core/full harness, portable and packaged Nia checks, and private-source upload authorization. It introduced the whole-cel renderer, predecode/first-frame handling, state portraits, protected idle contract and cross-machine scripts. Its installer was built but not installed through the wizard. These are historical checks, not post-merge 0.4.0 results or visual acceptance of the new art.
+## Known limits and next candidates
 
-## Known limitations
+- Local Codex observations have bounded history and cannot guarantee real-time state, stop/retry, approvals or prompt delivery. Owned App Server sessions would require a separate design.
+- Seven candidate animations still need visual acceptance. Frame counts, hashes, anchor metrics and source uploads cannot establish facial quality. Imported GIF motion is independent of the built-in animation toggle.
+- Calendar single-occurrence exceptions, external calendars, configurable dashboard widgets and Live2D/Spine are not implemented. Current-time scrolling in the calendar and clearer Agent empty states remain useful UX candidates.
+- Project deletion does not cascade or unlink all related entities. VS Code discovery checks default installation locations and may miss custom installs. Batched task sorting and targeted background refresh are further development candidates.
+- Some detailed help and backend diagnostics remain Chinese. Settings navigation can be simplified without removing useful controls.
+- Windows executables are unsigned. OS notification settings can suppress toasts. The development-only `extract-zip` dependency retains an upstream advisory; Electron archives are checked against the official hash before extraction.
 
-- Codex observations come from local files; they cannot guarantee live cross-process state or support stop, retry, approvals or sending prompts. Authentication remains in official Codex products.
-- English covers primary controls, while some detailed help and backend diagnostics remain Chinese.
-- Only idle artwork has user visual acceptance. Earlier non-idle face atlases were rejected and remain historical archives; the seven current 24-cel sequences still await acceptance. Source hashes, anchor metrics, frame counts, build success and uploading source cannot certify facial quality. Imported GIF motion is independent of the built-in animation toggle. Preview states do not imply live observability of every Agent event.
-- Single-occurrence calendar exceptions, Live2D/Spine, external calendars, configurable dashboard widgets and owned App Server session management are not implemented.
-- Project deletion does not cascade or unlink all related entities. VS Code discovery still checks default installation locations rather than all custom installations.
-- No Windows signing certificate has been supplied. OS notification preferences and Do Not Disturb can suppress actual toast visibility.
-- `extract-zip` retains an upstream development-dependency audit advisory. It is not a runtime dependency; build archive extraction remains subject to the official hash check.
-- New source features and authored tests require the current run's runtime verification; they are not release-completion claims.
-
-## Reference
-
-- Developer rules and cross-machine harness: `AGENTS.md`, `docs/START_ON_NEW_PC.md`
-- Usage: `docs/USER_GUIDE.md`
-- Developer handoff: `docs/DEVELOPMENT_HANDOFF.md`
-- Current release notes: `docs/RELEASE_0.4.0.md`
-- Animation and assets: `docs/NIA_ANIMATION.md`
-- Architecture: `docs/ARCHITECTURE.md`
-- Verification: `docs/VERIFICATION.md`
-- Open-source research: `docs/OPEN_SOURCE_RESEARCH.md`
-- Remote animation provenance: `docs/RELEASE_0.3.11.md`
-
-Art review resources: `docs/NIA_REVIEW.html` supports pausing and comparing candidate cels. Numeric checks reported in the remote release history describe their measured sample only; the combined product still needs runtime verification and separate user visual acceptance.
+See [USER_GUIDE.md](USER_GUIDE.md), [DEVELOPMENT_HANDOFF.md](DEVELOPMENT_HANDOFF.md), [START_ON_NEW_PC.md](START_ON_NEW_PC.md), [VERIFICATION.md](VERIFICATION.md), [RELEASE_0.4.1.md](RELEASE_0.4.1.md) and [NIA_ANIMATION.md](NIA_ANIMATION.md). The source-only frame-inspection tool is `docs/NIA_REVIEW.html`; open it from a source checkout with its `public/` artwork, not from the packaged documentation.

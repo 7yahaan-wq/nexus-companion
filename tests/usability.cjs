@@ -63,7 +63,7 @@ function luminance(rgb) {
       (luminance(colors.bg) + 0.05) / (luminance(colors.muted) + 0.05) >= 4.5,
       JSON.stringify(colors),
     );
-    await p.screenshot({ path: path.join(root, '.test-data/v020-morning.png') });
+    await p.screenshot({ path: path.join(root, '.test-data/usability-morning.png') });
     await p.getByRole('button', { name: '添加今日任务', exact: true }).first().click();
     await p.getByLabel('任务标题', { exact: true }).fill('Dialog closure regression');
     await p.keyboard.press('Escape');

@@ -58,7 +58,7 @@ async function launch(first = true) {
     await p.getByRole('button', { name: '查看灵感', exact: true }).click();
     await p.getByRole('heading', { name: '一个及时保存的想法', exact: true }).waitFor();
     await p.locator('[data-page="Home"]').click();
-    await p.screenshot({ path: path.join(root, '.test-data/v031-home.png') });
+    await p.screenshot({ path: path.join(root, '.test-data/nia-home.png') });
     await p.locator('[data-page="Settings"]').click();
     const preview = p.locator('.nia-preview-stage .avatar-render');
     const sprite = preview.locator('.nia-sprite');
@@ -207,7 +207,7 @@ async function launch(first = true) {
       assert.equal(await portrait.evaluate((img) => img.naturalHeight), 1536, state + ' portrait height');
       assert.equal(await preview.getAttribute('data-motion'), 'still');
     }
-    await p.locator('.nia-preview').screenshot({ path: path.join(root, '.test-data/v035-portrait.png') });
+    await p.locator('.nia-preview').screenshot({ path: path.join(root, '.test-data/nia-portrait.png') });
     await p.locator('.nia-preview-header .nia-display-toggle').click();
     await p.waitForFunction(() => document.querySelector('.nia-preview-stage .avatar-render').dataset.display === 'animation');
     await p.locator('[data-preview-state="working"]').click();
@@ -262,7 +262,7 @@ async function launch(first = true) {
     await p.waitForFunction(() => document.querySelector('.app').dataset.theme === 'light');
     await p
       .locator('.nia-preview')
-      .screenshot({ path: path.join(root, '.test-data/v030-nia-light.png') });
+      .screenshot({ path: path.join(root, '.test-data/nia-light.png') });
     await p.getByLabel('Language / 语言').selectOption('en');
     await p.locator('[data-page="Home"]').click();
     await p.getByRole('button', { name: 'Capture an idea', exact: true }).waitFor();
@@ -271,7 +271,7 @@ async function launch(first = true) {
     assert.ok(box && box.x >= 0 && box.x + box.width <= (await p.evaluate(() => innerWidth)));
     assert.ok(await p.getByRole('button', { name: 'View ideas', exact: true }).isVisible());
     assert.ok(await p.locator('.companion-rail .nia-display-toggle').isVisible());
-    await p.screenshot({ path: path.join(root, '.test-data/v031-home-narrow.png') });
+    await p.screenshot({ path: path.join(root, '.test-data/nia-home-narrow.png') });
     await p.getByRole('button', { name: 'View ideas', exact: true }).click();
     await p.getByRole('heading', { name: 'Ideas & notes', exact: true }).waitFor();
     await p.getByRole('heading', { name: '一个及时保存的想法', exact: true }).waitFor();

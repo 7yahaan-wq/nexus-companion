@@ -1,4 +1,4 @@
-> 0.4.0 已完成：灵感、每日计划、任务与专注工作流，保留远端 0.3.11 的跨机器 harness、Nia 单格动画及立绘切换。完整 harness、打包程序复测和便携 EXE 验收均通过。只有 idle 动画已获用户视觉接受；其余七组独立 24 格动画仍是候选。开发接续见 [另一台电脑继续开发](docs/START_ON_NEW_PC.md)，素材约束见 [Nia 动画说明](docs/NIA_ANIMATION.md) 和 [AGENTS.md](AGENTS.md)。
+> 0.4.1 为清理维护版本：收敛旧版资料与未使用的衍生素材，保留灵感、计划、任务、专注和 Nia 动画／立绘功能。完整 harness、包内源码审计和打包版验收均已通过，实际结果见 [项目状态](docs/PROJECT_STATUS.md)。只有 idle 动画已获用户视觉接受，其余七组仍为候选。开发接续见 [另一台电脑继续开发](docs/START_ON_NEW_PC.md)，素材约束见 [Nia 动画说明](docs/NIA_ANIMATION.md) 和 [AGENTS.md](AGENTS.md)。
 
 # Nexus Companion
 
@@ -6,19 +6,19 @@
 
 ## 直接使用
 
-本机已生成并验证的文件位于 `dist/`；该目录不进入 Git。GitHub 上的源码可以重新打包，安装文件作为 Release 资源上传需要相应授权。校验值见 [发布记录](docs/PROJECT_STATUS.md)：
+当前版本的文件位于 `dist/`；该目录不进入 Git。GitHub 上的源码可以重新打包，安装文件作为 Release 资源上传需要相应授权。校验值见 [发布记录](docs/PROJECT_STATUS.md)：
 
-- `NexusCompanion-Setup-0.4.0.exe`：安装版。
-- `NexusCompanion-Portable-0.4.0.exe`：免安装启动版，默认使用 AppData，可在设置中选择数据位置。
+- `NexusCompanion-Setup-0.4.1.exe`：安装版。
+- `NexusCompanion-Portable-0.4.1.exe`：免安装启动版，默认使用 AppData，可在设置中选择数据位置。
 - `win-unpacked/Nexus Companion.exe`：解包版本，可直接启动；整个目录需要一起保留。
 
 首次启动会引导选择项目目录、主题和角色。没有演示任务或随机 Agent 数据。安装包未签名，Windows 可能显示发布者未验证；目前未提供代码签名证书。
 
-完整的安装、功能和故障排查说明见 [Nexus Companion 0.4.0 使用手册](docs/USER_GUIDE.md)。
+完整的安装、功能和故障排查说明见 [Nexus Companion 0.4.1 使用手册](docs/USER_GUIDE.md)。
 
 ## 已实现
 
-0.4.0 增加可恢复草稿、灵感转任务、每日三件事与收工回顾、项目下一步、跨页专注计时及任务用时联动。首页突出今日与逾期工作，Nia 在窄窗口下不遮挡内容。远端引入的图集预解码、单格切换与八状态立绘继续保留；七组非 idle 动画尚待用户视觉验收。详见 [版本说明](docs/RELEASE_0.4.0.md)。
+当前工作流包含可恢复草稿、灵感转任务、每日三件事与收工回顾、项目下一步、跨页专注计时及任务用时联动。首页突出今日与逾期工作，Nia 在窄窗口下不遮挡内容。图集预解码、单格切换与八状态立绘继续保留；七组非 idle 动画尚待用户视觉验收。详见 [版本说明](docs/RELEASE_0.4.1.md)。
 
 - Home：一键记录和查看灵感、今日任务、最近 Agent 观测、等待处理项、日程、项目进度和真实统计。
 - Projects：创建/编辑/删除，Godot/Unity 识别，目录/VS Code/终端/项目启动，重要文档，Git 分支、未提交文件、最近提交（只读）。外部程序未安装时显示错误。
@@ -89,7 +89,6 @@ npm run verify:packaged  # 打包后7组桌面流程 + 便携EXE启动
 ## 工程文档
 
 - [另一台电脑继续开发](docs/START_ON_NEW_PC.md)
-- [实际使用体验与后续建议](docs/UX_REVIEW_2026-09-24.md)
 
 - [开发接续说明与本机环境](docs/DEVELOPMENT_HANDOFF.md)
 - [架构](docs/ARCHITECTURE.md)
@@ -100,4 +99,4 @@ npm run verify:packaged  # 打包后7组桌面流程 + 便携EXE启动
 - [开源项目学习与落地](docs/OPEN_SOURCE_RESEARCH.md)
 - [测试与交付边界](docs/VERIFICATION.md)
 
-第二阶段可扩展 Live2D/Spine、完整 App Server 管理、外部日历和重复日程的单次例外；这些能力尚未实现，不会显示成已接入。
+后续可扩展 Live2D/Spine、完整 App Server 管理、外部日历和重复日程的单次例外；这些能力尚未实现，不会显示成已接入。其他体验候选见 [开发接续说明](docs/DEVELOPMENT_HANDOFF.md#9-后续优化候选)。

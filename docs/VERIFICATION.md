@@ -1,58 +1,42 @@
-# Verification
+# 验证与交付边界
 
-## Harness
+当前清理版本：**0.4.1**。清理后的完整 harness、源码/归档审计和打包验收已通过：37 项单元测试、21 个 verify 阶段（含 16 组桌面回归）、七组打包桌面流程及实际便携 EXE。源码与包内 38 个应用文件一致；4,578 条归档项完成检查。实际结果、首次拖放超时记录和本次哈希统一记入 [PROJECT_STATUS.md](PROJECT_STATUS.md)。
 
-`npm run doctor` checks Node, pinned Electron runtime, assets and lockfile. `npm run verify` builds, runs all domain tests, then launches real Electron windows through Playwright for milestones 1–8 and the full user journey. Every test uses isolated data directories. Reports: `.test-data/verification.json`.
+## 运行入口
 
-## 0.4.0 verification (2026-10-08)
+| 命令                        | 范围                                                                        |
+| --------------------------- | --------------------------------------------------------------------------- |
+| `npm run doctor`            | Node、锁定 Electron、依赖和构建前置条件                                     |
+| `npm test`                  | 当前全部 `tests/*.test.cjs`                                                 |
+| `npm run harness`           | 环境、受保护素材/项目契约、单元测试、TypeScript、构建和 Nia 桌面检查        |
+| `npm run harness -- --full` | 环境与契约检查，再运行完整 `verify`                                         |
+| `npm run package`           | 构建、打包、配套文档与哈希、源码/归档一致性审计，成功后清理识别到的旧版产物 |
+| `npm run verify:packaged`   | 七组打包桌面流程与真实便携 EXE 启动/桥接/引导/退出                          |
 
-The final code integrates remote `c1a7d42` / 0.3.11 with the idea-to-focus workflow changes. `node scripts/harness.cjs --full` passed: environment checks plus all 21 verify stages (project asset contract, three builds, 35 unit tests and 16 desktop suites). The final renderer bundle is `index-_YOTWZ6p.js`; reports and screenshots use isolated `.test-data` profiles and controlled Codex fixtures.
+`verify` 包含 desktop、m2–m8、e2e、polish、usability、nia、notes-flow、focus-flow、planning-flow 和 workflow。这些套件名承载当前回归，不因沿用早期名称而成为可删除文件。打包验证单独覆盖 e2e、usability、nia 与四组工作流，并调用 portable 检查。
 
-- Notes: autosaved drafts across close, entry points and restart; failed saves retain content; explicit discard; existing/new note selection clears stale filters, including same-note renaming through search; note-to-task deduplication and source links; dirty-close protection and focus after asynchronous draft loading.
-- Focus: pause/restart recovery, fractional elapsed time, atomic finish/credit/cleanup, rollback, duplicate requests, manual-time edit receipts, cross-page controls and explicit completion/another-round/break choices. No historical backfill or automatic task completion.
-- Planning: overdue and upcoming work visible first, deliberate rescheduling, at most three priorities, automatic budget/reflection persistence, deleted priority slots, project next-step persistence, linked ideas and visible panels after opening. Wide/compact/narrow and dark/light/English screenshots were reviewed.
-- Regression: task/calendar dragging, onboarding, backup export/restore, data relocation, tray, settings, denied IPC, Markdown, Nia animation/portrait switching, reduced motion and hidden-window pause. The calendar drag harness scrolls its destination before mouse-down so window scrolling cannot cancel native drag initiation.
-- Release: the NSIS installer and portable EXE were built. `node scripts/verify-packaged.cjs` passed seven packaged desktop suites (`e2e`, `usability`, `nia`, `notes-flow`, `focus-flow`, `planning-flow`, `workflow`) and the real self-extracting portable startup/SQLite bridge/onboarding/clean-exit check. Record: `.test-data/packaged-verification.json`.
-- Archive audit: `node scripts/verify-release.cjs` passed, comparing all 45 files under `build/` and `electron/` byte-for-byte with the ASAR, checking 4,585 entries and excluding application test data, databases and session files. EXE hashes are in PROJECT_STATUS.md and `dist/SHA256SUMS-0.4.0.txt`; ASAR hash and detailed comparisons are in `.test-data/release-audit.json`.
+全部桌面测试使用 `.test-data/` 下的 `NEXUS_DATA_DIR`。需要 Codex 会话内容时，使用隔离 `CODEX_HOME` 和受控 JSONL 样例，不读取用户的个人会话作为测试夹具。Electron 桌面检查需要可用的 Windows 桌面环境；环境阻止启动时应报告未完成，不能以静态检查替代。
 
-The focused independent review found and fixed invalid capture-draft types, stale selection after renaming, asynchronous autofocus, retrying manual time changes and missing priority slots. Existing CSP, isolated IPC and local-only data boundaries remain. No new dependencies or artwork were added by this release's workflow implementation; remote 0.3.11 art was retained unchanged. Only idle artwork has user visual acceptance; seven non-idle sequences remain candidates regardless of automated test results. The installer wizard was not run.
+## 必须保留的回归范围
 
-`npm run package` now audits the new build before removing recognized old top-level generated release files. `npm run verify:packaged` repeats artifact-runtime validation. No user data or source-art directories are cleaned.
+- **灵感与表单**：草稿跨入口、关闭和重启恢复，失败保存保留内容，显式丢弃，异步加载后的焦点，同一笔记改名后清除旧筛选，灵感转任务去重和来源链接，普通表单关闭保护及重复提交防护。
+- **专注与用时**：暂停/重启、秒数与小数分钟、结束记录/任务加时/活动状态清理的事务一致性、失败回滚、重复请求和手工用时编辑重试；跨页控制和显式完成/继续/休息。
+- **计划与项目**：今日/逾期及近期日程、明确重新安排、最多三项重点、预算/回顾自动保存、删除任务释放重点名额、项目下一步与关联灵感；宽/窄/紧凑布局以及深浅主题。
+- **基础功能**：SQLite CRUD 和重开、备份校验/事务合并/异常草稿拒绝、数据迁移、日历重复与跨夜/重叠/拖放、任务排序、引导、Markdown、搜索、通知去重和托盘恢复。
+- **安全与隔离**：未知 IPC、无效实体状态和资源路径穿越拒绝；本地页面 CSP，渲染进程没有 Node 集成；包内不包含应用数据库、会话、个人备份或测试数据。
+- **Nia**：用户参考和 accepted idle 哈希/帧序列/时长保护，当前图集绑定、预解码后单格播放、透明边缘、立绘切换与设置持久化、系统减少动态效果及隐藏窗口暂停。人工逐格检查仍独立于工程验证。
 
-## 0.3.1 verification (2026-09-21)
+## 结果文件
 
-All 16 harness stages passed again: 20 unit tests and 12 real desktop suites. Nia regression checks now verify automatic navigation after saving an idea, cancel staying on the homepage, the renamed notes navigation, homepage View ideas in Chinese/English, reopening saved ideas after restart, and a single visible sidebar focus entry that opens focus mode. Home screenshots were reviewed in dark and light/narrow layouts. The packaged 0.3.1 runtime passed E2E, usability and Nia suites; the actual portable executable passed its smoke test. Archive audit verified version/assets and excluded private files. Hashes are recorded in PROJECT_STATUS.md.
+- `.test-data/verification.json`：完整源码回归各阶段及耗时。
+- `.test-data/packaged-verification.json`：打包桌面与便携程序结果。
+- `.test-data/release-audit.json`：源码与 ASAR 比对、包内隐私检查及产物哈希。
+- `dist/SHA256SUMS-0.4.1.txt`：本次两个 EXE 的最终校验值，成功打包后生成。
 
-## 0.3.0 verification (2026-09-21)
+截图与测试数据库不进入 Git 或应用发布包。清理生成物前须逐项确认绝对路径和用途，保留当前结果，不递归清空工作目录。打包版必须与当前源码一致；不能拿旧 `win-unpacked` 目录代替重建。
 
-- Environment checks passed with Node 24.19.0 and Electron 39.8.10. TypeScript and Vite production builds passed.
-- All 16 harness stages passed: 3 build stages, 20 unit tests, and 12 desktop suites (`desktop`, `m2`–`m8`, `e2e`, `polish`, `usability`, `nia`). The runtime test uses the installed Electron binary and isolated application data.
-- Four new unit tests cover stale failures/live observations, completion expiry, invalid/future timestamps, nighttime/focus priority, and the shipped RGBA atlas/frame metadata contract.
-- The new Nia desktop suite saves a note from the homepage and checks it after restart; previews all eight semantic states; checks real frame advancement; pauses for reduced motion, window hide and disabled animation; restores playback on show; checks persistent settings, light/dark themes, English and a 1060-pixel-wide window. No renderer exceptions occurred.
-- Screenshots of idle, working, thinking and sleepy artwork and the homepage were visually reviewed. Per-frame clipping removes neighbouring atlas fragments; namespaced mood classes avoid the application's global error styling.
-- Source formatting checks passed. The settings preview deliberately keeps displaying Nia when the companion uses Core or a custom pack; existing pack/Core tests now scope their assertions to the companion rail.
-- Final packaged runtime passed E2E, usability and Nia suites. The 0.3.0 portable EXE passed direct startup/bridge/onboarding/clean-exit smoke checks. Archive inspection verified version 0.3.0, the exact atlas hash and absence of private data across 4559 entries; both release executable hashes are recorded in PROJECT_STATUS.md.
+## 不能由上述检查证明的事
 
-The generated art contains four drawn action groups / 16 frames, reused across eight semantic states. Imported GIF playback is not controlled by the animation toggle. The installer installation flow is not executed during validation. Packaged runtime results and artifact hashes are recorded in [PROJECT_STATUS.md](PROJECT_STATUS.md).
+构建安装器不等于实际安装过；只有运行安装向导并检查后才可报告安装验收。程序没有 Windows 代码签名证书。系统勿扰模式可能阻止通知，外部编辑器/引擎/终端能力依赖本机安装情况。
 
-Desktop tests require a normal Windows desktop process. The restricted execution environment crashed Electron; the checks passed in the approved unrestricted environment. Since 0.4.0, the full harness isolates Codex directories and supplies controlled session fixtures. Test data and screenshots stay under `.test-data` and are excluded from Git and release archives.
-
-## Verified before packaging
-
-- SQLite CRUD/reopen; backups preserve unrelated records, verify content hashes and restore in one transaction; SQLite quick_check.
-- Calendar validation, daily/weekly/monthly recurrence boundaries, month end, overlapping lanes and overnight segments.
-- Codex explicit/stale/missing states, Unix-second timestamps, real desktop PascalCase file events; real local session listing and virtualized logs.
-- Focus pause/restart/exact-once completion; native notification API and deduplication across restart.
-- Real desktop onboarding, project directory import, task CRUD/completion, drag task → calendar, all three calendar views, Markdown notes/reports, image background and Avatar Pack import, light/dark appearance, command palette, global capture and persistence after restart.
-- Window close hides to tray; restore returns to the same window. In v0.2 validation the user's running portable instance already owned the global shortcut; the second instance correctly logged a conflict and its in-window shortcut fallback was verified. Windows reports native notifications supported; OS-level toast visibility depends on notification/Do Not Disturb preferences.
-- Zero renderer exceptions in the end-to-end path. Invalid IPC methods, invalid record states and pack path traversal rejected.
-
-## Scope and limits
-
-Historical v0.2 verification added two storage migration tests and a real Electron usability suite: close/escape welcome and task dialogs, leave focus without stopping the timer, Chinese/English navigation, Morning text contrast, pause Codex reads, migrate on restart while preserving notes/timer/settings and the old database. All 15 stages (including 16 unit tests) passed on 2026-09-20; these checks remain in the 0.3.0 harness.
-
-External editor/engine/terminal launch depends on installed programs. Git inspection is read-only. No live approval/stop/retry capability is claimed for the local Codex provider. Local observations have bounded history. Task and event drag tests verify actual UI behavior, not just helper code. First-party UI is loaded locally under CSP; renderer has no Node integration.
-
-The build is unsigned. Final installer and portable artifact hashes are recorded in PROJECT_STATUS.md and the versioned `dist/SHA256SUMS-<version>.txt`. Packaged applications are checked separately from source tests. The actual portable self-extracting executable has a startup/bridge/onboarding/clean-exit smoke test. Producing the installer does not install it into the user's system.
-
-An additional desktop polish suite verifies task-board dragging, local backup export/preview/restore, and real-session role labels/pinning. A restore navigation issue found by this suite was fixed: only same-entry-page reloads are allowed, while external navigation remains blocked.
+Codex 本地文件观测不等于实时控制，日报不等于完整审计账本。角色测试、素材哈希或源码上传不等于用户认可画风；只有 idle 已接受，七组非 idle 动画仍为候选。任务/日程拖放和数据恢复应验证真实界面结果，而不只检查辅助函数。

@@ -1,12 +1,12 @@
 # 项目开发接续说明
 
-核对日期：2026-10-08。当前版本 `0.4.0`，本轮工作流已与远端 `c1a7d42` / `0.3.11` 的素材、播放器和跨机器开发规则整合。工作目录：`D:\ProjectNia\nexus-companion`。完整 harness、打包程序复测、便携 EXE 与归档审计均已通过，版本标签为 `v0.4.0`；具体产物和哈希见 PROJECT_STATUS.md。
+核对日期：2026-10-08。当前维护版本 `0.4.1`，工作目录：`D:\ProjectNia\nexus-companion`。此次只清理冗余资料和不再使用的衍生素材，保留既有工作流；清理后的完整 harness、包审计和打包版流程已通过，实际结果统一见 [PROJECT_STATUS.md](PROJECT_STATUS.md) 和 [VERIFICATION.md](VERIFICATION.md)。
 
-先读根目录 [AGENTS.md](../AGENTS.md)；跨机器启动见 [START_ON_NEW_PC.md](START_ON_NEW_PC.md)。本文的源码说明已按 0.4.0 更新，第 7 节的机器路径和安装工具仍是历史环境记录，不能直接套用到另一台电脑。
+先读根目录 [AGENTS.md](../AGENTS.md)；跨机器启动见 [START_ON_NEW_PC.md](START_ON_NEW_PC.md)。本文的源码说明已按 0.4.1 更新，第 7 节的机器路径和安装工具仍是历史环境记录，不能直接套用到另一台电脑。
 
 本文基于现有源码、配置、测试和发布文件整理，用于后续在本机继续开发。当前发布验收见 VERIFICATION.md；本次已实现的优化与后续候选项分别记录。修改功能后应同步更新相关说明。
 
-0.4.0 将灵感、任务、时间安排和专注连成工作流：灵感草稿自动保存、保存后定位、一键转任务；首页优先显示今日与逾期任务及下一项日程；每日三项重点和收工回顾；任务用时自动累计；项目下一步自动保存；Nia 紧凑栏避免覆盖内容。以下记录当前实现，不将正在运行的测试写成已通过。
+现行工作流连接灵感、任务、时间安排和专注：草稿自动保存、保存后定位、一键转任务；首页优先显示今日与逾期任务及下一项日程；每日三项重点和收工回顾；任务用时自动累计；项目下一步自动保存；Nia 紧凑栏避免覆盖内容。旧版本过程通过 Git 标签查阅，本文保留当前代码入口、数据契约和使用说明。
 
 ## 1. 产品与当前范围
 
@@ -55,7 +55,7 @@ electron/
 scripts/                   构建、环境/素材契约、harness、受限发布清理、打包收尾、Electron 下载
 tests/                     单元测试及桌面验收
 public/assets/             Nia 图片与应用图标
-art/                       受保护 idle、历史原图、七组候选源页/单格、提示词与 manifest
+art/                       受保护 idle、原始参考、七组候选源页/单格、提示词与 manifest
 res/Nia.png                受保护的用户角色设计参考
 docs/                      架构、用户手册、发布记录等
 ```
@@ -162,7 +162,7 @@ flowchart TD
 
 默认数据根目录为 `%APPDATA%\Nexus Companion`，包含数据库、`assets/`、`logs/` 和 `backups/`。`data-location.json` 位于 Electron 的基础 userData 目录，记录 active / pending 路径。迁移复制数据库快照及资源、备份、日志，校验后切换；保留旧目录并拒绝覆盖已存在目标。
 
-备份是带 SHA-256 的 JSON `.nexus` 文件，不是 SQLite 文件副本，也不加密。它包含项目、任务、日程、笔记、已结束专注、时间线和日报，以及允许导出的设置与引用图片。0.4.0 的设置白名单包含 `appearance`、`agent-profiles`、`capture-preferences`、合法日期键的每日计划、笔记/快速记录草稿；不导出 `agents` 缓存、Codex 源文件、连接配置、运行中专注状态或通知去重账本。已写入时间线的 Agent 活动仍属于备份内容。恢复时同 ID 覆盖、其他记录保留，数据库合并使用事务，恢复前生成快照。
+备份是带 SHA-256 的 JSON `.nexus` 文件，不是 SQLite 文件副本，也不加密。它包含项目、任务、日程、笔记、已结束专注、时间线和日报，以及允许导出的设置与引用图片。0.4.1 的设置白名单包含 `appearance`、`agent-profiles`、`capture-preferences`、合法日期键的每日计划、笔记/快速记录草稿；不导出 `agents` 缓存、Codex 源文件、连接配置、运行中专注状态或通知去重账本。已写入时间线的 Agent 活动仍属于备份内容。恢复时同 ID 覆盖、其他记录保留，数据库合并使用事务，恢复前生成快照。
 
 ## 6. 容易误解的实现边界
 
@@ -193,20 +193,20 @@ flowchart TD
 
 以下工具链位置沿用此前在这台机器上的初始化记录，本次文档更新没有重新安装系统工具。开始新的开发会话时，应以 `doctor` 和实际命令可用性重新确认。
 
-| 项目             | 本次检查结果                                                                               |
+| 项目             | 本机环境记录（使用前复核）                                                                 |
 | ---------------- | ------------------------------------------------------------------------------------------ |
-| 仓库             | `D:\ProjectNia\nexus-companion`，初始工作区干净                                            |
-| Node             | 当前任务可调用 v24.19.0，来源为 Codex 自带运行时                                           |
+| 仓库             | `D:\ProjectNia\nexus-companion`                                                            |
+| Node             | 本轮 harness 确认 v24.19.0，来源为 Codex 自带运行时                                        |
 | npm              | 系统未安装完整 npm；已校验并准备本项目临时 npm 12.0.2，位于 `.test-data/toolchain/package` |
 | 依赖与构建目录   | 已按锁文件安装依赖，Electron 39.8.10 已按官方 SHA-256 校验；构建与发布目录已生成           |
 | Git              | `D:\Git\cmd\git.exe` 可用                                                                  |
 | VS Code          | `D:\Microsoft VS Code\Code.exe` 存在，`code.cmd` 在 PATH 中                                |
 | Windows Terminal | `wt.exe` 启动入口在 PATH 中；未额外测试交互窗口                                            |
-| 发布文件         | 0.4.0 安装版、便携版、解包程序与 SHA256SUMS 已生成并验证；仅清理识别到的旧版生成文件       |
+| 发布文件         | 本轮 0.4.1 安装器和便携版已生成；包审计、七组桌面及实际便携 EXE 验收通过                   |
 
 Node 的当前位置为 `C:\Users\123\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe`。这是本次任务可用的运行时，不能据此认定用户另开的终端已经具备完整开发环境。
 
-本次没有安装系统级工具。任务中已从官方 npm registry 下载并校验 npm，使用锁文件完成依赖安装，并手动补齐 npm 12 阻止自动执行的构建工具安装步骤。长期开发建议安装完整 Node.js 24+ 与 npm。当前机器也可按下面的临时工具链说明继续开发。
+此前已从官方 npm registry 下载并校验临时 npm，使用锁文件安装依赖，并补齐 npm 12 阻止自动执行的构建工具安装步骤。本轮复用现有工具链，没有安装系统工具或新增依赖；仅修改版本号不需要重新安装依赖。长期开发建议安装完整 Node.js 24+ 与 npm，当前机器也可按下面的临时工具链说明继续开发。
 
 另一个已确认的本机兼容问题：`electron/services/projects.cjs` 的 VS Code 按钮只检查 LocalAppData / Program Files 默认位置，未使用 PATH，也不检查 D 盘；本机两个默认候选都不存在。后续应增加可配置路径或可靠的程序发现方式。
 
@@ -274,26 +274,17 @@ npm start
 
 Electron 下载异常时，仓库提供从缓存恢复和下载的脚本，两者都校验官方包内的 SHA-256。它们需要 npm 依赖先就绪；不是 npm 缺失时的替代安装方式。当前 `doctor.cjs` 同样预期依赖已经安装。
 
-本机本次打包遇到 GitHub 工具下载等待，使用已安装的 7-Zip 和 electron-builder 的镜像配置完成；哈希校验保持启用。复用已经构建好的程序时可运行：
+本轮打包复用已准备的 7-Zip 和 electron-builder 缓存，避免重复下载构建工具。先按上文设置临时 npm 的 PATH，再运行：
 
 ```powershell
 $env:ELECTRON_BUILDER_7ZIP_PATH = Join-Path (Get-Location) 'node_modules\electron-winstaller\vendor\7z-x64.exe'
 $env:ELECTRON_BUILDER_CACHE = Join-Path (Get-Location) '.test-data\builder-cache'
-$env:ELECTRON_BUILDER_BINARIES_MIRROR = 'https://npmmirror.com/mirrors/electron-builder-binaries/'
-node node_modules/electron-builder/out/cli/cli.js --win nsis portable --prepackaged dist/win-unpacked
+npm.cmd run package
 ```
 
-`--prepackaged` 只封装指定目录；修改源码后应先正常运行 `npm run package` 生成新程序，不能直接拿旧目录代替重建。
+`npm run package` 会重建当前程序、归档审计及文档，再清理旧版本。不要直接用旧 `win-unpacked` 目录封装新版本。
 
-历史 0.3.1 实际验证（2026-09-21；不能作为 0.4.0 通过依据）：
-
-- doctor 环境检查通过；完整自主 harness 的 16 个阶段全部通过，包括 20 项单元测试和 12 组桌面测试。
-- Nia 专项覆盖主页笔记保存后跳转、查看/取消、重启后查找、唯一侧栏专注入口、八状态预览、帧推进、系统减少动态效果、窗口隐藏恢复、动画开关持久化、深浅主题、英文和最小宽度布局。验收截图保存在 .test-data。
-- 受限执行环境会导致 Electron 渲染进程崩溃，真实桌面验收使用获准的非受限执行；数据仍隔离在 .test-data。
-- 最终打包复测及文件哈希以 [VERIFICATION.md](VERIFICATION.md) / [PROJECT_STATUS.md](PROJECT_STATUS.md) 为准。安装器不会在验收中自动安装。
-- 直接加载领域 TypeScript 单测时有 Node 模块类型提示，不影响结果。角色素材和实现详见 [NIA_ANIMATION.md](NIA_ANIMATION.md)。
-
-本次 0.4.0 验证状态（2026-10-08）：与远端 0.3.11 整合后的 `harness --full` 通过，内部 verify 的 21 阶段包含项目契约、构建、35 项单元测试与 16 组桌面套件。另通过七组打包桌面流程和便携 EXE 检查；45 个应用文件与归档一致，审计 4,585 个条目。结果见 `.test-data/verification.json`、`packaged-verification.json` 和 `release-audit.json`；发布哈希见 PROJECT_STATUS.md。素材检查不能替代用户对七组候选动画的视觉接受。
+本轮完整验证与打包验收已完成，VERIFICATION.md 与 PROJECT_STATUS.md 记录本次结果、产物哈希及未覆盖范围；首轮原生拖放超时也已保留，最终源码与打包回归均通过。安装器向导未实际运行，角色仍需单独视觉接受。
 
 ## 9. 后续优化候选
 
@@ -301,7 +292,7 @@ node node_modules/electron-builder/out/cli/cli.js --win nsis portable --prepacka
 
 | 方向           | 已观察到的实现                                                                                             | 后续处理入口                                            |
 | -------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| 开发环境复现   | 已补齐项目工具链，整合后的 0.4.0 完整 harness 已通过；跨机器安装工具仍需自行确认                           | 长期开发准备完整 Node/npm，可进一步建立 CI              |
+| 开发环境复现   | 提供本机工具链记录与跨机器 harness；新机器安装和当前版本结果仍需实际确认                                   | 长期开发准备完整 Node/npm，可进一步建立 CI              |
 | 本机程序发现   | VS Code 安装在 D 盘，应用只检查两个默认位置                                                                | `electron/services/projects.cjs`                        |
 | 后台数据刷新   | Agent 扫描会写数据库时间线，但 `useWorkspace` 只在初次加载和自身增删改后刷新；打开时间线页面也没有额外刷新 | 主进程变更通知或有针对性的刷新策略                      |
 | Agent 详情更新 | 详情页保存打开时的 run 对象，日志仅在打开时读取；列表更新不会自动更新已有详情                              | `Agents.tsx` 的选择状态与日志刷新                       |
@@ -310,7 +301,9 @@ node node_modules/electron-builder/out/cli/cli.js --win nsis portable --prepacka
 | 角色视觉验收   | 仅 idle 已接受；七组独立 24 格新动画为候选，单格播放器和立绘模式已合入                                     | 依规则逐格、接缝和实际显示尺寸复核，等待用户视觉接受    |
 | 类型与数据演进 | 通用 Entity / IPC 大量使用 any，数据库只有 schema 标记                                                     | 按功能逐步定义实体/接口，新增字段时考虑旧数据和备份兼容 |
 | 国际化与外观   | 仍有中文硬编码；浅色 CSS 覆盖部分透明度规则                                                                | 翻译覆盖、CSS 变量与视觉回归                            |
-| 测试可复现性   | 已隔离 Codex 目录并提供固定会话样例；整合后 21 阶段及打包产物复测通过                                      | 继续分离受控回归与可选真实集成测试                      |
+| 测试可复现性   | 已隔离 Codex 目录并提供固定会话样例，源码与打包版分别验证                                                  | 继续分离受控回归与可选真实集成测试                      |
+
+旧体验报告中仍有价值的候选包括：日历首次滚动到当前时间、Agent 空状态显示目录/暂停/过滤原因、设置页分组导航，以及长标题和多任务看板的可用宽度；这些尚未全部实现，应按真实用户路径分别验收。
 
 功能扩展如重复日程单次例外、可自定义工作台、Live2D / Spine、外部日历、可管理自有会话的 Agent 后端，均应作为独立需求设计，不应将当前预留接口或状态当作已接入功能。
 
