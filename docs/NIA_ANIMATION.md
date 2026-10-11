@@ -1,6 +1,6 @@
 # Nia 动画与立绘
 
-当前版本 0.4.1 已清理 175 个不再使用的旧衍生文件，保留现行播放器和美术。**只有悠闲 idle 动画已获用户视觉接受；其他七组独立 24 格动画仍是候选。** 本轮素材契约、源码及打包版 Nia 验证均已通过，结果见 [PROJECT_STATUS.md](PROJECT_STATUS.md)；工程检查不能替代用户的视觉验收。
+0.5.0 增加 Agent 用量与额度展示，保留现行 Nia 播放器、美术和状态触发规则。**只有悠闲 idle 动画已获用户视觉接受；其他七组独立 24 格动画仍是候选。** 当前素材及桌面验证结果见 [PROJECT_STATUS.md](PROJECT_STATUS.md)；工程检查不能替代用户的视觉验收。
 
 ## 素材保留范围
 
@@ -14,7 +14,7 @@
 | `public/assets/nia/animations-hires/`                                   | 七组当前候选运行图集                             |
 | `art/nia-portraits/`、`public/assets/nia/portraits/`                    | 八张完整状态立绘源图及运行资源                   |
 
-未参与现行播放器的非 idle classic 衍生帧/图集属于本轮明确清理对象，不可因此删除原始参考或 accepted idle。规则以根 [AGENTS.md](../AGENTS.md) 为准。
+未参与现行播放器的旧非 idle classic 衍生帧/图集已按此前授权移除，不能因此删除原始参考或 accepted idle。规则以根 [AGENTS.md](../AGENTS.md) 为准。
 
 ## 生成与播放约束
 

@@ -1,6 +1,7 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const os = require('node:os');
+const { parseUsage, mergeQuotaSnapshots } = require('./usage.cjs');
 async function readSlice(file, tail, max = 2 * 1024 * 1024) {
   const h = await fs.open(file, 'r');
   try {
@@ -10,9 +11,10 @@ async function readSlice(file, tail, max = 2 * 1024 * 1024) {
     const { bytesRead } = await h.read(b, 0, b.length, start);
     const text = b.subarray(0, bytesRead).toString('utf8');
     return {
-      text: start ? text.slice(text.indexOf('\n') + 1) : text,
+      text: start ? (text.includes('\n') ? text.slice(text.indexOf('\n') + 1) : '') : text,
       mtime: stat.mtime.toISOString(),
       size: stat.size,
+      truncated: start > 0,
     };
   } finally {
     await h.close();
@@ -21,7 +23,10 @@ async function readSlice(file, tail, max = 2 * 1024 * 1024) {
 function parseLines(text) {
   return text.split('\n').flatMap((line) => {
     try {
-      return [JSON.parse(line)];
+      const record = JSON.parse(line);
+      return record !== null && typeof record === 'object' && !Array.isArray(record)
+        ? [record]
+        : [];
     } catch {
       return [];
     }
@@ -38,8 +43,12 @@ function timestamp(value, fallback = null) {
   const d = new Date(numeric !== null ? (numeric < 1e11 ? numeric * 1000 : numeric) : value);
   return Number.isFinite(d.getTime()) ? d.toISOString() : fallback;
 }
-function parseRun(meta, records, { file, mtime, title, now = Date.now() }) {
+function parseRun(meta, records, { file, mtime, title, now = Date.now(), coverage = 'full' }) {
   const id = meta.id || meta.session_id || path.basename(file, '.jsonl');
+  const { usage, accountQuota } = parseUsage(records, {
+    forkedFromSession: typeof meta.forked_from_id === 'string' && Boolean(meta.forked_from_id),
+    coverage,
+  });
   let status = 'UNAVAILABLE',
     startTime = null,
     endTime = null,
@@ -51,6 +60,7 @@ function parseRun(meta, records, { file, mtime, title, now = Date.now() }) {
   let lastEvent = null,
     observedAt = null;
   for (const r of records) {
+    if (!r || typeof r !== 'object' || Array.isArray(r)) continue;
     const p = r.payload || {};
     const time = timestamp(r.timestamp, timestamp(p.timestamp, mtime));
     if (!observedAt || time > observedAt) observedAt = time;
@@ -172,6 +182,8 @@ function parseRun(meta, records, { file, mtime, title, now = Date.now() }) {
     observedAt,
     lastEvent,
     source: '本地会话记录（非实时 API）',
+    usage,
+    accountQuota,
   };
 }
 class CodexProvider {
@@ -220,13 +232,20 @@ class CodexProvider {
             const meta =
               parseLines(head.text).find((r) => r.type === 'session_meta')?.payload || {};
             const records = parseLines(tail.text);
-            cached = { size: stat.size, mtime: stat.mtimeMs, meta, records };
+            cached = {
+              size: stat.size,
+              mtime: stat.mtimeMs,
+              meta,
+              records,
+              truncated: tail.truncated,
+            };
             this.cache.set(file, cached);
           }
           const run = parseRun(cached.meta, cached.records, {
             file,
             mtime: stat.mtime.toISOString(),
             title: titles.get(cached.meta.id),
+            coverage: cached.truncated ? 'tail' : 'full',
           });
           const existing = runs.findIndex((r) => r.id === run.id);
           if (existing < 0 || runs[existing].observedAt < run.observedAt) {
@@ -239,6 +258,7 @@ class CodexProvider {
       runs.sort((a, b) => b.observedAt.localeCompare(a.observedAt));
       return {
         runs,
+        accountQuota: mergeQuotaSnapshots(runs.map((run) => run.accountQuota)),
         capabilities: this.capabilities,
         availability: 'LOCAL_ONLY',
         message:
@@ -249,6 +269,7 @@ class CodexProvider {
     } catch (e) {
       return {
         runs: [],
+        accountQuota: null,
         capabilities: this.capabilities,
         availability: 'UNAVAILABLE',
         message: `Unavailable · 无法读取 Codex 会话目录：${e.code || e.message}`,

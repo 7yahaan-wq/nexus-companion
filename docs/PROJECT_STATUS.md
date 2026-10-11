@@ -1,8 +1,8 @@
 # Project status
 
-## Current release: 0.4.1 (2026-10-08)
+## Current release: 0.5.0 (2026-10-11)
 
-This maintenance release removes redundant old release documents, screenshots and unused derived artwork while preserving the complete idea-to-focus workflow. The full harness, current package audit and packaged application journeys passed after cleanup. The evidence below belongs to this 0.4.1 build.
+This release adds local Codex session token details, separate account plan quota snapshots and explicit read-only official CLI queries. A task's estimated Credits are not subscription percentage points or dollar billing. The full harness, archive/source audit and packaged application checks passed for this 0.5.0 build.
 
 Source is private at [7yahaan-wq/nexus-companion](https://github.com/7yahaan-wq/nexus-companion). Generated EXEs live in ignored `dist/`; pushing source does not upload release binaries.
 
@@ -15,32 +15,33 @@ Source is private at [7yahaan-wq/nexus-companion](https://github.com/7yahaan-wq/
 - Nia supports compact layout, single-cel playback, eight state portraits and a persistent animation/portrait switch. Only idle animation has user visual acceptance; seven non-idle sequences remain candidates. Core and imported Avatar Packs remain supported.
 - Backups include daily plans, drafts and capture preferences. Runtime state and credentials stay excluded. Codex integration observes local files and does not control live sessions.
 
-## Cleanup boundaries
+## Codex usage
 
-Keep the user reference `res/Nia.png`, `public/assets/nia/calm.png`, original `art/nia-source/` sheets, accepted idle sources/atlas, current hires candidate sources/frames/manifests and all current portraits. Remove only the enumerated unused derivatives and obsolete documentation approved for this cleanup; user databases, imported assets and backups are outside its scope.
-
-Current development instructions, functional tests and release harness stay in place. Historical changes remain discoverable through Git rather than duplicate release notes in the current documentation tree. Release documentation uses `dist/README.md`, `dist/AGENTS.md` and a single current `dist/docs/` directory.
-
-The enumerated cleanup removed 5,833 files (441,085,128 bytes), including 175 inactive derivatives, 20 obsolete source documents/screenshots, 20 duplicate distribution documents, 5,595 older generated test files and 23 obsolete analysis files. After the new archive audit passed, packaging removed five old 0.4.0 release artifacts (287,754,732 bytes). These are deleted-file totals; new binaries and current test evidence also occupy disk space. The current portable EXE is 6,082,451 bytes smaller than 0.4.0.
+- Cards show the latest reported session total. Details separate cumulative and latest-request counters, cached input, cache-write input, output and reasoning output. Unknown fields stay unknown; repeated observations are never added. Forked sessions are not added to their parents.
+- Account quota is separate from session tokens. Each limit bucket retains its own observed time, reported window length and reset time. Expired windows remain historical snapshots until refreshed.
+- Only manual buttons start the installed Codex CLI for `account/rateLimits/read` or `account/usage/read`. Queries use the selected Codex directory and its current CLI account. Nexus never reads credentials, signs in, submits prompts or controls threads. The CLI may refresh its own authentication. Results stay in renderer memory.
+- Official thread Credits, when available, retain microcredit precision and model groups. A valid response without thread usage is explicitly unavailable, never zero. Installed CLI/account compatibility and service availability affect this feature.
+- An actual read-only check on this machine returned current plan quota successfully. Its latest local session had no official task estimate. No personal account data is used as a test fixture or committed.
 
 ## Current verification
 
-| Check                                                 | Status / evidence                                                                                         |
-| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Documentation references and protected asset contract | Passed; original inputs, idle and current resources retained                                              |
-| `npm run harness -- --full`                           | Passed: 37 unit tests, 21 verify stages including 16 desktop suites; `.test-data/verification.json`       |
-| `npm run package` and archive/source audit            | Passed: 38 application source files match, 4,578 archive entries checked; `.test-data/release-audit.json` |
-| `npm run verify:packaged`                             | Passed: seven desktop suites and actual portable EXE; `.test-data/packaged-verification.json`             |
-| Installer wizard                                      | Not installed or tested by the packaging command                                                          |
+| Check                                      | Status / evidence                                                                                          |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| Protected assets and project contract      | Passed; original inputs, accepted idle and current candidate resources retained                            |
+| `npm run harness -- --full`                | Passed: 63 unit tests, 22 verify stages including 17 desktop suites; `.test-data/verification.json`        |
+| `npm run package` and archive/source audit | Passed: 40 application files match, 4,580 archive entries checked; `.test-data/release-audit.json`         |
+| `npm run verify:packaged`                  | Passed: eight desktop suites and actual portable EXE, nine stages; `.test-data/packaged-verification.json` |
+| Documentation links                        | Passed: 51 local links resolve                                                                             |
+| Installer wizard                           | Not installed or tested by the packaging command                                                           |
 
-The first full run timed out during native mouse task-to-calendar drag. The unchanged E2E case, final full harness and packaged E2E subsequently passed. The first-run record remains locally at `.test-data/verification-first-run-0.4.1.json`; this intermittent test result should be retained for future harness diagnosis.
+The complete source harness and packaged verification passed on their first 0.5.0 runs. The new agent-usage journey includes direct IPC validation, paused-connection rejection and connection-generation response isolation. Chinese and narrow English screenshots were visually inspected. The independent review's CLI stream-lifecycle issue was fixed with five regression tests before these runs.
 
 | Artifact                            |       Bytes | SHA-256                                                            |
 | ----------------------------------- | ----------: | ------------------------------------------------------------------ |
-| `NexusCompanion-Portable-0.4.1.exe` | 137,612,168 | `cb4bd86bcbe0d08bcc2e6021cd6a689efca39bbd2aba70505654b7c60190318b` |
-| `NexusCompanion-Setup-0.4.1.exe`    | 137,822,138 | `85f487a73a6be897bb611cf9983050b4c15cc713f3abad29d842302b04010bcf` |
+| `NexusCompanion-Portable-0.5.0.exe` | 137,620,718 | `a7d57722669a147e884556a72b829266b6bab07fc31d9066948200aa8cb101c3` |
+| `NexusCompanion-Setup-0.5.0.exe`    | 137,830,659 | `2d9c53ea090a5c572b7b5d5a879afd7b62f43667008beedc3ebe4f8736689fef` |
 
-Both files are in `dist/`; checksums are also recorded in `dist/SHA256SUMS-0.4.1.txt`. Seven unused atlases are absent from the rebuilt archive, which contains no application databases, personal sessions or test data.
+Files and matching checksums are in `dist/`, including `SHA256SUMS-0.5.0.txt`. Five recognized 0.4.1 release artifacts/documents were removed only after the new archive audit passed. No private database, personal session or test data is included in the archive. Source, installer and portable versions are all 0.5.0.
 
 ## Known limits and next candidates
 
@@ -51,4 +52,4 @@ Both files are in `dist/`; checksums are also recorded in `dist/SHA256SUMS-0.4.1
 - Some detailed help and backend diagnostics remain Chinese. Settings navigation can be simplified without removing useful controls.
 - Windows executables are unsigned. OS notification settings can suppress toasts. The development-only `extract-zip` dependency retains an upstream advisory; Electron archives are checked against the official hash before extraction.
 
-See [USER_GUIDE.md](USER_GUIDE.md), [DEVELOPMENT_HANDOFF.md](DEVELOPMENT_HANDOFF.md), [START_ON_NEW_PC.md](START_ON_NEW_PC.md), [VERIFICATION.md](VERIFICATION.md), [RELEASE_0.4.1.md](RELEASE_0.4.1.md) and [NIA_ANIMATION.md](NIA_ANIMATION.md). The source-only frame-inspection tool is `docs/NIA_REVIEW.html`; open it from a source checkout with its `public/` artwork, not from the packaged documentation.
+See [USER_GUIDE.md](USER_GUIDE.md), [DEVELOPMENT_HANDOFF.md](DEVELOPMENT_HANDOFF.md), [START_ON_NEW_PC.md](START_ON_NEW_PC.md), [VERIFICATION.md](VERIFICATION.md), [RELEASE_0.5.0.md](RELEASE_0.5.0.md) and [NIA_ANIMATION.md](NIA_ANIMATION.md). The source-only frame-inspection tool is `docs/NIA_REVIEW.html`; open it from a source checkout with its `public/` artwork, not from the packaged documentation.

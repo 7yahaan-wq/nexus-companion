@@ -1,6 +1,6 @@
-# 在另一台 Windows 电脑继续开发（0.4.1）
+# 在另一台 Windows 电脑继续开发（0.5.0）
 
-仓库：[7yahaan-wq/nexus-companion](https://github.com/7yahaan-wq/nexus-companion)（Private）。本页和根目录的 `AGENTS.md` 一起维护项目规则；当前行为以 `docs/PROJECT_STATUS.md` 和 `docs/NIA_ANIMATION.md` 为准。`docs/DEVELOPMENT_HANDOFF.md` 已更新 0.4.1 工作流和播放器说明，但其中本机工具链路径仍是历史环境记录，不能直接用于另一台电脑。
+仓库：[7yahaan-wq/nexus-companion](https://github.com/7yahaan-wq/nexus-companion)（Private）。本页和根目录的 `AGENTS.md` 一起维护项目规则；当前行为以 `docs/PROJECT_STATUS.md` 和 `docs/NIA_ANIMATION.md` 为准。`docs/DEVELOPMENT_HANDOFF.md` 已更新 0.5.0 工作流和播放器说明，但其中本机工具链路径仍是历史环境记录，不能直接用于另一台电脑。
 
 ## 拉取与验证
 

@@ -37,6 +37,7 @@ const commands = [
     'focus-flow',
     'planning-flow',
     'workflow',
+    'agent-usage',
   ].map((name) => [name, ['tests/' + name + '.cjs']]),
 ];
 for (const [name, args] of commands) {

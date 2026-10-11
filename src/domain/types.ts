@@ -9,6 +9,82 @@ export type AgentStatus =
   | 'FAILED'
   | 'CANCELLED'
   | 'UNAVAILABLE';
+export interface TokenUsage {
+  inputTokens: number | null;
+  cachedInputTokens: number | null;
+  cacheWriteInputTokens: number | null;
+  outputTokens: number | null;
+  reasoningOutputTokens: number | null;
+  totalTokens: number | null;
+}
+export interface AgentUsage {
+  total: TokenUsage | null;
+  lastRequest: TokenUsage | null;
+  observedAt: string | null;
+  model: string | null;
+  modelContextWindow: number | null;
+  forkedFromSession: boolean;
+  coverage: 'full' | 'tail';
+}
+export interface QuotaWindow {
+  usedPercent: number;
+  windowMinutes: number | null;
+  resetsAt: string | null;
+}
+export interface QuotaBucket {
+  limitId: string | null;
+  limitName: string | null;
+  primary: QuotaWindow | null;
+  secondary: QuotaWindow | null;
+  credits: {
+    hasCredits: boolean | null;
+    unlimited: boolean | null;
+    balance: string | null;
+  } | null;
+  planType: string | null;
+  observedAt: string | null;
+  source: 'session-log' | 'app-server';
+}
+export interface AccountQuota {
+  buckets: QuotaBucket[];
+  observedAt: string | null;
+  source: 'session-log' | 'app-server';
+}
+export type CodexQueryReason =
+  | 'CHATGPT_REQUIRED'
+  | 'CLI_UNAVAILABLE'
+  | 'UNSUPPORTED'
+  | 'TIMEOUT'
+  | 'INVALID_RESPONSE'
+  | 'QUERY_FAILED'
+  | 'INVALID_REQUEST'
+  | 'NO_TASK_USAGE';
+export interface CodexQuotaResult {
+  status: 'AVAILABLE' | 'UNAVAILABLE';
+  accountLabel: string | null;
+  quota: AccountQuota | null;
+  reason: CodexQueryReason | null;
+}
+export interface CodexTaskUsageResult {
+  status: 'AVAILABLE' | 'UNAVAILABLE';
+  accountLabel: string | null;
+  reason: CodexQueryReason | null;
+  threadUsage: {
+    threadId: string;
+    estimatedCredits: number;
+    observedAt: string;
+    groups: {
+      model: string | null;
+      speed: string | null;
+      reasoningEffort: string | null;
+      inputTokens: number | null;
+      cachedInputTokens: number | null;
+      outputTokens: number | null;
+      totalTokens: number | null;
+      estimatedCredits: number;
+    }[];
+  } | null;
+}
 export interface AgentRun extends Entity {
   agentName: string;
   agentType: string;
@@ -28,11 +104,22 @@ export interface AgentRun extends Entity {
   error: string | null;
   provider: string;
   observedAt: string;
+  usage: AgentUsage | null;
+  accountQuota: AccountQuota | null;
 }
 export interface AgentProvider {
   id: string;
   capabilities: { stop: boolean; retry: boolean; live: boolean };
   list(): Promise<AgentRun[]>;
+}
+export interface AgentsSnapshot {
+  runs: AgentRun[];
+  availability: string;
+  message: string;
+  capabilities: AgentProvider['capabilities'];
+  accountQuota: AccountQuota | null;
+  root?: string;
+  scannedAt?: string;
 }
 export interface CalendarProvider {
   list(): Promise<Entity[]>;

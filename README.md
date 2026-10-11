@@ -1,4 +1,4 @@
-> 0.4.1 为清理维护版本：收敛旧版资料与未使用的衍生素材，保留灵感、计划、任务、专注和 Nia 动画／立绘功能。完整 harness、包内源码审计和打包版验收均已通过，实际结果见 [项目状态](docs/PROJECT_STATUS.md)。只有 idle 动画已获用户视觉接受，其余七组仍为候选。开发接续见 [另一台电脑继续开发](docs/START_ON_NEW_PC.md)，素材约束见 [Nia 动画说明](docs/NIA_ANIMATION.md) 和 [AGENTS.md](AGENTS.md)。
+> 0.5.0 增加会话 token 摘要与明细、账号共享额度快照，以及手动查询当前套餐额度和官方任务 Credits 估算。当前验收与产物状态见 [项目状态](docs/PROJECT_STATUS.md)。只有 idle 动画已获用户视觉接受，其余七组仍为候选。开发接续见 [另一台电脑继续开发](docs/START_ON_NEW_PC.md)，素材约束见 [Nia 动画说明](docs/NIA_ANIMATION.md) 和 [AGENTS.md](AGENTS.md)。
 
 # Nexus Companion
 
@@ -8,23 +8,23 @@
 
 当前版本的文件位于 `dist/`；该目录不进入 Git。GitHub 上的源码可以重新打包，安装文件作为 Release 资源上传需要相应授权。校验值见 [发布记录](docs/PROJECT_STATUS.md)：
 
-- `NexusCompanion-Setup-0.4.1.exe`：安装版。
-- `NexusCompanion-Portable-0.4.1.exe`：免安装启动版，默认使用 AppData，可在设置中选择数据位置。
+- `NexusCompanion-Setup-0.5.0.exe`：安装版。
+- `NexusCompanion-Portable-0.5.0.exe`：免安装启动版，默认使用 AppData，可在设置中选择数据位置。
 - `win-unpacked/Nexus Companion.exe`：解包版本，可直接启动；整个目录需要一起保留。
 
 首次启动会引导选择项目目录、主题和角色。没有演示任务或随机 Agent 数据。安装包未签名，Windows 可能显示发布者未验证；目前未提供代码签名证书。
 
-完整的安装、功能和故障排查说明见 [Nexus Companion 0.4.1 使用手册](docs/USER_GUIDE.md)。
+完整的安装、功能和故障排查说明见 [Nexus Companion 0.5.0 使用手册](docs/USER_GUIDE.md)。
 
 ## 已实现
 
-当前工作流包含可恢复草稿、灵感转任务、每日三件事与收工回顾、项目下一步、跨页专注计时及任务用时联动。首页突出今日与逾期工作，Nia 在窄窗口下不遮挡内容。图集预解码、单格切换与八状态立绘继续保留；七组非 idle 动画尚待用户视觉验收。详见 [版本说明](docs/RELEASE_0.4.1.md)。
+当前工作流包含可恢复草稿、灵感转任务、每日三件事与收工回顾、项目下一步、跨页专注计时及任务用时联动。Agent 卡片新增会话累计 tokens，详情区分最近请求，并独立展示账号套餐额度；当前详情可直接刷新。首页突出今日与逾期工作，Nia 在窄窗口下不遮挡内容。图集预解码、单格切换与八状态立绘继续保留；七组非 idle 动画尚待用户视觉验收。详见 [版本说明](docs/RELEASE_0.5.0.md)。
 
 - Home：一键记录和查看灵感、今日任务、最近 Agent 观测、等待处理项、日程、项目进度和真实统计。
 - Projects：创建/编辑/删除，Godot/Unity 识别，目录/VS Code/终端/项目启动，重要文档，Git 分支、未提交文件、最近提交（只读）。外部程序未安装时显示错误。
 - Tasks：6 种状态，拖拽列与手动排序，优先级、项目、标签、日期、预计/实际时长、关联 Agent，搜索过滤。
 - Calendar：月/周/日视图，创建/编辑/删除，任务拖入时间块，拖动日程，拖动底边调整结束时间，每天/周/月重复。跨午夜分段和重叠事件分栏。**编辑、拖动、调整重复日程会修改整个系列**；单次例外编辑尚未提供。
-- Agents：只读真实 Codex JSONL，多会话卡片、角色标注、置顶、日志、明确记录的修改文件、目录与 VS Code；长日志读取末尾 2 MB，最多展示 1500 条公开输出并虚拟化渲染。
+- Agents：只读真实 Codex JSONL，多会话卡片、角色标注、置顶、日志、明确记录的修改文件、目录与 VS Code；会话累计/最近请求 token 明细、带来源和时间的共享额度快照，手动通过本机 Codex CLI 查询官方套餐额度与任务 Credits 估算。长日志读取末尾 2 MB，最多展示 1500 条公开输出并虚拟化渲染。
 - Timeline / Daily Report：真实本地操作和 Agent 事件，按日期/项目/Agent/任务过滤，Markdown 复制和导出。
 - Notes：轻量 Markdown、项目、标签、搜索；不执行 HTML、不加载远程图片。
 - Focus：25/50/自定义 1–480 分钟，暂停/继续/结束，主进程计时、重启恢复、完成通知、每日统计。
@@ -37,13 +37,17 @@
 
 ## Codex 的真实能力边界
 
-默认只读 `$CODEX_HOME/sessions` 和 `session_index.jsonl`，未设置时为用户目录下 `.codex`。不读取 `auth.json`，不修改 Codex 配置，不发送提示，不启动 Agent，不消耗模型额度。
+默认只读 `$CODEX_HOME/sessions` 和 `session_index.jsonl`，未设置时为用户目录下 `.codex`。Nexus 不读取或保存 `auth.json`、密码和访问令牌，不发送提示、不执行模型任务，也不自动登录或修改 Codex 配置。
+
+只有点击「查询当前套餐额度」或详情中的「查询此任务额度」，才会启动本机 Codex CLI 的只读 App Server 查询。它使用所选 Codex 目录对应的当前 CLI 登录账号，与历史会话来源账号不一定相同；查询可能访问官方服务，并由 CLI 自行刷新其 OAuth 凭据。查询结果仅保留在界面内存，不写入 Nexus 设置。
+
+会话累计取自 Codex 报告的计数，最近请求不等于整个任务；缺失显示 `—`，不当作零，也不逐条累加累计事件。账号套餐额度为所有会话共享的窗口快照，过了重置时间需要重新查询。任务 Credits 只展示官方返回的估算，部分本机会话暂不提供；不换算成订阅扣减百分点或美元，也不将账号剩余额度归属到某个任务。
 
 当前最多发现最近 120 个会话文件，按真实线程 ID 去重。状态来自明确的本地事件；超过两分钟未更新的运行观测会显示 **Unavailable**。它不是 Codex Desktop 进程的实时 API，可能缺少轮次、被截断的历史、审批、错误、进度或长时间无输出的实际运行状态。运行时长只在读取到有效开始与结束事件时计算，秒/毫秒时间戳均会规范化。日志会显示观测时间。
 
-停止、重试和实时审批显示 **Unsupported**。未来可以替换 `AgentProvider`，接入拥有自己会话的 App Server；不会用猜测或随机数冒充这些能力。日报 Agent 数据是可见最近轮次的统计，不能当作完整审计账本。
+停止、重试和实时审批显示 **Unsupported**。当前 App Server 接入仅查询账号和用量，不接管其他进程的实时会话。未来可单独设计拥有自有会话的 `AgentProvider`；不会用猜测或随机数冒充这些能力。日报 Agent 数据是可见最近轮次的统计，不能当作完整审计账本。
 
-参考：[OpenAI App Server 官方文档](https://developers.openai.com/zh-Hans/docs/app-server)。
+参考：[OpenAI App Server 官方文档](https://learn.chatgpt.com/docs/app-server)、[tokens 与 Credits 官方说明](https://learn.chatgpt.com/docs/pricing)。
 
 ## 数据与隐私
 
@@ -58,7 +62,7 @@
 | 导入图片    | `assets/`，按内容哈希命名  |
 | 恢复前快照  | `backups/`                 |
 
-数据默认只存本地。应用没有云上传、遥测或账号系统；点击外部仓库链接时会打开系统浏览器。导出的备份含你的个人内容，请自行保管。直接复制 SQLite 数据前请从托盘退出；日常备份优先使用 Settings 中的导出功能。
+工作数据默认只存本地，应用没有云同步、遥测或自有账号系统。手动额度查询通过官方 CLI 访问账号/用量服务，任务查询会提交所选会话 ID；不会提交 Nexus 的笔记、任务正文或项目文件。点击外部仓库链接时会打开系统浏览器。导出的备份含你的个人内容，请自行保管。直接复制 SQLite 数据前请从托盘退出；日常备份优先使用 Settings 中的导出功能。
 
 ## 本地开发
 
@@ -77,7 +81,7 @@ npm start
 npm test          # 领域 / 存储 / 安全测试
 npm run harness -- --full  # 完整桌面回归
 npm run package  # 生成并审计 NSIS/portable，成功后清理识别到的旧版生成文件
-npm run verify:packaged  # 打包后7组桌面流程 + 便携EXE启动
+npm run verify:packaged  # 打包后桌面流程 + 便携EXE启动
 ```
 
 测试仅写 `.test-data/`，可通过 `.test-data/verification.json` 检查每个阶段。截图也在此目录。正式包不会包含测试数据、Codex 记录或个人备份。构建依赖由 `package-lock.json` 固定。

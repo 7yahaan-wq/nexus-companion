@@ -15,6 +15,7 @@ for (const name of [
   'focus-flow',
   'planning-flow',
   'workflow',
+  'agent-usage',
   'portable',
 ]) {
   console.log('\nPACKAGED ' + name);

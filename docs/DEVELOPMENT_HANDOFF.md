@@ -1,8 +1,8 @@
 # 项目开发接续说明
 
-核对日期：2026-10-08。当前维护版本 `0.4.1`，工作目录：`D:\ProjectNia\nexus-companion`。此次只清理冗余资料和不再使用的衍生素材，保留既有工作流；清理后的完整 harness、包审计和打包版流程已通过，实际结果统一见 [PROJECT_STATUS.md](PROJECT_STATUS.md) 和 [VERIFICATION.md](VERIFICATION.md)。
+核对日期：2026-10-11。当前版本 `0.5.0`，工作目录：`D:\ProjectNia\nexus-companion`。本次增加会话 token 用量、账号额度快照及手动官方查询，保留既有工作流与数据。当前验收和发布结果统一见 [PROJECT_STATUS.md](PROJECT_STATUS.md) 和 [VERIFICATION.md](VERIFICATION.md)。
 
-先读根目录 [AGENTS.md](../AGENTS.md)；跨机器启动见 [START_ON_NEW_PC.md](START_ON_NEW_PC.md)。本文的源码说明已按 0.4.1 更新，第 7 节的机器路径和安装工具仍是历史环境记录，不能直接套用到另一台电脑。
+先读根目录 [AGENTS.md](../AGENTS.md)；跨机器启动见 [START_ON_NEW_PC.md](START_ON_NEW_PC.md)。本文的源码说明已按 0.5.0 更新，第 7 节的机器路径和安装工具仍是历史环境记录，不能直接套用到另一台电脑。
 
 本文基于现有源码、配置、测试和发布文件整理，用于后续在本机继续开发。当前发布验收见 VERIFICATION.md；本次已实现的优化与后续候选项分别记录。修改功能后应同步更新相关说明。
 
@@ -13,7 +13,7 @@
 Nexus Companion 是面向 Windows 的本地桌面工作中枢，组合项目、任务、日历、Codex 会话观测、笔记、日报、专注计时和 Nia 伙伴。
 
 - 应用没有独立账号系统、云同步、遥测或模型请求。外部链接通过系统浏览器打开。
-- Codex 集成读取本地会话文件，展示最近观测；没有发送提示、创建会话、停止、重试、实时审批能力。
+- Codex 日常扫描读取本地会话文件，展示最近状态、token 用量和额度快照；没有发送提示、创建任务、停止、重试、实时审批能力。仅点击查询按钮时通过本机官方 CLI 读取当前账号套餐或所选会话用量，可能联网，并由 CLI 自行刷新 OAuth；Nexus 不读取保存凭据，也不发起登录。
 - Nia 保留已接受的 idle 图集与播放顺序；其余七种状态使用独立 24 格候选图集。一次显示一个完整格子，图集预解码后推进时间轴，并支持八状态静态立绘和显示模式持久化。只有 idle 已获用户视觉接受，其他七组仍待接受，不能用测试通过代替艺术判断。Core 和自定义角色包继续支持；Live2D / Spine 尚未接入。
 - 日历支持本地重复系列，不支持单次例外、外部日历同步或显式时区管理。
 - 安装版和便携版均以本地数据目录为基础；便携版默认数据并不跟随 EXE 保存。
@@ -50,7 +50,7 @@ electron/
   preload.cjs              window.nexus 桥接
   storage/                 数据库线程、输入校验、数据目录迁移
   providers/               Codex 适配器及线程封装
-  services/                项目、资源、备份、专注、通知
+  services/                项目、资源、备份、专注、通知、手动 Codex 账号/用量查询
   generated/calendar.cjs   从领域源码生成的 Node 端日历逻辑
 scripts/                   构建、环境/素材契约、harness、受限发布清理、打包收尾、Electron 下载
 tests/                     单元测试及桌面验收
@@ -74,6 +74,9 @@ flowchart TD
   Store --> DB[(nexus.sqlite)]
   Main --> Provider[ProviderClient / Codex worker]
   Provider --> Logs[只读 sessions 与 session_index.jsonl]
+  Main --> Account[手动 codexQuota / codexTaskUsage]
+  Account --> CLI[官方 CLI App Server stdio]
+  CLI --> CodexService[官方账号与用量服务]
   Main --> Services[专注 / 通知 / 备份 / 资源 / 项目服务]
   Services --> Store
 ```
@@ -95,6 +98,7 @@ flowchart TD
 - `useDraft` 将笔记和快速记录草稿写入 `settings`，按草稿键串行写入并用 revision 防止旧编辑器清除新草稿。
 - 每日计划按本地日期独立保存；Home 的自动保存队列跨页面重新挂载保持顺序。项目“下次第一步”延迟 500 ms 保存，失焦或离开页面时提交待保存内容。
 - `useAgents` 每轮读取结束后等待 15 秒再读取；窗口聚焦和连接设置变化时强制刷新。主进程也每 15 秒扫描，使用 10 秒缓存与正在执行的请求合并来减少重复读取。
+- 上述轮询只读取本地会话，不查询官方账号。`queryQuota` 只由按钮触发，结果保留在内存，连接改变时清空。详情根据 `selectedId` 获取最新 run，可直接刷新；日志与任务估算的异步请求防止迟回结果串到其他会话。
 - 专注计时由主进程每秒检查；界面每秒读取状态。计时不依赖页面是否打开。
 
 ### 接口约定
@@ -104,7 +108,7 @@ flowchart TD
 | 接口组     | 代表方法                                                                                                  |
 | ---------- | --------------------------------------------------------------------------------------------------------- |
 | 数据       | `list`、`save`、`delete`                                                                                  |
-| Agent      | `agents`、`agentLogs`、`connectionInfo`、`configureConnection`                                            |
+| Agent      | `agents`、`agentLogs`、`connectionInfo`、`configureConnection`、手动 `codexQuota` / `codexTaskUsage`      |
 | 项目与系统 | `projectInspect`、`projectOpen`、`openDocument`、`openUrl`、`chooseDirectory`                             |
 | 专注与通知 | `focusState`、`focusStart`、`focusPause`、`focusStop`、`notify`                                           |
 | 资源       | `asset`、`importBackground`、`importAvatar`                                                               |
@@ -115,19 +119,19 @@ flowchart TD
 
 ## 4. 功能修改入口
 
-| 功能          | 主要文件                                                                                       | 需要一起考虑的行为                                                     |
-| ------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| 工作台        | `src/features/home/Home.tsx`、`src/domain/planning.ts`                                         | 今日与逾期、显式重新安排、下一日程、三项重点、容量、自动保存回顾       |
-| 项目          | `src/features/projects/Projects.tsx`、`electron/services/projects.cjs`                         | 下一步自动保存、关联任务和灵感、继续专注、目录检测与只读 Git           |
-| 任务          | `src/features/tasks/Tasks.tsx`                                                                 | 六状态、排序、筛选、`completedAt`、安排到日历                          |
-| 日历          | `src/features/calendar/Calendar.tsx`、`src/domain/calendar.ts`                                 | 重复展开、月末、跨夜、重叠分栏、拖放、15 分钟步长调整                  |
-| Agent         | `src/features/agents/Agents.tsx`、`src/providers/useAgents.ts`、`electron/providers/codex.cjs` | 文件格式、观测时间、缓存、角色与置顶、日志上限                         |
-| 时间线 / 日报 | `src/features/timeline/Timeline.tsx`、`src/domain/report.ts`、`electron/main.cjs`              | 事件写入、日期与项目过滤、日报统计范围                                 |
-| 笔记          | `src/features/notes/Notes.tsx`、`src/domain/useDraft.ts`                                       | 草稿恢复、保存定位、转任务及来源链接、Markdown、搜索                   |
-| 专注          | `src/features/focus/Focus.tsx`、`electron/services/focus.cjs`、`electron/storage/worker.cjs`   | 全局计时条、暂停与恢复、事务累计任务用时、完成后的显式选择             |
-| 设置          | `src/features/settings/`                                                                       | 外观、语言、连接、资源导入、备份与数据迁移                             |
-| 伙伴          | `src/domain/avatar.ts`、`src/avatar/`、`src/ui/avatar.css`                                     | 状态时效、图集帧序列、播放/暂停、预览、快捷菜单；详见 NIA_ANIMATION.md |
-| 通用交互      | `src/components/`                                                                              | Modal 关闭与焦点恢复、EntityForm 时间戳、搜索与快速记录                |
+| 功能          | 主要文件                                                                                                                                                         | 需要一起考虑的行为                                                          |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 工作台        | `src/features/home/Home.tsx`、`src/domain/planning.ts`                                                                                                           | 今日与逾期、显式重新安排、下一日程、三项重点、容量、自动保存回顾            |
+| 项目          | `src/features/projects/Projects.tsx`、`electron/services/projects.cjs`                                                                                           | 下一步自动保存、关联任务和灵感、继续专注、目录检测与只读 Git                |
+| 任务          | `src/features/tasks/Tasks.tsx`                                                                                                                                   | 六状态、排序、筛选、`completedAt`、安排到日历                               |
+| 日历          | `src/features/calendar/Calendar.tsx`、`src/domain/calendar.ts`                                                                                                   | 重复展开、月末、跨夜、重叠分栏、拖放、15 分钟步长调整                       |
+| Agent         | `src/features/agents/Agents.tsx`、`Usage.tsx`、`src/providers/useAgents.ts`、`electron/providers/codex.cjs` / `usage.cjs`、`electron/services/codex-account.cjs` | 会话累计/最近请求、额度独立范围、手动查询、观测与过期、缓存、角色、迟回隔离 |
+| 时间线 / 日报 | `src/features/timeline/Timeline.tsx`、`src/domain/report.ts`、`electron/main.cjs`                                                                                | 事件写入、日期与项目过滤、日报统计范围                                      |
+| 笔记          | `src/features/notes/Notes.tsx`、`src/domain/useDraft.ts`                                                                                                         | 草稿恢复、保存定位、转任务及来源链接、Markdown、搜索                        |
+| 专注          | `src/features/focus/Focus.tsx`、`electron/services/focus.cjs`、`electron/storage/worker.cjs`                                                                     | 全局计时条、暂停与恢复、事务累计任务用时、完成后的显式选择                  |
+| 设置          | `src/features/settings/`                                                                                                                                         | 外观、语言、连接、资源导入、备份与数据迁移                                  |
+| 伙伴          | `src/domain/avatar.ts`、`src/avatar/`、`src/ui/avatar.css`                                                                                                       | 状态时效、图集帧序列、播放/暂停、预览、快捷菜单；详见 NIA_ANIMATION.md      |
+| 通用交互      | `src/components/`                                                                                                                                                | Modal 关闭与焦点恢复、EntityForm 时间戳、搜索与快速记录                     |
 
 样式在 `src/main.tsx` 按固定顺序导入；`notes.css`、`planning.css`、`workflow.css` 在 `light.css` 之后补充新工作流布局。外观修改需要同时检查深浅主题、背景透明度和较窄窗口。桌面窗口最小尺寸是 1060 × 720；小于 1200 CSS 像素宽度时，伙伴使用独立窄栏，不再悬浮覆盖正文。宽窗口可手动收起伙伴栏并保存偏好。
 
@@ -162,7 +166,9 @@ flowchart TD
 
 默认数据根目录为 `%APPDATA%\Nexus Companion`，包含数据库、`assets/`、`logs/` 和 `backups/`。`data-location.json` 位于 Electron 的基础 userData 目录，记录 active / pending 路径。迁移复制数据库快照及资源、备份、日志，校验后切换；保留旧目录并拒绝覆盖已存在目标。
 
-备份是带 SHA-256 的 JSON `.nexus` 文件，不是 SQLite 文件副本，也不加密。它包含项目、任务、日程、笔记、已结束专注、时间线和日报，以及允许导出的设置与引用图片。0.4.1 的设置白名单包含 `appearance`、`agent-profiles`、`capture-preferences`、合法日期键的每日计划、笔记/快速记录草稿；不导出 `agents` 缓存、Codex 源文件、连接配置、运行中专注状态或通知去重账本。已写入时间线的 Agent 活动仍属于备份内容。恢复时同 ID 覆盖、其他记录保留，数据库合并使用事务，恢复前生成快照。
+备份是带 SHA-256 的 JSON `.nexus` 文件，不是 SQLite 文件副本，也不加密。它包含项目、任务、日程、笔记、已结束专注、时间线和日报，以及允许导出的设置与引用图片。0.5.0 的设置白名单包含 `appearance`、`agent-profiles`、`capture-preferences`、合法日期键的每日计划、笔记/快速记录草稿；不导出 `agents` 缓存、Codex 源文件、连接配置、运行中专注状态或通知去重账本。已写入时间线的 Agent 活动仍属于备份内容。恢复时同 ID 覆盖、其他记录保留，数据库合并使用事务，恢复前生成快照。
+
+本次 token/额度字段允许缺失，旧记录和旧备份仍可读取；不会将缺失字段补成零。官方手动查询结果不写入 `settings`，不进入备份。现有记录、草稿、专注用时去重、导入 Avatar Pack 与外观设置的兼容行为保持不变。
 
 ## 6. 容易误解的实现边界
 
@@ -174,6 +180,17 @@ flowchart TD
 - 当前解析器实际产生 `RUNNING`、`COMPLETED`、`FAILED`、`CANCELLED`、`UNAVAILABLE`。界面和类型中的 WAITING / WAITING_APPROVAL 等预留状态不代表当前适配器已能识别审批。
 - 两分钟没有新观测的 RUNNING 降为 UNAVAILABLE；只有同时有有效开始、结束记录才计算时长。日报仅统计可见最近轮次。
 - 本地显示名与角色来自 `agent-profiles`，不是底层模型或 Agent 身份的自动识别结果。
+
+### Codex token 与额度契约
+
+- `AgentRun.usage` 包含 `total`、`lastRequest`、`observedAt`、`model`、`modelContextWindow`、`forkedFromSession` 和 `coverage`。缺失为 `null`，包括缺事件时间时的观测时间。累计取最近报告值，不对每条累计事件求和；最近请求不等于整轮任务，缓存与推理细分项不重复计入总量。
+- 分叉会话只使用 Codex 当前会话报告的计数，不与来源会话相加；只读尾部时标出 `tail` 覆盖范围。不要凭未知基线计算整轮用量。
+- `AgentRun.accountQuota` 与 `AgentsSnapshot.accountQuota` 是账号共享快照，桶包含窗口、重置时间、可选 Credits、来源与自身观测时间。UI 不用扫描时间替代额度观测时间，不把窗口剩余分配给单个任务，重置时间过后不自动推算为满额。
+- 手动 `codexQuota` 返回当前 CLI 账号标签及官方窗口，`codexTaskUsage(threadId)` 返回官方 `estimatedCredits` 与可选模型/速度/推理分组。任务计量使用安装版 CLI 支持的协议字段，返回 `threadUsage: null` 时使用 `NO_TASK_USAGE` 提示尚无估算；不得用本地 tokens 填补。
+- `CodexQueryReason` 只允许固定原因码；界面提供可理解的中英提示，不透出原始服务错误、日志或令牌。重复点击加锁，连接变更和详情切换会使旧结果失效。主进程还校验会话 ID 属于当前可见记录。
+- CLI 查询可联网并使用所选 Codex 目录中的现有登录；CLI 自行处理 OAuth 刷新，Nexus 不读取或存储凭据。无自动登录、后台官方查询、提示发送、模型任务执行或额度重置操作。官方账号可能与历史日志所属账号不同；Credits 不是套餐百分点，也不换算美元。
+
+接口依据见 [App Server 官方文档](https://learn.chatgpt.com/docs/app-server) 和 [tokens / Credits 官方说明](https://learn.chatgpt.com/docs/pricing)，具体任务估算可用性依当前 CLI 协议与服务返回。
 
 ### 日历、专注与伙伴
 
@@ -196,13 +213,13 @@ flowchart TD
 | 项目             | 本机环境记录（使用前复核）                                                                 |
 | ---------------- | ------------------------------------------------------------------------------------------ |
 | 仓库             | `D:\ProjectNia\nexus-companion`                                                            |
-| Node             | 本轮 harness 确认 v24.19.0，来源为 Codex 自带运行时                                        |
+| Node             | 此前环境记录为 v24.19.0，来源为 Codex 自带运行时；开始开发前重新确认                       |
 | npm              | 系统未安装完整 npm；已校验并准备本项目临时 npm 12.0.2，位于 `.test-data/toolchain/package` |
 | 依赖与构建目录   | 已按锁文件安装依赖，Electron 39.8.10 已按官方 SHA-256 校验；构建与发布目录已生成           |
 | Git              | `D:\Git\cmd\git.exe` 可用                                                                  |
 | VS Code          | `D:\Microsoft VS Code\Code.exe` 存在，`code.cmd` 在 PATH 中                                |
 | Windows Terminal | `wt.exe` 启动入口在 PATH 中；未额外测试交互窗口                                            |
-| 发布文件         | 本轮 0.4.1 安装器和便携版已生成；包审计、七组桌面及实际便携 EXE 验收通过                   |
+| 发布文件         | 当前版本产物、验收与未覆盖项以 PROJECT_STATUS.md / VERIFICATION.md 为准                    |
 
 Node 的当前位置为 `C:\Users\123\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe`。这是本次任务可用的运行时，不能据此认定用户另开的终端已经具备完整开发环境。
 
@@ -254,23 +271,23 @@ npm start
 
 ## 8. 验证与打包
 
-| 命令                      | 范围                                                     |
-| ------------------------- | -------------------------------------------------------- |
-| `npm test`                | 执行 `tests/*.test.cjs`，包含新增规划及专注存储回归测试  |
-| `npm run build`           | TypeScript 检查 → Node 日历模块生成 → Vite 构建          |
-| `npm run harness`         | 环境、素材/项目契约、单元测试、构建与 Nia 桌面检查       |
-| `npm run verify`          | 项目契约、3 个构建阶段、单元测试、16 组桌面测试          |
-| `npm run smoke`           | 开发入口的 Electron 隐藏窗口启动检查，前提是已有构建产物 |
-| `node tests/portable.cjs` | 直接执行现有 portable EXE，检查页面、桥接、引导和退出    |
-| `npm run package`         | 重新构建并生成 NSIS 安装器与 portable EXE                |
+| 命令                      | 范围                                                                   |
+| ------------------------- | ---------------------------------------------------------------------- |
+| `npm test`                | 执行 `tests/*.test.cjs`，涵盖存储、工作流、用量解析与受控 CLI 协议回归 |
+| `npm run build`           | TypeScript 检查 → Node 日历模块生成 → Vite 构建                        |
+| `npm run harness`         | 环境、素材/项目契约、单元测试、构建与 Nia 桌面检查                     |
+| `npm run verify`          | 项目契约、构建、单元测试及桌面套件                                     |
+| `npm run smoke`           | 开发入口的 Electron 隐藏窗口启动检查，前提是已有构建产物               |
+| `node tests/portable.cjs` | 直接执行现有 portable EXE，检查页面、桥接、引导和退出                  |
+| `npm run package`         | 重新构建并生成 NSIS 安装器与 portable EXE                              |
 
-`verify` 中的桌面套件为 desktop、m2–m8、e2e、polish、usability、nia、notes-flow、focus-flow、planning-flow、workflow。它不包含 `tests/portable.cjs`，也不自动完成安装器安装验收。
+`verify` 中的桌面套件包含基础页面、工作流、Nia，以及受控 `agent-usage` 用量交互。实际列表以 `scripts/verify.cjs` 为准；它不自动完成安装器安装验收。
 
-`npm run harness -- --full` 在环境与资源契约检查后运行完整 `verify`。`npm run package` 生成新包和配套文档，完成源码/归档审计后，才删除名称匹配规则的旧版安装器、便携版、blockmap、校验和及版本说明。`npm run verify:packaged` 执行七组打包桌面流程和实际便携 EXE 检查。不得递归清空 `dist`，不得将不受 Git 跟踪的目录当作临时垃圾。
+`npm run harness -- --full` 在环境与资源契约检查后运行完整 `verify`。`npm run package` 生成新包和配套文档，完成源码/归档审计后，才删除名称匹配规则的旧版安装器、便携版、blockmap、校验和及版本说明。`npm run verify:packaged` 执行打包桌面流程和实际便携 EXE 检查。不得递归清空 `dist`，不得将不受 Git 跟踪的目录当作临时垃圾。
 
 `e2e.cjs`、`usability.cjs` 与 `nia.cjs` 可用 `NEXUS_PACKAGED_EXE` 指定已解包的应用测试。`NEXUS_TEST_MODE=1` 仅在未打包应用中用于跳过首次引导；完整用户路径测试保留首次引导。
 
-当前 `verify` 为子进程设置隔离 `CODEX_HOME`；m4 和 polish 等需要会话内容的测试生成受控会话样例，不依赖个人真实会话。Nexus 数据也隔离在 `.test-data`。新增流程套件检查草稿与保存定位、专注用时和跨页计时、每日计划及项目续接；这描述测试范围，不等同于本次已经全部通过。
+当前 `verify` 为子进程设置隔离 `CODEX_HOME`；需要会话内容的测试生成受控会话样例，不依赖个人真实会话。Nexus 数据也隔离在 `.test-data`。用量测试覆盖空值与零、累计去重、过期快照、手动查询、缺少官方任务估算、迟回隔离与英文窄窗；CLI 单元测试使用假的 stdio 响应，不访问个人账号。既有流程继续检查草稿、专注、每日计划及项目续接。这描述测试范围，不等同于本次已经全部通过。
 
 Electron 下载异常时，仓库提供从缓存恢复和下载的脚本，两者都校验官方包内的 SHA-256。它们需要 npm 依赖先就绪；不是 npm 缺失时的替代安装方式。当前 `doctor.cjs` 同样预期依赖已经安装。
 
@@ -284,7 +301,7 @@ npm.cmd run package
 
 `npm run package` 会重建当前程序、归档审计及文档，再清理旧版本。不要直接用旧 `win-unpacked` 目录封装新版本。
 
-本轮完整验证与打包验收已完成，VERIFICATION.md 与 PROJECT_STATUS.md 记录本次结果、产物哈希及未覆盖范围；首轮原生拖放超时也已保留，最终源码与打包回归均通过。安装器向导未实际运行，角色仍需单独视觉接受。
+当前验证与打包验收状态由 VERIFICATION.md 与 PROJECT_STATUS.md 记录，不用旧构建的结果证明新版本。安装器安装验收与角色视觉接受仍需分别记录，不能从打包或自动化成功推断。
 
 ## 9. 后续优化候选
 
@@ -295,7 +312,7 @@ npm.cmd run package
 | 开发环境复现   | 提供本机工具链记录与跨机器 harness；新机器安装和当前版本结果仍需实际确认                                   | 长期开发准备完整 Node/npm，可进一步建立 CI              |
 | 本机程序发现   | VS Code 安装在 D 盘，应用只检查两个默认位置                                                                | `electron/services/projects.cjs`                        |
 | 后台数据刷新   | Agent 扫描会写数据库时间线，但 `useWorkspace` 只在初次加载和自身增删改后刷新；打开时间线页面也没有额外刷新 | 主进程变更通知或有针对性的刷新策略                      |
-| Agent 详情更新 | 详情页保存打开时的 run 对象，日志仅在打开时读取；列表更新不会自动更新已有详情                              | `Agents.tsx` 的选择状态与日志刷新                       |
+| Agent 用量扩展 | 详情已按会话 ID 跟随最新记录，手动刷新 token 和日志；官方任务估算取决于账号与服务是否提供                  | 继续覆盖 CLI 协议变化和更多缺失字段场景，勿自算套餐账单 |
 | 看板批量写入   | 一次拖动逐条保存整列任务，每条都刷新七个集合并写入时间线                                                   | 批量事务、一次刷新、区分排序与业务活动                  |
 | 项目关联一致性 | 主进程 Agent→项目匹配只转小写，项目页还会统一斜杠；删除不清理引用                                          | 统一路径规范化及关联处理规则                            |
 | 角色视觉验收   | 仅 idle 已接受；七组独立 24 格新动画为候选，单格播放器和立绘模式已合入                                     | 依规则逐格、接缝和实际显示尺寸复核，等待用户视觉接受    |

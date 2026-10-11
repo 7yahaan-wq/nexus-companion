@@ -12,7 +12,15 @@
 | [CodexMonitor](https://github.com/Dimillian/CodexMonitor)                                                                                                                                                                                                                                                  | 区分历史记录与受控会话，置顶及窗口返回刷新 | 会话去重、秒/毫秒时间戳、用户角色、置顶、Provider 能力提示；只读本地会话不等于实时控制                    |
 | [AionUi assistant guide](https://github.com/iOfficeAI/AionUi/wiki/Assistant-Configuration-Guide)                                                                                                                                                                                                           | 展示身份与底层 Agent 分离                  | Programmer/QA/Art 等为用户标注，不凭猜测确定模型或 Agent 身份                                             |
 
-Codex 登录在官方应用、IDE 或 CLI 中完成，参见 [官方认证文档](https://developers.openai.com/codex/auth)。Nexus 不读取凭据，不提供账号登录或实时停止、重试、审批。将来接入可管理自有会话的 App Server，需要单独明确授权、状态和隐私边界。
+Codex 登录在官方应用、IDE 或 CLI 中完成，参见 [官方认证文档](https://developers.openai.com/codex/auth)。Nexus 不读取或保存凭据，不提供账号登录或实时停止、重试、审批。0.5.0 的 App Server 接入仅限用户手动读取当前账号的额度及用量；管理自有会话仍是单独的未来能力。
+
+## Codex 用量与账号额度
+
+[官方 App Server 文档](https://learn.chatgpt.com/docs/app-server) 区分账号信息、额度窗口和用量查询。Nexus 将这些数据与本地会话状态分开：卡片显示 Codex 报告的会话累计 tokens，详情同时保留最近请求和缺失字段；账号共享额度独立显示来源、观测时间和重置时间。累计事件不重复相加，分叉会话不叠加来源会话计数，过期窗口也不推算为满额。
+
+手动按钮经本机官方 CLI 查询当前套餐或所选会话。任务估算字段按本机 CLI 生成的协议定义适配；服务合法返回无任务估算时显示尚未提供，不使用本地 tokens 猜算。当前 CLI 账号不等于历史日志的确定归属。CLI 可能联网并刷新自身 OAuth，Nexus 不读取或保存凭据，不自动登录、轮询官方账户或执行模型任务。
+
+[官方 tokens / Credits 说明](https://learn.chatgpt.com/docs/pricing) 将 Credits 与套餐包含的使用限制分开说明。当前界面只展示服务返回的任务 `estimatedCredits`，不按价格表本地估算，不把 Credits 换算为订阅扣减百分点或美元。界面提供真实零值、缺失、失败、过期与部分账号/会话暂不支持等状态。
 
 ## 角色与帧动画
 
@@ -31,6 +39,6 @@ Nia 当前只渲染一个完整格子，加载解码后才开始计时，遵循�
 
 ## Harness 与下一步
 
-`scripts/harness.cjs` 统一跨机器前置条件、素材契约与桌面验证；完整回归使用隔离数据库和受控 Codex 样例，打包后再验实际 EXE。草稿、计时、计划、备份和布局的验证范围见 [VERIFICATION.md](VERIFICATION.md)，当前结果见 [PROJECT_STATUS.md](PROJECT_STATUS.md)。
+`scripts/harness.cjs` 统一跨机器前置条件、素材契约与桌面验证；完整回归使用隔离数据库和受控 Codex 样例，打包后再验实际 EXE。账号查询使用受控 CLI 响应测试，不以个人会话作为测试夹具。草稿、计时、计划、备份、用量与布局的验证范围见 [VERIFICATION.md](VERIFICATION.md)，当前结果见 [PROJECT_STATUS.md](PROJECT_STATUS.md)。
 
 后续仍可评估日历当前时间定位、Agent 空状态指引、设置分组、程序路径发现和批量保存。完整候选及代码入口保留在 [DEVELOPMENT_HANDOFF.md](DEVELOPMENT_HANDOFF.md#9-后续优化候选)，不把研究方向写成已经接入的能力。

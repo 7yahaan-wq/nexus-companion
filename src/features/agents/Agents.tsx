@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { RefreshCw, Terminal, Folder, Copy, ExternalLink } from 'lucide-react';
 import type { AgentRun } from '../../domain/types';
 import { api } from '../../domain/api';
@@ -7,7 +7,8 @@ import EntityForm from '../../components/EntityForm';
 import type { Entity } from '../../domain/types';
 import VirtualLog from '../../components/VirtualLog';
 import type { useAgents } from '../../providers/useAgents';
-import { L } from '../../domain/i18n';
+import { L, useI18n } from '../../domain/i18n';
+import { AccountQuotaPanel, TokenSummary, UsageDetail } from './Usage';
 export function Status({ status }: { status: string }) {
   return (
     <span className={'badge agent-status ' + status}>
@@ -16,6 +17,7 @@ export function Status({ status }: { status: string }) {
   );
 }
 export function AgentCard({ run, onOpen }: { run: AgentRun; onOpen: () => void }) {
+  const { language, t } = useI18n();
   return (
     <button className="agent-card" onClick={onOpen}>
       <div className="agent-card-heading">
@@ -29,21 +31,26 @@ export function AgentCard({ run, onOpen }: { run: AgentRun; onOpen: () => void }
           </strong>
           <small>
             {run.role ? run.role + ' · ' : ''}
-            {run.project || '未关联项目'}
+            {run.project || t('未关联项目', 'No linked project')}
           </small>
         </div>
         <Status status={run.status} />
       </div>
       <h3>{run.taskName}</h3>
       <p>{run.currentStep}</p>
-      <div className="agent-output">{run.lastMessage || '没有可用的公开输出'}</div>
+      <div className="agent-output">
+        {run.lastMessage || t('没有可用的公开输出', 'No public output available')}
+      </div>
+      <TokenSummary run={run} />
       <footer>
         <span>
-          {run.duration !== null ? `${Math.round(run.duration / 60000)} min` : '时长未知'}
+          {run.duration !== null
+            ? `${Math.round(run.duration / 60000)} min`
+            : t('时长未知', 'Duration unknown')}
         </span>
         <span>
-          观测{' '}
-          {new Date(run.observedAt).toLocaleTimeString('zh-CN', {
+          {t('观测', 'Observed')}{' '}
+          {new Date(run.observedAt).toLocaleTimeString(language === 'en' ? 'en-US' : 'zh-CN', {
             hour: '2-digit',
             minute: '2-digit',
           })}
@@ -60,20 +67,46 @@ export default function Agents({
   agents: ReturnType<typeof useAgents>;
   setError: (s: string) => void;
 }) {
+  const { language, t } = useI18n();
   const [profile, setProfile] = useState<Entity | null>(null);
-  const [selected, setSelected] = useState<AgentRun | null>(null),
+  const [selectedId, setSelectedId] = useState<string | null>(null),
     [logs, setLogs] = useState<string[]>([]),
+    [logsLoading, setLogsLoading] = useState(false),
+    [logsError, setLogsError] = useState(false),
+    [logRevision, setLogRevision] = useState(0),
     [q, setQ] = useState(''),
     [status, setStatus] = useState('');
-  async function open(run: AgentRun) {
-    setSelected(run);
+  const logRequest = useRef(0);
+  const selected = agents.runs.find((run) => run.id === selectedId);
+  function open(run: AgentRun) {
+    ++logRequest.current;
+    setSelectedId(run.id);
     setLogs([]);
-    try {
-      setLogs(await api('agentLogs', run.id));
-    } catch (e: any) {
-      setError(e.message);
-    }
+    setLogsError(false);
   }
+  function closeSelected() {
+    ++logRequest.current;
+    setSelectedId(null);
+  }
+  useEffect(() => {
+    if (!selectedId) return;
+    const request = ++logRequest.current;
+    setLogsLoading(true);
+    setLogsError(false);
+    api<string[]>('agentLogs', selectedId)
+      .then((next) => {
+        if (request === logRequest.current) setLogs(next);
+      })
+      .catch(() => {
+        if (request === logRequest.current) setLogsError(true);
+      })
+      .finally(() => {
+        if (request === logRequest.current) setLogsLoading(false);
+      });
+    return () => {
+      ++logRequest.current;
+    };
+  }, [selectedId, selected?.observedAt, logRevision]);
   const filtered = agents.runs.filter(
     (r) =>
       (!status || r.status === status) &&
@@ -85,24 +118,44 @@ export default function Agents({
         <span className="connection-dot" />
         <div>
           <strong>Codex Local · {agents.info.availability}</strong>
-          <p>{agents.info.message}</p>
+          <p>
+            {language === 'en'
+              ? agents.info.availability === 'UNAVAILABLE'
+                ? 'Local sessions are unavailable. Check the Codex connection in Settings.'
+                : agents.info.availability === 'DISABLED'
+                  ? 'Local Codex reading is paused in Settings.'
+                  : 'Read-only local session records. Status is based on the latest observation; live control is unavailable.'
+              : agents.info.message}
+          </p>
         </div>
-        <button aria-label="刷新 Agent" onClick={() => agents.refresh(true)}>
+        <button
+          aria-label={t('刷新 Agent', 'Refresh agents')}
+          disabled={agents.refreshing}
+          onClick={() => agents.refresh(true)}
+        >
           <RefreshCw size={15} />
         </button>
       </div>
+      <AccountQuotaPanel
+        snapshot={agents.info.accountQuota}
+        result={agents.quotaResult}
+        pending={agents.quotaPending}
+        error={agents.quotaError}
+        onQuery={agents.queryQuota}
+      />
       <div className="toolbar">
         <input
-          placeholder="搜索 Agent、任务或项目…"
+          placeholder={t('搜索 Agent、任务或项目…', 'Search agents, tasks or projects…')}
+          aria-label={t('搜索 Agent、任务或项目', 'Search agents, tasks or projects')}
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
         <select
-          aria-label="Agent 状态过滤"
+          aria-label={t('Agent 状态过滤', 'Filter agent status')}
           value={status}
           onChange={(e) => setStatus(e.target.value)}
         >
-          <option value="">所有状态</option>
+          <option value="">{t('所有状态', 'All statuses')}</option>
           {[
             'RUNNING',
             'COMPLETED',
@@ -112,10 +165,14 @@ export default function Agents({
             'CANCELLED',
             'UNAVAILABLE',
           ].map((s) => (
-            <option key={s}>{s}</option>
+            <option key={s} value={s}>
+              {t(s)}
+            </option>
           ))}
         </select>
-        <span className="quiet">{filtered.length} 个会话</span>
+        <span className="quiet">
+          {filtered.length} {t('个会话', 'sessions')}
+        </span>
       </div>
       <div className="agent-grid">
         {filtered.map((r) => (
@@ -125,14 +182,34 @@ export default function Agents({
       {!filtered.length && (
         <section className="panel empty">
           <Terminal size={32} />
-          <h3>{agents.loading ? '正在读取本地会话…' : '没有符合条件的本地记录'}</h3>
-          <p>不会把未知状态显示为成功或运行中。</p>
+          <h3>
+            {agents.loading
+              ? t('正在读取本地会话…', 'Reading local sessions…')
+              : t('没有符合条件的本地记录', 'No matching local records')}
+          </h3>
+          <p>
+            {t(
+              '不会把未知状态显示为成功或运行中。',
+              'Unknown states are not presented as completed or running.',
+            )}
+          </p>
         </section>
       )}
       {selected && (
-        <Modal title={selected.taskName} onClose={() => setSelected(null)} wide>
+        <Modal title={selected.taskName} onClose={closeSelected} wide>
           <div className="toolbar wrap">
             <Status status={selected.status} />
+            <button
+              data-testid="agent-detail-refresh"
+              disabled={agents.refreshing}
+              onClick={async () => {
+                await agents.refresh(true);
+                setLogRevision((value) => value + 1);
+              }}
+            >
+              <RefreshCw size={14} />
+              {t('刷新当前会话', 'Refresh this session')}
+            </button>
             <button
               onClick={() =>
                 setProfile({
@@ -143,7 +220,7 @@ export default function Agents({
                 })
               }
             >
-              标注角色 / 置顶
+              {t('标注角色 / 置顶', 'Label / pin')}
             </button>
             <button
               onClick={() =>
@@ -151,7 +228,7 @@ export default function Agents({
               }
             >
               <Copy size={14} />
-              复制日志
+              {t('复制日志', 'Copy logs')}
             </button>
             <button
               onClick={() =>
@@ -161,7 +238,7 @@ export default function Agents({
               }
             >
               <Folder size={14} />
-              项目目录
+              {t('项目目录', 'Project folder')}
             </button>
             <button
               onClick={() =>
@@ -172,20 +249,49 @@ export default function Agents({
             >
               VS Code
             </button>
-            <button disabled title="本地只读 Provider 不支持">
-              停止 · Unsupported
+            <button
+              disabled
+              title={t('本地只读 Provider 不支持', 'Not supported by the local read-only provider')}
+            >
+              {t('停止 · Unsupported', 'Stop · Unsupported')}
             </button>
-            <button disabled title="本地只读 Provider 不支持">
-              重试 · Unsupported
+            <button
+              disabled
+              title={t('本地只读 Provider 不支持', 'Not supported by the local read-only provider')}
+            >
+              {t('重试 · Unsupported', 'Retry · Unsupported')}
             </button>
           </div>
+          <UsageDetail run={selected} />
           <p>{selected.currentStep} · Progress: Unavailable</p>
           <p className="path-text">{selected.workingDirectory}</p>
-          <h3>明确记录的修改文件</h3>
-          <p>{selected.changedFiles.join(' · ') || 'Unavailable · 此记录没有结构化文件修改数据'}</p>
+          <h3>{t('明确记录的修改文件', 'Recorded file changes')}</h3>
+          <p>
+            {selected.changedFiles.join(' · ') ||
+              t(
+                'Unavailable · 此记录没有结构化文件修改数据',
+                'Unavailable · No structured file changes in this record',
+              )}
+          </p>
           <h3>
-            公开输出日志 <span className="quiet">最多末尾 2 MB / 1500 条 · 虚拟列表</span>
+            {t('公开输出日志', 'Public output logs')}{' '}
+            <span className="quiet">
+              {t('最多末尾 2 MB / 1500 条 · 虚拟列表', 'Last 2 MB / 1500 entries · virtual list')}
+            </span>
           </h3>
+          {logsLoading && (
+            <p className="usage-note" role="status">
+              {t('正在读取日志…', 'Reading logs…')}
+            </p>
+          )}
+          {logsError && (
+            <p className="usage-error" role="alert">
+              {t(
+                '日志读取失败，请刷新当前会话重试。',
+                'Logs could not be read. Refresh this session to retry.',
+              )}
+            </p>
+          )}
           <VirtualLog logs={logs} />
         </Modal>
       )}
@@ -233,7 +339,7 @@ export default function Agents({
               },
             });
             await agents.refresh(true);
-            setSelected(null);
+            closeSelected();
           }}
         />
       )}

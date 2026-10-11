@@ -24,14 +24,55 @@ const assets = require('./services/assets.cjs');
 const backup = require('./services/backup.cjs');
 let pendingBackup = null;
 const { ProviderClient } = require('./providers/client.cjs');
+const codexAccount = require('./services/codex-account.cjs');
 const codex = new ProviderClient();
 let agentRead = null;
 let agentCache = null,
   agentCacheAt = 0;
 const storedObservations = new Map();
 let connection = { enabled: true, root: null };
+let connectionGeneration = 0;
+let accountRead = null;
 const defaultCodexRoot =
   process.env.CODEX_HOME || path.join(require('node:os').homedir(), '.codex');
+async function readAccountUsage(threadId = null) {
+  const resultKey = threadId === null ? 'quota' : 'threadUsage';
+  const unavailable = (reason) => ({
+    status: 'UNAVAILABLE',
+    accountLabel: null,
+    [resultKey]: null,
+    reason,
+  });
+  if (!connection.enabled) return unavailable('INVALID_REQUEST');
+  if (
+    threadId !== null &&
+    (typeof threadId !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(threadId))
+  )
+    return unavailable('INVALID_REQUEST');
+  const generation = connectionGeneration;
+  if (threadId !== null) {
+    const snapshot = await handlers.agents();
+    if (generation !== connectionGeneration || !snapshot.runs.some((run) => run.id === threadId))
+      return unavailable('INVALID_REQUEST');
+  }
+  const key = `${generation}:${threadId || 'quota'}`;
+  if (accountRead)
+    return accountRead.key === key ? accountRead.promise : unavailable('QUERY_FAILED');
+  const codexRoot = connection.root || defaultCodexRoot;
+  const promise = (
+    threadId === null
+      ? codexAccount.readQuota(codexRoot)
+      : codexAccount.readTaskUsage(codexRoot, threadId)
+  )
+    .then((result) =>
+      generation === connectionGeneration ? result : unavailable('INVALID_REQUEST'),
+    )
+    .finally(() => {
+      if (accountRead?.promise === promise) accountRead = null;
+    });
+  accountRead = { key, promise };
+  return promise;
+}
 async function saveActivities(run, projectRows) {
   if (storedObservations.get(run.id) === run.observedAt) return;
   for (const activity of run.activities || []) {
@@ -64,6 +105,7 @@ async function readAgents() {
       root: connection.root || defaultCodexRoot,
       scannedAt: new Date().toISOString(),
       capabilities: { stop: false, retry: false, live: false },
+      accountQuota: null,
     };
   if (agentCache && Date.now() - agentCacheAt < 10000) return agentCache;
   const result = await codex.list();
@@ -154,6 +196,7 @@ const handlers = {
           ? { root: null, enabled: true }
           : { enabled: mode === 'enable' }),
     };
+    connectionGeneration++;
     await store.save('settings', { id: 'codex-connection', ...connection });
     await codex.call('configure', connection.root);
     agentCache = null;
@@ -248,6 +291,11 @@ const handlers = {
     return agentRead;
   },
   agentLogs: (id) => codex.logs(id),
+  codexQuota: () => readAccountUsage(),
+  codexTaskUsage: (id) =>
+    typeof id === 'string'
+      ? readAccountUsage(id)
+      : { status: 'UNAVAILABLE', accountLabel: null, threadUsage: null, reason: 'INVALID_REQUEST' },
   exportMarkdown: async (text, name) => {
     if (typeof text !== 'string' || text.length > 2000000) throw Error('Invalid report');
     const r = await dialog.showSaveDialog(win, {
