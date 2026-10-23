@@ -185,3 +185,41 @@
 .resize-handle:hover {
   background: var(--accent);
 }
+.calendar-now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  z-index: 2;
+  pointer-events: none;
+}
+.calendar-now::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.calendar-now time {
+  position: absolute;
+  right: 3px;
+  bottom: 5px;
+  padding: 2px 4px;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+.calendar-now.at-start time {
+  top: 5px;
+  bottom: auto;
+}
+.calendar-now.at-start::before {
+  top: 0;
+}

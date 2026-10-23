@@ -63,9 +63,11 @@ export function AgentCard({ run, onOpen }: { run: AgentRun; onOpen: () => void }
 export default function Agents({
   agents,
   setError,
+  onOpenConnections,
 }: {
   agents: ReturnType<typeof useAgents>;
   setError: (s: string) => void;
+  onOpenConnections: () => void;
 }) {
   const { language, t } = useI18n();
   const [profile, setProfile] = useState<Entity | null>(null);
@@ -74,9 +76,38 @@ export default function Agents({
     [logsLoading, setLogsLoading] = useState(false),
     [logsError, setLogsError] = useState(false),
     [logRevision, setLogRevision] = useState(0),
+    [enabling, setEnabling] = useState(false),
+    [enableError, setEnableError] = useState(false),
     [q, setQ] = useState(''),
     [status, setStatus] = useState('');
   const logRequest = useRef(0);
+  const enableRequest = useRef(0),
+    enableBusy = useRef(false);
+  useEffect(
+    () => () => {
+      ++enableRequest.current;
+      enableBusy.current = false;
+    },
+    [],
+  );
+  async function enableReading() {
+    if (enableBusy.current) return;
+    enableBusy.current = true;
+    const request = ++enableRequest.current;
+    setEnabling(true);
+    setEnableError(false);
+    try {
+      await api('configureConnection', 'enable');
+      await agents.refresh(true);
+    } catch {
+      if (request === enableRequest.current) setEnableError(true);
+    } finally {
+      if (request === enableRequest.current) {
+        enableBusy.current = false;
+        setEnabling(false);
+      }
+    }
+  }
   const selected = agents.runs.find((run) => run.id === selectedId);
   function open(run: AgentRun) {
     ++logRequest.current;
@@ -112,6 +143,53 @@ export default function Agents({
       (!status || r.status === status) &&
       `${r.taskName} ${r.project} ${r.agentName}`.toLowerCase().includes(q.toLowerCase()),
   );
+  const emptyState =
+    agents.loading || agents.info.availability === 'LOADING'
+      ? 'loading'
+      : agents.info.availability === 'DISABLED'
+        ? 'paused'
+        : agents.info.availability === 'UNAVAILABLE'
+          ? 'unavailable'
+          : !agents.runs.length
+            ? 'no-records'
+            : !filtered.length
+              ? 'filtered'
+              : null;
+  const scanned = agents.info.scannedAt ? new Date(agents.info.scannedAt) : null;
+  const emptyContent = {
+    loading: [
+      t('正在读取本地会话…', 'Reading local sessions…'),
+      t('正在检查本机 Codex 记录，请稍候。', 'Checking local Codex records. Please wait.'),
+    ],
+    paused: [
+      t('已暂停读取 Codex', 'Codex reading is paused'),
+      t(
+        '启用后会继续读取本地会话，已有记录不会被删除。',
+        'Enable reading to resume local session discovery. Existing records are kept.',
+      ),
+    ],
+    unavailable: [
+      t('暂时无法读取本地会话', 'Local sessions are unavailable'),
+      t(
+        '请检查读取目录是否存在、可访问，且包含 sessions 文件夹。',
+        'Check that the session directory exists, is accessible, and contains a sessions folder.',
+      ),
+    ],
+    'no-records': [
+      t('还没有本地会话记录', 'No local sessions yet'),
+      t(
+        '目录可以读取，但尚未发现会话。先在官方 Codex 中开始一次任务，或选择已有记录的目录，再重新检测。',
+        'The directory is readable, but no sessions were found. Start a task in official Codex, or select a directory with existing sessions, then scan again.',
+      ),
+    ],
+    filtered: [
+      t('没有匹配的会话', 'No matching sessions'),
+      t(
+        `已读取 ${agents.runs.length} 个会话，当前关键词或状态没有匹配。`,
+        `${agents.runs.length} sessions were found, but none match your search or status filter.`,
+      ),
+    ],
+  };
   return (
     <>
       <div className="provider-banner">
@@ -130,11 +208,27 @@ export default function Agents({
         </div>
         <button
           aria-label={t('刷新 Agent', 'Refresh agents')}
-          disabled={agents.refreshing}
+          disabled={agents.refreshing || enabling}
           onClick={() => agents.refresh(true)}
         >
           <RefreshCw size={15} />
         </button>
+      </div>
+      <div className="agent-connection-meta" data-testid="agent-connection-meta">
+        <div>
+          <span>{t('读取目录', 'Session directory')}</span>
+          <code>{agents.info.root || t('尚未获取目录', 'Directory not available yet')}</code>
+        </div>
+        <div>
+          <span>{t('最近扫描', 'Last scan')}</span>
+          {scanned && Number.isFinite(scanned.getTime()) ? (
+            <time dateTime={agents.info.scannedAt}>
+              {scanned.toLocaleString(language === 'en' ? 'en-US' : 'zh-CN')}
+            </time>
+          ) : (
+            <span>{t('尚未扫描', 'Not scanned yet')}</span>
+          )}
+        </div>
       </div>
       <AccountQuotaPanel
         snapshot={agents.info.accountQuota}
@@ -179,20 +273,62 @@ export default function Agents({
           <AgentCard key={r.id} run={r} onOpen={() => open(r)} />
         ))}
       </div>
-      {!filtered.length && (
-        <section className="panel empty">
+      {emptyState && (
+        <section
+          className="panel empty agent-empty-state"
+          data-testid="agent-empty-state"
+          data-state={emptyState}
+          aria-busy={emptyState === 'loading' || enabling}
+        >
           <Terminal size={32} />
-          <h3>
-            {agents.loading
-              ? t('正在读取本地会话…', 'Reading local sessions…')
-              : t('没有符合条件的本地记录', 'No matching local records')}
-          </h3>
-          <p>
-            {t(
-              '不会把未知状态显示为成功或运行中。',
-              'Unknown states are not presented as completed or running.',
-            )}
-          </p>
+          <h3>{emptyContent[emptyState][0]}</h3>
+          <p role="status">{emptyContent[emptyState][1]}</p>
+          {emptyState === 'filtered' ? (
+            <button
+              className="primary"
+              data-testid="agent-clear-filters"
+              onClick={() => {
+                setQ('');
+                setStatus('');
+              }}
+            >
+              {t('清除筛选', 'Clear filters')}
+            </button>
+          ) : (
+            emptyState !== 'loading' && (
+              <div className="agent-empty-actions">
+                {emptyState === 'paused' ? (
+                  <button
+                    className="primary"
+                    data-testid="agent-enable-reading"
+                    disabled={enabling}
+                    onClick={enableReading}
+                  >
+                    {enabling ? t('正在启用…', 'Enabling…') : t('启用读取', 'Enable reading')}
+                  </button>
+                ) : (
+                  <button disabled={agents.refreshing} onClick={() => agents.refresh(true)}>
+                    {agents.refreshing ? t('正在检测…', 'Scanning…') : t('重新检测', 'Scan again')}
+                  </button>
+                )}
+                <button
+                  data-testid="agent-open-connections"
+                  disabled={enabling}
+                  onClick={onOpenConnections}
+                >
+                  {t('打开连接设置', 'Open connection settings')}
+                </button>
+              </div>
+            )
+          )}
+          {enableError && (
+            <p className="usage-error" role="alert">
+              {t(
+                '未能启用读取，请重试或检查连接设置。',
+                'Reading could not be enabled. Retry or check connection settings.',
+              )}
+            </p>
+          )}
         </section>
       )}
       {selected && (

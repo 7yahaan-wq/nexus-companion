@@ -88,6 +88,17 @@ async function capture(app, p, name, size) {
     await p.waitForFunction(
       () => document.querySelector('.capture-kind [aria-pressed="true"]')?.textContent === '任务',
     );
+    // Restoring preferences replaces the loading dialog. Wait for the new native
+    // dialog and its restored input before sending a keyboard action to it.
+    await p.waitForFunction(() => {
+      const input = document.querySelector('[aria-label="快速记录内容"]');
+      return (
+        input &&
+        !input.disabled &&
+        input === document.activeElement &&
+        input.closest('dialog')?.open
+      );
+    });
     await p.keyboard.press('Escape');
     await p.waitForFunction(() => !document.querySelector('dialog[open]'));
     await button(p, '快捷任务').click();

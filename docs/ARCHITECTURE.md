@@ -1,6 +1,6 @@
 # Nexus Companion architecture
 
-## Current architecture — 0.5.0
+## Current architecture — 0.5.1
 
 Electron + React + TypeScript + Vite. Electron provides Windows tray, notifications, global shortcuts, filesystem and NSIS/portable packaging without a Rust toolchain. React owns presentation only. Node services own persistence and integrations behind a narrow context-isolated IPC bridge. SQLite runs in a worker (Node built-in SQLite); no native addon ABI dependency. Windows AppData/Nexus Companion stores data, logs and imported assets. Ordinary workflows remain local, without analytics or cloud sync. The explicit exception is a user-triggered, read-only account/usage query through the official local Codex CLI, which may contact Codex services.
 
@@ -39,3 +39,7 @@ The harness runs TypeScript/Vite build, service/domain tests and desktop checks.
 Electron is pinned to 39.8.10. Codex discovery/parsing runs in its own worker, with bounded tail reads and deduplication by thread ID. Unix seconds, milliseconds and ISO timestamps are normalized before duration calculations. Main-process scheduling continues while the window is hidden. UI pollers refresh on focus without claiming cross-process live control. Role labels and pins are local display metadata, separate from provider identity.
 
 Backups include records and only referenced assets, with SHA-256 validation. Import shows a preview and merges records transactionally after preserving a pre-restore snapshot. Credentials and source Codex session files are never included. Complete automated verification is available through `npm run verify`; release binaries are tested independently from the development entry point.
+
+## Bounded verification workflow
+
+Verification remains a fixed local sequence, without model execution or an unattended repair agent. Explicit resume validates source/evaluator/toolchain fingerprints, evidence logs and required build/package artifacts before reusing recent successful stages. Reports distinguish fresh execution and reuse. Failures stop the sequence; wall-clock, step and output bounds prevent unbounded runs. Independent user critique, immutable acceptance conditions and ownership are documented in [DEVELOPMENT_LOOP.md](DEVELOPMENT_LOOP.md).

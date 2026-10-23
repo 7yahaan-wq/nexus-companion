@@ -20,6 +20,7 @@ const copies = [
   ...[
     'USER_GUIDE',
     'DEVELOPMENT_HANDOFF',
+    'DEVELOPMENT_LOOP',
     'PROJECT_STATUS',
     'VERIFICATION',
     'ARCHITECTURE',

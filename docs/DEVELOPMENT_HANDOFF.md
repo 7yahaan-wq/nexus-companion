@@ -1,8 +1,8 @@
 # 项目开发接续说明
 
-核对日期：2026-10-11。当前版本 `0.5.0`，工作目录：`D:\ProjectNia\nexus-companion`。本次增加会话 token 用量、账号额度快照及手动官方查询，保留既有工作流与数据。当前验收和发布结果统一见 [PROJECT_STATUS.md](PROJECT_STATUS.md) 和 [VERIFICATION.md](VERIFICATION.md)。
+核对日期：2026-10-24。当前版本 `0.5.1`，工作目录：`D:\ProjectNia\nexus-companion`。本次改善 Agent 空态恢复、日历当下定位和验证续跑，保留既有工作流与数据。当前验收和发布结果统一见 [PROJECT_STATUS.md](PROJECT_STATUS.md) 和 [VERIFICATION.md](VERIFICATION.md)。
 
-先读根目录 [AGENTS.md](../AGENTS.md)；跨机器启动见 [START_ON_NEW_PC.md](START_ON_NEW_PC.md)。本文的源码说明已按 0.5.0 更新，第 7 节的机器路径和安装工具仍是历史环境记录，不能直接套用到另一台电脑。
+先读根目录 [AGENTS.md](../AGENTS.md)；跨机器启动见 [START_ON_NEW_PC.md](START_ON_NEW_PC.md)。本文的源码说明已按 0.5.1 更新，第 7 节的机器路径和安装工具仍是历史环境记录，不能直接套用到另一台电脑。
 
 本文基于现有源码、配置、测试和发布文件整理，用于后续在本机继续开发。当前发布验收见 VERIFICATION.md；本次已实现的优化与后续候选项分别记录。修改功能后应同步更新相关说明。
 
@@ -166,7 +166,7 @@ flowchart TD
 
 默认数据根目录为 `%APPDATA%\Nexus Companion`，包含数据库、`assets/`、`logs/` 和 `backups/`。`data-location.json` 位于 Electron 的基础 userData 目录，记录 active / pending 路径。迁移复制数据库快照及资源、备份、日志，校验后切换；保留旧目录并拒绝覆盖已存在目标。
 
-备份是带 SHA-256 的 JSON `.nexus` 文件，不是 SQLite 文件副本，也不加密。它包含项目、任务、日程、笔记、已结束专注、时间线和日报，以及允许导出的设置与引用图片。0.5.0 的设置白名单包含 `appearance`、`agent-profiles`、`capture-preferences`、合法日期键的每日计划、笔记/快速记录草稿；不导出 `agents` 缓存、Codex 源文件、连接配置、运行中专注状态或通知去重账本。已写入时间线的 Agent 活动仍属于备份内容。恢复时同 ID 覆盖、其他记录保留，数据库合并使用事务，恢复前生成快照。
+备份是带 SHA-256 的 JSON `.nexus` 文件，不是 SQLite 文件副本，也不加密。它包含项目、任务、日程、笔记、已结束专注、时间线和日报，以及允许导出的设置与引用图片。0.5.1 的设置白名单包含 `appearance`、`agent-profiles`、`capture-preferences`、合法日期键的每日计划、笔记/快速记录草稿；不导出 `agents` 缓存、Codex 源文件、连接配置、运行中专注状态或通知去重账本。已写入时间线的 Agent 活动仍属于备份内容。恢复时同 ID 覆盖、其他记录保留，数据库合并使用事务，恢复前生成快照。
 
 本次 token/额度字段允许缺失，旧记录和旧备份仍可读取；不会将缺失字段补成零。官方手动查询结果不写入 `settings`，不进入备份。现有记录、草稿、专注用时去重、导入 Avatar Pack 与外观设置的兼容行为保持不变。
 
@@ -213,7 +213,7 @@ flowchart TD
 | 项目             | 本机环境记录（使用前复核）                                                                 |
 | ---------------- | ------------------------------------------------------------------------------------------ |
 | 仓库             | `D:\ProjectNia\nexus-companion`                                                            |
-| Node             | 此前环境记录为 v24.19.0，来源为 Codex 自带运行时；开始开发前重新确认                       |
+| Node             | 本轮检测为 v24.16.0，前轮为 v24.19.0，来源为 Codex 自带运行时；开始开发前重新确认          |
 | npm              | 系统未安装完整 npm；已校验并准备本项目临时 npm 12.0.2，位于 `.test-data/toolchain/package` |
 | 依赖与构建目录   | 已按锁文件安装依赖，Electron 39.8.10 已按官方 SHA-256 校验；构建与发布目录已生成           |
 | Git              | `D:\Git\cmd\git.exe` 可用                                                                  |
@@ -281,9 +281,9 @@ npm start
 | `node tests/portable.cjs` | 直接执行现有 portable EXE，检查页面、桥接、引导和退出                  |
 | `npm run package`         | 重新构建并生成 NSIS 安装器与 portable EXE                              |
 
-`verify` 中的桌面套件包含基础页面、工作流、Nia，以及受控 `agent-usage` 用量交互。实际列表以 `scripts/verify.cjs` 为准；它不自动完成安装器安装验收。
+`verify` 中的桌面套件包含基础页面、工作流、Nia、受控 `agent-usage` 用量交互，以及 Agent 恢复和日历定位。入口 `scripts/verify.cjs` 使用的固定列表位于 `scripts/verification-runner.cjs`；它不自动完成安装器安装验收。
 
-`npm run harness -- --full` 在环境与资源契约检查后运行完整 `verify`。`npm run package` 生成新包和配套文档，完成源码/归档审计后，才删除名称匹配规则的旧版安装器、便携版、blockmap、校验和及版本说明。`npm run verify:packaged` 执行打包桌面流程和实际便携 EXE 检查。不得递归清空 `dist`，不得将不受 Git 跟踪的目录当作临时垃圾。
+`npm run harness -- --full` 与 `verify` 使用同一个固定阶段列表，环境和资源契约只运行一次。`npm run package` 生成新包和配套文档，完成源码/归档审计后，才删除名称匹配规则的旧版安装器、便携版、blockmap、校验和及版本说明。`npm run verify:packaged` 执行打包桌面流程和实际便携 EXE 检查。不得递归清空 `dist`，不得将不受 Git 跟踪的目录当作临时垃圾。
 
 `e2e.cjs`、`usability.cjs` 与 `nia.cjs` 可用 `NEXUS_PACKAGED_EXE` 指定已解包的应用测试。`NEXUS_TEST_MODE=1` 仅在未打包应用中用于跳过首次引导；完整用户路径测试保留首次引导。
 
@@ -320,9 +320,11 @@ npm.cmd run package
 | 国际化与外观   | 仍有中文硬编码；浅色 CSS 覆盖部分透明度规则                                                                | 翻译覆盖、CSS 变量与视觉回归                            |
 | 测试可复现性   | 已隔离 Codex 目录并提供固定会话样例，源码与打包版分别验证                                                  | 继续分离受控回归与可选真实集成测试                      |
 
-旧体验报告中仍有价值的候选包括：日历首次滚动到当前时间、Agent 空状态显示目录/暂停/过滤原因、设置页分组导航，以及长标题和多任务看板的可用宽度；这些尚未全部实现，应按真实用户路径分别验收。
+旧体验报告中的日历首次定位和 Agent 空状态恢复已在 0.5.1 实施并验收。设置页分组导航、长标题和多任务看板的可用宽度仍可继续优化，应按真实用户路径分别验收。
 
 功能扩展如重复日程单次例外、可自定义工作台、Live2D / Spine、外部日历、可管理自有会话的 Agent 后端，均应作为独立需求设计，不应将当前预留接口或状态当作已接入功能。
+
+验证续跑和独立体验审查的固定流程见 [DEVELOPMENT_LOOP.md](DEVELOPMENT_LOOP.md)。默认完整执行；中断后可显式使用 `npm run harness -- --full --resume`，仅复用指纹匹配的成功证据。运行器改动不能削弱产品回归的断言。
 
 ## 10. 后续接续阅读顺序
 

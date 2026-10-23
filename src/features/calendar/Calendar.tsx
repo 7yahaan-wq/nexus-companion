@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { L } from '../../domain/i18n';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { L, useI18n } from '../../domain/i18n';
 import { Plus, ChevronLeft, ChevronRight, GripVertical } from 'lucide-react';
 import EntityForm from '../../components/EntityForm';
 import type { Entity } from '../../domain/types';
@@ -107,10 +107,27 @@ export function eventForTask(task: Entity, date?: Date) {
   };
 }
 export default function Calendar({ workspace }: { workspace: WorkspaceActions }) {
+  const { language, t } = useI18n();
+  const weekdays =
+    language === 'en'
+      ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+      : ['日', '一', '二', '三', '四', '五', '六'];
   const { data, save, setError } = workspace;
   const [date, setDate] = useState(new Date()),
     [view, setView] = useState('Week'),
-    [editing, setEditing] = useState<Entity | null>(null);
+    [editing, setEditing] = useState<Entity | null>(null),
+    [now, setNow] = useState(new Date()),
+    [scrollRevision, setScrollRevision] = useState(0);
+  const timeScroll = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const update = () => setNow(new Date());
+    const timer = setInterval(update, 30000);
+    window.addEventListener('focus', update);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('focus', update);
+    };
+  }, []);
   let start = new Date(date);
   start.setHours(0, 0, 0, 0);
   if (view === 'Month') {
@@ -120,11 +137,37 @@ export default function Calendar({ workspace }: { workspace: WorkspaceActions })
   const days = Array.from({ length: view === 'Month' ? 42 : view === 'Week' ? 7 : 1 }, (_, i) =>
     addDays(start, i),
   );
+  useLayoutEffect(() => {
+    const scroller = timeScroll.current;
+    if (!scroller) return;
+    const resizeViewport = () => {
+      const top = scroller.getBoundingClientRect().top + window.scrollY;
+      scroller.style.height = `${Math.max(240, Math.min(565, window.innerHeight - top - 24))}px`;
+    };
+    resizeViewport();
+    window.addEventListener('resize', resizeViewport);
+    return () => window.removeEventListener('resize', resizeViewport);
+  }, [view, language]);
+  // Reposition only when entering a timed view or explicitly returning to today.
+  // Clock ticks, data refreshes and date browsing must preserve manual scrolling.
+  useLayoutEffect(() => {
+    const scroller = timeScroll.current;
+    if (!scroller || view === 'Month') return;
+    const current = new Date();
+    const todayVisible = days.some((day) => dateKey(day) === dateKey(current));
+    const minutes = todayVisible ? current.getHours() * 60 + current.getMinutes() : 9 * 60;
+    scroller.scrollTop = Math.max(0, (minutes / 60) * 48 - scroller.clientHeight / 3);
+  }, [view, scrollRevision]);
   const shown = occurrences(data.events as CalendarEntry[], start, addDays(start, days.length));
-  function create(d: Date, hour = 9) {
+  function create(d: Date, hour?: number) {
+    const task = { id: '', title: '', estimatedTime: 60 };
+    if (hour === undefined && dateKey(d) === dateKey(new Date())) {
+      setEditing(eventForTask(task));
+      return;
+    }
     const time = new Date(d);
-    time.setHours(hour, 0, 0, 0);
-    setEditing(eventForTask({ id: '', title: '', estimatedTime: 60 }, time));
+    time.setHours(hour ?? 9, 0, 0, 0);
+    setEditing(eventForTask(task, time));
   }
   async function drop(e: React.DragEvent, d: Date, hour = 9) {
     e.preventDefault();
@@ -219,13 +262,17 @@ export default function Calendar({ workspace }: { workspace: WorkspaceActions })
       >
         <strong>{e.title}</strong>
         <span>
-          {s.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+          {s.toLocaleTimeString(language === 'en' ? 'en-GB' : 'zh-CN', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          })}
           {e.recurrence && e.recurrence !== 'none' ? ' ↻' : ''}
         </span>
         {timed && (
           <div
             className="resize-handle"
-            title="拖动调整结束时间（15 分钟）"
+            title={t('拖动调整结束时间（15 分钟）', 'Drag to adjust the end time (15 minutes)')}
             onClick={(ev) => ev.stopPropagation()}
             onPointerDown={(ev) => resize(ev, e)}
           />
@@ -238,7 +285,7 @@ export default function Calendar({ workspace }: { workspace: WorkspaceActions })
       <div className="toolbar wrap">
         <div className="calendar-nav">
           <button
-            aria-label="上一页"
+            aria-label={t('上一页', 'Previous')}
             onClick={() => {
               const next = new Date(date);
               if (view === 'Month') next.setMonth(next.getMonth() - 1, 1);
@@ -248,11 +295,18 @@ export default function Calendar({ workspace }: { workspace: WorkspaceActions })
           >
             <ChevronLeft size={16} />
           </button>
-          <button onClick={() => setDate(new Date())}>
+          <button
+            onClick={() => {
+              const current = new Date();
+              setNow(current);
+              setDate(current);
+              setScrollRevision((revision) => revision + 1);
+            }}
+          >
             <L text="今天" />
           </button>
           <button
-            aria-label="下一页"
+            aria-label={t('下一页', 'Next')}
             onClick={() => {
               const next = new Date(date);
               if (view === 'Month') next.setMonth(next.getMonth() + 1, 1);
@@ -263,7 +317,10 @@ export default function Calendar({ workspace }: { workspace: WorkspaceActions })
             <ChevronRight size={16} />
           </button>
           <strong>
-            {date.getFullYear()} 年 {date.getMonth() + 1} 月
+            {date.toLocaleDateString(language === 'en' ? 'en-GB' : 'zh-CN', {
+              year: 'numeric',
+              month: 'long',
+            })}
           </strong>
         </div>
         <div className="segmented">
@@ -279,8 +336,10 @@ export default function Calendar({ workspace }: { workspace: WorkspaceActions })
         </button>
       </div>
       <p className="quiet">
-        拖入任务创建时间块。拖动日程可移动，周 /
-        日视图底边可调整时长。重复日程的编辑与移动作用于整个系列。
+        {t(
+          '拖入任务创建时间块。拖动日程可移动，周 / 日视图底边可调整时长。重复日程的编辑与移动作用于整个系列。',
+          'Drag in tasks to create time blocks. Move events by dragging; resize their lower edge in Week / Day views. Editing a recurring event changes the whole series.',
+        )}
       </p>
       <div className="calendar-layout">
         <aside className="calendar-tasks">
@@ -309,14 +368,18 @@ export default function Calendar({ workspace }: { workspace: WorkspaceActions })
                 </button>
               </div>
             ))}
-          {!data.tasks.length && <p>先创建一个任务，再拖入日历。</p>}
+          {!data.tasks.length && (
+            <p>
+              {t('先创建一个任务，再拖入日历。', 'Create a task, then drag it into the calendar.')}
+            </p>
+          )}
         </aside>
         <div className="calendar-body">
           {view === 'Month' ? (
             <>
               <div className="month-header">
-                {['一', '二', '三', '四', '五', '六', '日'].map((d) => (
-                  <span key={d}>{d}</span>
+                {[1, 2, 3, 4, 5, 6, 0].map((day) => (
+                  <span key={day}>{weekdays[day]}</span>
                 ))}
               </div>
               <div className="month-grid">
@@ -325,7 +388,7 @@ export default function Calendar({ workspace }: { workspace: WorkspaceActions })
                     key={dateKey(d)}
                     className={
                       'month-cell ' +
-                      (dateKey(d) === dateKey(new Date()) ? 'today' : '') +
+                      (dateKey(d) === dateKey(now) ? 'today' : '') +
                       (d.getMonth() !== date.getMonth() ? ' outside' : '')
                     }
                     onDoubleClick={() => create(d)}
@@ -352,18 +415,18 @@ export default function Calendar({ workspace }: { workspace: WorkspaceActions })
                 {days.map((d) => (
                   <button
                     key={dateKey(d)}
-                    className={dateKey(d) === dateKey(new Date()) ? 'today' : ''}
+                    className={dateKey(d) === dateKey(now) ? 'today' : ''}
                     onClick={() => {
                       setDate(d);
                       setView('Day');
                     }}
                   >
-                    {['日', '一', '二', '三', '四', '五', '六'][d.getDay()]}
+                    {weekdays[d.getDay()]}
                     <strong>{d.getDate()}</strong>
                   </button>
                 ))}
               </div>
-              <div className="time-scroll">
+              <div className="time-scroll" ref={timeScroll}>
                 <div
                   className="time-grid"
                   style={{ gridTemplateColumns: `42px repeat(${days.length},1fr)` }}
@@ -385,6 +448,26 @@ export default function Calendar({ workspace }: { workspace: WorkspaceActions })
                         />
                       ))}
                       {layoutDay(shown, d).map((row) => eventButton(row.event, true, row))}
+                      {dateKey(d) === dateKey(now) && (
+                        <div
+                          className={
+                            'calendar-now' +
+                            (now.getHours() === 0 && now.getMinutes() < 30 ? ' at-start' : '')
+                          }
+                          data-testid="calendar-now"
+                          role="img"
+                          aria-label={`${t('当前时间', 'Current time')} ${now.toLocaleTimeString(language === 'en' ? 'en-GB' : 'zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })}`}
+                          style={{ top: ((now.getHours() * 60 + now.getMinutes()) / 60) * 48 }}
+                        >
+                          <time dateTime={now.toISOString()}>
+                            {now.toLocaleTimeString(language === 'en' ? 'en-GB' : 'zh-CN', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: false,
+                            })}
+                          </time>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

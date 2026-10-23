@@ -61,6 +61,8 @@ export default function App() {
     [noteSelectionRevision, setNoteSelectionRevision] = useState(0),
     [focusTaskId, setFocusTaskId] = useState(''),
     [notice, setNotice] = useState(''),
+    [settingsFocusSection, setSettingsFocusSection] = useState<'connections' | null>(null),
+    [settingsFocusRevision, setSettingsFocusRevision] = useState(0),
     [background, setBackground] = useState('');
   useEffect(() => {
     api<Entity[]>('list', 'settings')
@@ -88,6 +90,7 @@ export default function App() {
     setSettings(values);
   }, []);
   const action = useCallback((value: string) => {
+    setSettingsFocusSection(null);
     setPalette(false);
     setCapture(false);
     setTask(null);
@@ -100,10 +103,15 @@ export default function App() {
     else if (value === 'note') setNote({ id: uid(), title: '', content: '' });
     else setPage(value);
   }, []);
+  const openConnections = useCallback(() => {
+    action('Settings');
+    setSettingsFocusSection('connections');
+    setSettingsFocusRevision((revision) => revision + 1);
+  }, [action]);
   const t = (text: string, english?: string) => translate(settings.language, text, english);
   useEffect(() => {
-    window.scrollTo({ top: 0 });
-  }, [page]);
+    if (page !== 'Settings' || settingsFocusSection !== 'connections') window.scrollTo({ top: 0 });
+  }, [page, settingsFocusSection]);
   useEffect(() => {
     document.documentElement.lang = settings.language || 'zh-CN';
   }, [settings.language]);
@@ -326,7 +334,7 @@ export default function App() {
             ) : page === 'Calendar' ? (
               <Calendar workspace={workspace} />
             ) : page === 'Agents' ? (
-              <Agents agents={agents} setError={setError} />
+              <Agents agents={agents} setError={setError} onOpenConnections={openConnections} />
             ) : page === 'Timeline' ? (
               <Timeline workspace={workspace} agents={agents.runs} />
             ) : page === 'Notes' ? (
@@ -339,6 +347,8 @@ export default function App() {
               />
             ) : page === 'Settings' ? (
               <Settings
+                focusSection={settingsFocusSection}
+                focusRevision={settingsFocusRevision}
                 settings={settings}
                 update={(s) => update(s).catch((e) => setError(e.message))}
                 setError={setError}

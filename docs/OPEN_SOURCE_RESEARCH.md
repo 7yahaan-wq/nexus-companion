@@ -12,7 +12,7 @@
 | [CodexMonitor](https://github.com/Dimillian/CodexMonitor)                                                                                                                                                                                                                                                  | 区分历史记录与受控会话，置顶及窗口返回刷新 | 会话去重、秒/毫秒时间戳、用户角色、置顶、Provider 能力提示；只读本地会话不等于实时控制                    |
 | [AionUi assistant guide](https://github.com/iOfficeAI/AionUi/wiki/Assistant-Configuration-Guide)                                                                                                                                                                                                           | 展示身份与底层 Agent 分离                  | Programmer/QA/Art 等为用户标注，不凭猜测确定模型或 Agent 身份                                             |
 
-Codex 登录在官方应用、IDE 或 CLI 中完成，参见 [官方认证文档](https://developers.openai.com/codex/auth)。Nexus 不读取或保存凭据，不提供账号登录或实时停止、重试、审批。0.5.0 的 App Server 接入仅限用户手动读取当前账号的额度及用量；管理自有会话仍是单独的未来能力。
+Codex 登录在官方应用、IDE 或 CLI 中完成，参见 [官方认证文档](https://developers.openai.com/codex/auth)。Nexus 不读取或保存凭据，不提供账号登录或实时停止、重试、审批。当前 App Server 接入仅限用户手动读取当前账号的额度及用量；管理自有会话仍是单独的未来能力。
 
 ## Codex 用量与账号额度
 
@@ -41,4 +41,12 @@ Nia 当前只渲染一个完整格子，加载解码后才开始计时，遵循�
 
 `scripts/harness.cjs` 统一跨机器前置条件、素材契约与桌面验证；完整回归使用隔离数据库和受控 Codex 样例，打包后再验实际 EXE。账号查询使用受控 CLI 响应测试，不以个人会话作为测试夹具。草稿、计时、计划、备份、用量与布局的验证范围见 [VERIFICATION.md](VERIFICATION.md)，当前结果见 [PROJECT_STATUS.md](PROJECT_STATUS.md)。
 
-后续仍可评估日历当前时间定位、Agent 空状态指引、设置分组、程序路径发现和批量保存。完整候选及代码入口保留在 [DEVELOPMENT_HANDOFF.md](DEVELOPMENT_HANDOFF.md#9-后续优化候选)，不把研究方向写成已经接入的能力。
+日历当前时间定位和 Agent 空状态指引已在 0.5.1 实施。后续仍可评估设置分组、程序路径发现和批量保存。完整候选及代码入口保留在 [DEVELOPMENT_HANDOFF.md](DEVELOPMENT_HANDOFF.md#9-后续优化候选)，不把研究方向写成已经接入的能力。
+
+## 2026-10-23 体验优化采用的参考
+
+[Super Productivity 固定提交的日历实现](https://github.com/super-productivity/super-productivity/blob/dee0b6d20ca11926b4488fc237470efe580ee55b/src/app/features/schedule/schedule/schedule.component.ts) 将当前时段定位与周期更新时间分开，避免用户阅读时反复跳动。Nexus 借鉴这一原则：首次进入及点击“今天”定位，数据/时间线刷新不抢滚动；今天新建从下一刻度开始。
+
+[CodexMonitor 固定提交的侧栏](https://github.com/Dimillian/CodexMonitor/blob/dd61b9abd37de5ded86e82b9fe8a83fd49d46fa5/src/features/app/components/Sidebar.tsx) 区分搜索无结果、未添加工作区和没有会话。[其搜索栏](https://github.com/Dimillian/CodexMonitor/blob/dd61b9abd37de5ded86e82b9fe8a83fd49d46fa5/src/features/app/components/SidebarSearchBar.tsx) 提供清除操作。Nexus 结合只读目录来源，进一步区分暂停和读取异常，提供清除筛选、启用和直达连接设置。
+
+上述为源码观察和本产品适配判断。独立智能体在隔离数据上实际复现了两类卡点后才选择实施，未复制上游代码或素材，未引入新依赖。容量摘要暂缓，继续复用已有每日计划。开发及证据复用流程见 [DEVELOPMENT_LOOP.md](DEVELOPMENT_LOOP.md)。

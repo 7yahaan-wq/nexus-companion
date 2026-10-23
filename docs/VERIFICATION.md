@@ -1,6 +1,6 @@
 # 验证与交付边界
 
-当前版本：**0.5.0**。本次增加会话 tokens、账号套餐额度和显式官方只读查询的回归。完整 harness、包内源码审计、八组打包桌面流程和实际便携 EXE 均已通过。当前构建的实际结果与产物哈希统一记入 [PROJECT_STATUS.md](PROJECT_STATUS.md)，不能复用旧版本测试结果。
+当前版本：**0.5.1**。本轮增加 Agent 恢复和日历当下定位验收，以及有界的指纹续跑。当前构建的实际执行、复用和产物哈希统一记入 [PROJECT_STATUS.md](PROJECT_STATUS.md)，旧版本结果不能验证新构建。固定开发流程见 [DEVELOPMENT_LOOP.md](DEVELOPMENT_LOOP.md)。
 
 ## 运行入口
 
@@ -9,11 +9,11 @@
 | `npm run doctor`            | Node、锁定 Electron、依赖和构建前置条件                                     |
 | `npm test`                  | 当前全部 `tests/*.test.cjs`                                                 |
 | `npm run harness`           | 环境、受保护素材/项目契约、单元测试、TypeScript、构建和 Nia 桌面检查        |
-| `npm run harness -- --full` | 环境与契约检查，再运行完整 `verify`                                         |
+| `npm run harness -- --full` | 共用完整验证列表，环境与契约不重复运行                                      |
 | `npm run package`           | 构建、打包、配套文档与哈希、源码/归档一致性审计，成功后清理识别到的旧版产物 |
-| `npm run verify:packaged`   | 八组打包桌面流程与真实便携 EXE 启动/桥接/引导/退出                          |
+| `npm run verify:packaged`   | 十组打包桌面流程与真实便携 EXE 启动/桥接/引导/退出                          |
 
-`verify` 包含 desktop、m2–m8、e2e、polish、usability、nia、notes-flow、focus-flow、planning-flow、workflow 和 agent-usage。这些套件名承载当前回归，不因沿用早期名称而成为可删除文件。打包验证单独覆盖 e2e、usability、nia、四组工作流与 agent-usage，并调用 portable 检查。
+`verify` 包含 desktop、m2–m8、e2e、polish、usability、nia、notes-flow、focus-flow、planning-flow、workflow、agent-usage、agent-recovery 和 calendar-navigation。这些套件名承载当前回归，不因沿用早期名称而成为可删除文件。打包验证单独覆盖 e2e、usability、nia、四组工作流、agent-usage、agent-recovery 和 calendar-navigation，并调用 portable 检查。
 
 全部桌面测试使用 `.test-data/` 下的 `NEXUS_DATA_DIR`。需要 Codex 会话内容时，使用隔离 `CODEX_HOME` 和受控 JSONL 样例，不读取用户的个人会话作为测试夹具。Electron 桌面检查需要可用的 Windows 桌面环境；环境阻止启动时应报告未完成，不能以静态检查替代。
 
@@ -32,7 +32,7 @@
 - `.test-data/verification.json`：完整源码回归各阶段及耗时。
 - `.test-data/packaged-verification.json`：打包桌面与便携程序结果。
 - `.test-data/release-audit.json`：源码与 ASAR 比对、包内隐私检查及产物哈希。
-- `dist/SHA256SUMS-0.5.0.txt`：本次两个 EXE 的最终校验值，成功打包后生成。
+- `dist/SHA256SUMS-0.5.1.txt`：本次两个 EXE 的最终校验值，成功打包后生成。
 
 截图与测试数据库不进入 Git 或应用发布包。清理生成物前须逐项确认绝对路径和用途，保留当前结果，不递归清空工作目录。打包版必须与当前源码一致；不能拿旧 `win-unpacked` 目录代替重建。
 
@@ -41,3 +41,13 @@
 构建安装器不等于实际安装过；只有运行安装向导并检查后才可报告安装验收。程序没有 Windows 代码签名证书。系统勿扰模式可能阻止通知，外部编辑器/引擎/终端能力依赖本机安装情况。
 
 Codex 本地文件观测不等于实时控制，日报不等于完整审计账本。官方任务 Credits 为估算，不能从 tokens 推算套餐扣减百分点；受控接口测试不证明所有本地会话都能获得官方估算。角色测试、素材哈希或源码上传不等于用户认可画风；只有 idle 已接受，七组非 idle 动画仍为候选。任务/日程拖放和数据恢复应验证真实界面结果，而不只检查辅助函数。
+
+完整源码列表包含 6 个前置阶段和 19 组桌面验收；打包列表包含归档一致性审计、10 组桌面流程和实际便携 EXE。源码与打包的证据分别记录，不跨二进制复用。
+
+## 显式续跑的证据边界
+
+默认命令完整执行。使用 `npm run harness -- --full --resume` 或 `npm run verify:packaged -- --resume` 时，只能复用最近 24 小时内相同输入/环境指纹的成功项，并核对日志与必要产物。旧 JSON 没有指纹，不能复用；失败、取消、超时、损坏缓存及运行中输入变化不算通过。报告记录 `executed` / `reused` 与原始证据时间。
+
+阶段数最多 32，总期限最多 15 分钟，单步最多 180 秒，单步合并输出最多 2 MiB；遇错停止、不自动重试。运行器单元使用注入时钟和夹具检查总期限、取消及阶段数量，用真实 Node 子进程检查超时和输出上限，不启动模型。真实桌面仍串行，受影响的源码或测试变更会使对应证据失效。打包验收还检查当前源码与归档一致，不能复用旧 EXE 的成功来代替新包。
+
+当前桌面指纹采用保守范围：任何 `src/`、`electron/` 或 `public/` 内容变化都会使桌面证据失效，测试文件变化也会使该套件失效。它不声称做了精确的组件依赖分析。仅改普通说明文档不会重跑桌面；当前 release note 属于素材/项目契约输入。源码验收入口的环境 doctor 每次执行。

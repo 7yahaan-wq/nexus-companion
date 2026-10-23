@@ -28,10 +28,14 @@ export default function Settings({
   settings,
   update,
   setError,
+  focusSection = null,
+  focusRevision = 0,
 }: {
   settings: Entity;
   update: (s: Entity) => Promise<void>;
   setError: (s: string) => void;
+  focusSection?: 'connections' | null;
+  focusRevision?: number;
 }) {
   const { t } = useI18n();
   const [info, setInfo] = useState<any>({});
@@ -238,7 +242,10 @@ export default function Settings({
         </button>
       </section>
       <AvatarPreview settings={settings} update={update} />
-      <Connections setError={setError} />
+      <Connections
+        setError={setError}
+        focusRevision={focusSection === 'connections' ? focusRevision : undefined}
+      />
       <DataSafety setError={setError} />
       <section className="panel settings-wide">
         <h2>

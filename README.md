@@ -1,4 +1,4 @@
-> 0.5.0 增加会话 token 摘要与明细、账号共享额度快照，以及手动查询当前套餐额度和官方任务 Credits 估算。当前验收与产物状态见 [项目状态](docs/PROJECT_STATUS.md)。只有 idle 动画已获用户视觉接受，其余七组仍为候选。开发接续见 [另一台电脑继续开发](docs/START_ON_NEW_PC.md)，素材约束见 [Nia 动画说明](docs/NIA_ANIMATION.md) 和 [AGENTS.md](AGENTS.md)。
+> 0.5.1 改善 Agent 空态恢复和日历当下定位，新增带输入指纹的 Harness 续跑。保留会话 tokens、账号额度和既有工作流，当前结果见 [项目状态](docs/PROJECT_STATUS.md)，可重复开发流程见 [DEVELOPMENT_LOOP](docs/DEVELOPMENT_LOOP.md)。Nia 素材未修改，只有 idle 动画已获用户视觉接受。
 
 # Nexus Companion
 
@@ -8,17 +8,17 @@
 
 当前版本的文件位于 `dist/`；该目录不进入 Git。GitHub 上的源码可以重新打包，安装文件作为 Release 资源上传需要相应授权。校验值见 [发布记录](docs/PROJECT_STATUS.md)：
 
-- `NexusCompanion-Setup-0.5.0.exe`：安装版。
-- `NexusCompanion-Portable-0.5.0.exe`：免安装启动版，默认使用 AppData，可在设置中选择数据位置。
+- `NexusCompanion-Setup-0.5.1.exe`：安装版。
+- `NexusCompanion-Portable-0.5.1.exe`：免安装启动版，默认使用 AppData，可在设置中选择数据位置。
 - `win-unpacked/Nexus Companion.exe`：解包版本，可直接启动；整个目录需要一起保留。
 
 首次启动会引导选择项目目录、主题和角色。没有演示任务或随机 Agent 数据。安装包未签名，Windows 可能显示发布者未验证；目前未提供代码签名证书。
 
-完整的安装、功能和故障排查说明见 [Nexus Companion 0.5.0 使用手册](docs/USER_GUIDE.md)。
+完整的安装、功能和故障排查说明见 [Nexus Companion 0.5.1 使用手册](docs/USER_GUIDE.md)。
 
 ## 已实现
 
-当前工作流包含可恢复草稿、灵感转任务、每日三件事与收工回顾、项目下一步、跨页专注计时及任务用时联动。Agent 卡片新增会话累计 tokens，详情区分最近请求，并独立展示账号套餐额度；当前详情可直接刷新。首页突出今日与逾期工作，Nia 在窄窗口下不遮挡内容。图集预解码、单格切换与八状态立绘继续保留；七组非 idle 动画尚待用户视觉验收。详见 [版本说明](docs/RELEASE_0.5.0.md)。
+当前工作流包含可恢复草稿、灵感转任务、每日三件事与收工回顾、项目下一步、跨页专注计时及任务用时联动。Agent 卡片新增会话累计 tokens，详情区分最近请求，并独立展示账号套餐额度；当前详情可直接刷新。首页突出今日与逾期工作，Nia 在窄窗口下不遮挡内容。图集预解码、单格切换与八状态立绘继续保留；七组非 idle 动画尚待用户视觉验收。详见 [版本说明](docs/RELEASE_0.5.1.md)。
 
 - Home：一键记录和查看灵感、今日任务、最近 Agent 观测、等待处理项、日程、项目进度和真实统计。
 - Projects：创建/编辑/删除，Godot/Unity 识别，目录/VS Code/终端/项目启动，重要文档，Git 分支、未提交文件、最近提交（只读）。外部程序未安装时显示错误。
