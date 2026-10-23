@@ -2,6 +2,7 @@ const { parentPort, workerData } = require('node:worker_threads');
 const { DatabaseSync } = require('node:sqlite');
 const fs = require('node:fs');
 const path = require('node:path');
+const { randomUUID } = require('node:crypto');
 fs.mkdirSync(path.dirname(workerData.path), { recursive: true });
 const db = new DatabaseSync(workerData.path);
 db.exec(`PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;
@@ -18,11 +19,97 @@ const kinds = new Set([
   'reports',
   'agents',
 ]);
+const taskStates = new Set(['Inbox', 'Planned', 'In Progress', 'Waiting', 'Done', 'Cancelled']);
+function moveTask(request) {
+  const validId = (value) =>
+    typeof value === 'string' &&
+    value.trim().length > 0 &&
+    value.length <= 200 &&
+    !/[\u0000-\u001f\u007f]/.test(value);
+  if (
+    !request ||
+    typeof request !== 'object' ||
+    Array.isArray(request) ||
+    Object.getPrototypeOf(request) !== Object.prototype ||
+    Object.keys(request).some((key) => !['id', 'status', 'beforeId'].includes(key)) ||
+    !validId(request.id) ||
+    !taskStates.has(request.status) ||
+    (request.beforeId != null && !validId(request.beforeId))
+  )
+    throw Error('无效任务移动请求');
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    // Match list()'s record order, then use a stable manual-order sort. The client
+    // sends only an anchor; filtered-out tasks remain part of this transaction.
+    const tasks = db
+      .prepare('SELECT data FROM records WHERE kind=?')
+      .all('tasks')
+      .map((row) => JSON.parse(row.data));
+    const task = tasks.find((record) => record.id === request.id);
+    if (!task) throw Error('任务已不存在，请刷新后重试');
+    const beforeId = request.beforeId ?? null;
+    const anchor = beforeId === null ? null : tasks.find((record) => record.id === beforeId);
+    if (beforeId !== null && (!anchor || anchor.status !== request.status))
+      throw Error('目标任务已移动或删除，请刷新后重试');
+    const order = (record) => (Number.isFinite(Number(record.order)) ? Number(record.order) : 0);
+    const current = tasks
+      .filter((record) => record.status === request.status)
+      .sort((a, b) => order(a) - order(b));
+    const next = current.filter((record) => record.id !== task.id);
+    const at = beforeId === null ? next.length : next.findIndex((record) => record.id === beforeId);
+    if (beforeId !== task.id) next.splice(at, 0, task);
+    const sameStatus = task.status === request.status;
+    if (
+      beforeId === task.id ||
+      (sameStatus && current.every((record, index) => record.id === next[index]?.id))
+    ) {
+      db.exec('COMMIT');
+      return { changed: false, task };
+    }
+    const time = new Date().toISOString();
+    const moved = {
+      ...task,
+      status: request.status,
+      order: at,
+      updatedAt: time,
+      ...(!sameStatus ? { completedAt: request.status === 'Done' ? time : null } : {}),
+    };
+    const update = db.prepare("UPDATE records SET data=? WHERE kind='tasks' AND id=?");
+    for (let index = 0; index < next.length; index++) {
+      const record = next[index];
+      if (record.id !== task.id && record.order === index) continue;
+      const value = record.id === task.id ? moved : { ...record, order: index };
+      if (update.run(JSON.stringify(value), record.id).changes !== 1)
+        throw Error('任务已不存在，请刷新后重试');
+    }
+    const activity = {
+      id: randomUUID(),
+      time,
+      kind: 'tasks',
+      entityId: task.id,
+      project: task.project || '',
+      title: sameStatus
+        ? `任务排序 · ${task.title || task.id}`
+        : `任务移动 · ${task.title || task.id} · ${task.status} → ${request.status}`,
+    };
+    db.prepare('INSERT INTO records VALUES (?,?,?)').run(
+      'timeline',
+      activity.id,
+      JSON.stringify(activity),
+    );
+    db.exec('COMMIT');
+    return { changed: true, task: moved };
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
+}
 parentPort.on('message', ({ id, op, kind, value }) => {
   try {
     if (!kinds.has(kind)) throw Error('Unknown collection');
     let result;
-    if (op === 'snapshot') {
+    if (op === 'moveTask') result = moveTask(value);
+    else if (op === 'snapshot') {
       db.exec('BEGIN');
       try {
         result = db

@@ -1,0 +1,40 @@
+.task-board-feedback {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 10px 0;
+  min-height: 24px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.task-board-feedback p {
+  margin: 0;
+  flex: 1 1 230px;
+}
+.task-board-feedback button {
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+}
+.task-move-error {
+  padding: 10px 14px;
+  border: 1px solid #eaa0ab70;
+  border-radius: 8px;
+  color: var(--text);
+  background: #eaa0ab12;
+  margin-bottom: 12px;
+}
+.task-status-select {
+  width: 100%;
+  max-width: 100%;
+  margin-top: 10px;
+  padding: 5px 8px;
+  font-size: 11px;
+}
+.task-card:has(button:disabled) {
+  cursor: wait;
+}
+.task-card button:disabled,
+.task-status-select:disabled {
+  cursor: wait;
+}

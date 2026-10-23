@@ -438,6 +438,7 @@ const DESKTOP = [
   'agent-usage',
   'agent-recovery',
   'calendar-navigation',
+  'tasks-flow',
 ];
 const PACKAGED = [
   'e2e',
@@ -450,6 +451,7 @@ const PACKAGED = [
   'agent-usage',
   'agent-recovery',
   'calendar-navigation',
+  'tasks-flow',
   'portable',
 ];
 

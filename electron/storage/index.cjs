@@ -30,6 +30,9 @@ class Store {
   save(kind, value) {
     return this.call('save', kind, value);
   }
+  moveTask(request) {
+    return this.call('moveTask', 'tasks', request);
+  }
   finishFocus(record) {
     return this.call('finishFocus', 'focus', record);
   }

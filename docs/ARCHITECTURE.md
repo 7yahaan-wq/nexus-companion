@@ -1,6 +1,6 @@
 # Nexus Companion architecture
 
-## Current architecture — 0.5.1
+## Current architecture — 0.5.2
 
 Electron + React + TypeScript + Vite. Electron provides Windows tray, notifications, global shortcuts, filesystem and NSIS/portable packaging without a Rust toolchain. React owns presentation only. Node services own persistence and integrations behind a narrow context-isolated IPC bridge. SQLite runs in a worker (Node built-in SQLite); no native addon ABI dependency. Windows AppData/Nexus Companion stores data, logs and imported assets. Ordinary workflows remain local, without analytics or cloud sync. The explicit exception is a user-triggered, read-only account/usage query through the official local Codex CLI, which may contact Codex services.
 
@@ -13,6 +13,8 @@ Electron + React + TypeScript + Vite. Electron provides Windows tray, notificati
 - `electron/services`: safe project opening, read-only Git, asset import, notification scheduling, and the bounded `codex-account.cjs` account/usage query service.
 - `src/components`: shared controls, command palette, virtualized log list, shell.
 - Avatar renderer accepts state-to-asset packs. Local calendar provider supports recurrence independent of future cloud adapters. Widget definitions separate home layout from data.
+
+Task board moves use the allowlisted `taskMove({ id, status, beforeId? })` request. The worker reads the latest full target column and patches only necessary position/status/completion fields, preserving focus time and other entity data. Task updates and one timeline activity share a transaction; stale tasks/anchors reject without upserting. Same-position requests are no-ops. The renderer refreshes once after each successful request, including no-op retries after a lost response; a refresh failure is reported separately. Task query/project/sort live in the app shell for ordinary page round trips; explicit quick-task saves clear filters to reveal the result.
 
 ## Security and privacy
 

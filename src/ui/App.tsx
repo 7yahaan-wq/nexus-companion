@@ -22,7 +22,7 @@ import { useWorkspace } from '../domain/useWorkspace';
 import { useAgents } from '../providers/useAgents';
 import Home from '../features/home/Home';
 import Projects from '../features/projects/Projects';
-import Tasks, { TaskEditor } from '../features/tasks/Tasks';
+import Tasks, { TaskEditor, type TaskView } from '../features/tasks/Tasks';
 import Calendar, { EventEditor, eventForTask } from '../features/calendar/Calendar';
 import Agents from '../features/agents/Agents';
 import Timeline from '../features/timeline/Timeline';
@@ -48,6 +48,7 @@ export default function App() {
   const workspace = useWorkspace(),
     agents = useAgents();
   const focus = useFocus(workspace.refresh);
+  const [taskView, setTaskView] = useState<TaskView>({ query: '', project: '', sort: 'manual' });
   const [palette, setPalette] = useState(false),
     [capture, setCapture] = useState(false),
     [settingsLoaded, setSettingsLoaded] = useState(false);
@@ -324,6 +325,8 @@ export default function App() {
             ) : page === 'Tasks' ? (
               <Tasks
                 workspace={workspace}
+                view={taskView}
+                onViewChange={setTaskView}
                 onFocus={openFocus}
                 onNote={openNote}
                 onSchedule={(t) => {
@@ -403,6 +406,7 @@ export default function App() {
             onSaved={(kind, value) => {
               if (kind === 'notes') savedNote(value);
               else {
+                setTaskView((current) => ({ ...current, query: '', project: '' }));
                 setPage('Tasks');
                 setNotice(t('任务已保存到收集箱', 'Task saved to Inbox'));
               }

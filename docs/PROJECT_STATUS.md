@@ -1,8 +1,8 @@
 # Project status
 
-## Current release: 0.5.1 (2026-10-24)
+## Current release: 0.5.2 (2026-10-24)
 
-This release improves recovery from empty Agent results, calendar navigation to the current time, and bounded resumable verification. The current source harness, archive audit, packaged desktop journeys and actual portable EXE checks have passed.
+This release improves daily task creation, retained filters, accessible status changes and atomic board moves. The current source harness, archive audit, packaged desktop journeys and actual portable EXE checks have passed.
 
 Source is private at [7yahaan-wq/nexus-companion](https://github.com/7yahaan-wq/nexus-companion). Generated EXEs live in ignored `dist/`; pushing source does not upload release binaries.
 
@@ -24,39 +24,38 @@ Source is private at [7yahaan-wq/nexus-companion](https://github.com/7yahaan-wq/
 
 ## Independent experience and selected improvements
 
-An independent agent exercised the application with isolated data and reproduced generic empty-state feedback, midnight calendar entry at 21:17, and past-time event defaults. The baseline report and screenshots are local under `.test-data/ux-review-20261023/`. One stale screenshot was excluded from visual evidence; the baseline DOM geometry and other screenshots establish the calendar issue.
+An independent agent used isolated multi-project fixtures and native mouse dragging. It reproduced project-filtered creation hiding the new task, task/idea round trips losing all filters, automatic-sort dragging changing the hidden manual order without visual feedback, and filtered moves creating duplicate manual order values. Evidence is local under `.test-data/ux-review-20261024-round2/`. The observed hidden tasks retained their relative order; no data loss was established by this baseline.
 
-Two user paths were selected before implementation: Agent recovery and calendar current-time navigation. Acceptance is fixed in [DEVELOPMENT_LOOP.md](DEVELOPMENT_LOOP.md); implementation does not change existing regression assertions. Official pinned source references and adaptation rationale are in [OPEN_SOURCE_RESEARCH.md](OPEN_SOURCE_RESEARCH.md).
+Two paths were selected before implementation: filtered task work and reliable task movement. A read-only review then identified explicit capture navigation and committed-move/list-refresh failure boundaries; both were added to the fixed regression. Acceptance is documented in [DEVELOPMENT_LOOP.md](DEVELOPMENT_LOOP.md). Existing regression assertions remain intact; the Harness coverage assertion adds the new tasks-flow suite.
 
 ## Current verification
 
 | Check                     | Status / evidence                                                                                                          |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Full source Harness       | Passed: 79 unit tests, 25 stages including 19 desktop suites; .test-data/verification.json                                 |
-| Actual resume             | Passed: executed 5, reused 20; original successful timestamps/logs retained                                                |
-| Independent review        | Product interactions, cache failure protection and optional environment inputs reviewed                                    |
+| Full source Harness       | Passed: 87 unit tests; all 26 stages including 20 desktop suites; .test-data/verification.json                             |
+| Resume                    | Executed 26, reused 0: version/source changes invalidated old passes; current run passed first try                         |
+| Independent review        | UI navigation, failure/retry, strict move validation and transaction reviewed                                              |
 | Package/archive audit     | Passed: 40 application files match the ASAR; 4,580 archive entries inspected; .test-data/release-audit.json                |
-| Packaged desktop/portable | Passed: all 12 stages executed, including 10 desktop suites and actual portable EXE; .test-data/packaged-verification.json |
+| Packaged desktop/portable | Passed: all 13 stages executed, including 11 desktop suites and actual portable EXE; .test-data/packaged-verification.json |
 | Installer wizard          | Not installed or checked                                                                                                   |
 
-The first current-executor source run stopped at the existing workflow's dialog-readiness race. A diagnostic trace established that its original wait could precede native dialog opening. Synchronization was strengthened without removing assertions; resume kept 20 unaffected passes and completed the remaining stages. Initial failure evidence is retained in .test-data/verification-initial-0.5.1.json.
+Baseline 0.5.1 reports are retained under `.test-data/iteration-2026-10-24-round2/baseline-0.5.1-*`. This release retains the existing conservative dependency fingerprints, fixed bounds and explicit --resume behavior. It does not treat changed sources or a new version as already verified.
 
-An earlier real resume exposed the volatile CODEX_TOOL_CALL_ID fingerprint issue. The exact invocation metadata is now removed from the child environment; other environment values remain validated. Separate real npm invocations demonstrated one executed probe followed by zero executed and one reused. Cache entries from old executor versions were not migrated.
-
-Current Windows x64 artifacts were built and checked on 2026-10-24 (Asia/Shanghai). Final SHA-256 values also appear in `dist/SHA256SUMS-0.5.1.txt`:
+Current Windows x64 artifacts were built and checked on 2026-10-24 (Asia/Shanghai). Final SHA-256 values also appear in `dist/SHA256SUMS-0.5.2.txt`:
 
 | Artifact                          |     Bytes | SHA-256                                                            |
 | --------------------------------- | --------: | ------------------------------------------------------------------ |
-| NexusCompanion-Portable-0.5.1.exe | 137625927 | `040fd9b8d790425fe75f1590891a2ce2eb4855424fbcc33bf76ebff581b88c38` |
-| NexusCompanion-Setup-0.5.1.exe    | 137835895 | `19630debb0b3fe571f4e9a64b6291e09df54da9164180819a0c0e8529e990ee9` |
+| NexusCompanion-Portable-0.5.2.exe | 137625443 | `2114ce0864e5543694bfaea612ceef1437c00b9c91bc00ec2be60010d7889cfd` |
+| NexusCompanion-Setup-0.5.2.exe    | 137835407 | `d31760a8469789e9e15df8581e7cea0ad7f6be8ca500638e34cd471ff9952fd4` |
 
 ## Known limits and next candidates
 
 - Local Codex observations have bounded history and cannot guarantee real-time state, stop/retry, approvals or prompt delivery. Owned App Server sessions would require a separate design.
 - Seven candidate animations still need visual acceptance. Frame counts, hashes, anchor metrics and source uploads cannot establish facial quality. Imported GIF motion is independent of the built-in animation toggle.
 - Calendar single-occurrence exceptions, external calendars, configurable dashboard widgets and Live2D/Spine are not implemented. Daily calendar capacity summaries remain a future candidate.
-- Project deletion does not cascade or unlink all related entities. VS Code discovery checks default installation locations and may miss custom installs. Batched task sorting and targeted background refresh are further development candidates.
+- Project deletion does not cascade or unlink all related entities. VS Code discovery checks default installation locations and may miss custom installs. Task movement is now transactional; broader targeted background refresh remains a candidate.
+- Daily reflections are saved but not yet included in the generated daily report. Project details show a limited recent task list without a dedicated show-all action. Both remain future candidates.
 - Some detailed help and backend diagnostics remain Chinese. Settings navigation can be simplified without removing useful controls.
 - Windows executables are unsigned. OS notification settings can suppress toasts. The development-only `extract-zip` dependency retains an upstream advisory; Electron archives are checked against the official hash before extraction.
 
-See [USER_GUIDE.md](USER_GUIDE.md), [DEVELOPMENT_HANDOFF.md](DEVELOPMENT_HANDOFF.md), [START_ON_NEW_PC.md](START_ON_NEW_PC.md), [VERIFICATION.md](VERIFICATION.md), [RELEASE_0.5.1.md](RELEASE_0.5.1.md) and [NIA_ANIMATION.md](NIA_ANIMATION.md). The source-only frame-inspection tool is `docs/NIA_REVIEW.html`; open it from a source checkout with its `public/` artwork, not from the packaged documentation.
+See [USER_GUIDE.md](USER_GUIDE.md), [DEVELOPMENT_HANDOFF.md](DEVELOPMENT_HANDOFF.md), [START_ON_NEW_PC.md](START_ON_NEW_PC.md), [VERIFICATION.md](VERIFICATION.md), [RELEASE_0.5.2.md](RELEASE_0.5.2.md) and [NIA_ANIMATION.md](NIA_ANIMATION.md). The source-only frame-inspection tool is `docs/NIA_REVIEW.html`; open it from a source checkout with its `public/` artwork, not from the packaged documentation.

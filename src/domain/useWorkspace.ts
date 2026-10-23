@@ -23,11 +23,12 @@ const empty: Workspace = {
 export function useWorkspace() {
   const [data, setData] = useState<Workspace>(empty),
     [error, setError] = useState('');
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (throwOnError = false) => {
     try {
       const records = await Promise.all(collections.map((k) => api<Entity[]>('list', k)));
       setData(Object.fromEntries(collections.map((k, i) => [k, records[i]])) as Workspace);
     } catch (e: any) {
+      if (throwOnError) throw e;
       setError(e.message);
     }
   }, []);
@@ -57,6 +58,19 @@ export function useWorkspace() {
     },
     [refresh],
   );
-  return { data, save, remove, refresh, error, setError };
+  const moveTask = useCallback(
+    async (request: { id: string; status: string; beforeId?: string | null }) => {
+      const result = await api<{ changed: boolean; task: Entity }>('taskMove', request);
+      try {
+        // Even a no-op can be a retry after a committed move whose response was lost.
+        await refresh(true);
+      } catch (cause: any) {
+        throw Error(`任务请求已处理，但列表刷新失败，请重试。${cause.message || ''}`);
+      }
+      return result;
+    },
+    [refresh],
+  );
+  return { data, save, remove, moveTask, refresh, error, setError };
 }
 export type WorkspaceActions = ReturnType<typeof useWorkspace>;

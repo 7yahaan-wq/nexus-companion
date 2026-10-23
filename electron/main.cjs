@@ -323,6 +323,7 @@ const handlers = {
     return true;
   },
   list: (kind) => store.list(kind),
+  taskMove: (request) => store.moveTask(request),
   save: async (kind, value) => {
     validate(kind, value);
     if (kind === 'settings' && value.id === 'agent-profiles') agentCacheAt = 0;

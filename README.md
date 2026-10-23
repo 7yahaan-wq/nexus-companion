@@ -1,4 +1,4 @@
-> 0.5.1 改善 Agent 空态恢复和日历当下定位，新增带输入指纹的 Harness 续跑。保留会话 tokens、账号额度和既有工作流，当前结果见 [项目状态](docs/PROJECT_STATUS.md)，可重复开发流程见 [DEVELOPMENT_LOOP](docs/DEVELOPMENT_LOOP.md)。Nia 素材未修改，只有 idle 动画已获用户视觉接受。
+> 0.5.2 修复项目筛选下新建任务后不可见，保留跨页筛选，并以单次事务完成任务状态移动和排序。沿用带输入指纹的 Harness 续跑。保留会话 tokens、账号额度和既有工作流，当前结果见 [项目状态](docs/PROJECT_STATUS.md)，可重复开发流程见 [DEVELOPMENT_LOOP](docs/DEVELOPMENT_LOOP.md)。Nia 素材未修改，只有 idle 动画已获用户视觉接受。
 
 # Nexus Companion
 
@@ -8,21 +8,21 @@
 
 当前版本的文件位于 `dist/`；该目录不进入 Git。GitHub 上的源码可以重新打包，安装文件作为 Release 资源上传需要相应授权。校验值见 [发布记录](docs/PROJECT_STATUS.md)：
 
-- `NexusCompanion-Setup-0.5.1.exe`：安装版。
-- `NexusCompanion-Portable-0.5.1.exe`：免安装启动版，默认使用 AppData，可在设置中选择数据位置。
+- `NexusCompanion-Setup-0.5.2.exe`：安装版。
+- `NexusCompanion-Portable-0.5.2.exe`：免安装启动版，默认使用 AppData，可在设置中选择数据位置。
 - `win-unpacked/Nexus Companion.exe`：解包版本，可直接启动；整个目录需要一起保留。
 
 首次启动会引导选择项目目录、主题和角色。没有演示任务或随机 Agent 数据。安装包未签名，Windows 可能显示发布者未验证；目前未提供代码签名证书。
 
-完整的安装、功能和故障排查说明见 [Nexus Companion 0.5.1 使用手册](docs/USER_GUIDE.md)。
+完整的安装、功能和故障排查说明见 [Nexus Companion 0.5.2 使用手册](docs/USER_GUIDE.md)。
 
 ## 已实现
 
-当前工作流包含可恢复草稿、灵感转任务、每日三件事与收工回顾、项目下一步、跨页专注计时及任务用时联动。Agent 卡片新增会话累计 tokens，详情区分最近请求，并独立展示账号套餐额度；当前详情可直接刷新。首页突出今日与逾期工作，Nia 在窄窗口下不遮挡内容。图集预解码、单格切换与八状态立绘继续保留；七组非 idle 动画尚待用户视觉验收。详见 [版本说明](docs/RELEASE_0.5.1.md)。
+当前工作流包含可恢复草稿、灵感转任务、每日三件事与收工回顾、项目下一步、跨页专注计时及任务用时联动。Agent 卡片新增会话累计 tokens，详情区分最近请求，并独立展示账号套餐额度；当前详情可直接刷新。首页突出今日与逾期工作，Nia 在窄窗口下不遮挡内容。图集预解码、单格切换与八状态立绘继续保留；七组非 idle 动画尚待用户视觉验收。详见 [版本说明](docs/RELEASE_0.5.2.md)。
 
 - Home：一键记录和查看灵感、今日任务、最近 Agent 观测、等待处理项、日程、项目进度和真实统计。
 - Projects：创建/编辑/删除，Godot/Unity 识别，目录/VS Code/终端/项目启动，重要文档，Git 分支、未提交文件、最近提交（只读）。外部程序未安装时显示错误。
-- Tasks：6 种状态，拖拽列与手动排序，优先级、项目、标签、日期、预计/实际时长、关联 Agent，搜索过滤。
+- Tasks：6 种状态，可直接选择状态或原子拖动排序；项目内新建继承项目，跨页保留筛选。支持优先级、项目、标签、日期、预计/实际时长、关联 Agent 和搜索。
 - Calendar：月/周/日视图，创建/编辑/删除，任务拖入时间块，拖动日程，拖动底边调整结束时间，每天/周/月重复。跨午夜分段和重叠事件分栏。**编辑、拖动、调整重复日程会修改整个系列**；单次例外编辑尚未提供。
 - Agents：只读真实 Codex JSONL，多会话卡片、角色标注、置顶、日志、明确记录的修改文件、目录与 VS Code；会话累计/最近请求 token 明细、带来源和时间的共享额度快照，手动通过本机 Codex CLI 查询官方套餐额度与任务 Credits 估算。长日志读取末尾 2 MB，最多展示 1500 条公开输出并虚拟化渲染。
 - Timeline / Daily Report：真实本地操作和 Agent 事件，按日期/项目/Agent/任务过滤，Markdown 复制和导出。

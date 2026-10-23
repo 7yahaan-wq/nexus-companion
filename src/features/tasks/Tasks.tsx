@@ -4,8 +4,14 @@ import EntityForm from '../../components/EntityForm';
 import { uid, today } from '../../domain/api';
 import type { Entity } from '../../domain/types';
 import type { WorkspaceActions } from '../../domain/useWorkspace';
-import { L } from '../../domain/i18n';
+import { L, useI18n } from '../../domain/i18n';
+import '../../ui/tasks.css';
 export const statuses = ['Inbox', 'Planned', 'In Progress', 'Waiting', 'Done', 'Cancelled'];
+export interface TaskView {
+  query: string;
+  project: string;
+  sort: 'manual' | 'due' | 'priority';
+}
 export function TaskEditor({
   task,
   workspace,
@@ -70,20 +76,32 @@ export function TaskEditor({
 }
 export default function Tasks({
   workspace,
+  view,
+  onViewChange,
   onSchedule,
   onFocus,
   onNote,
 }: {
   workspace: WorkspaceActions;
+  view: TaskView;
+  onViewChange: (view: TaskView) => void;
   onSchedule: (task: Entity) => void;
   onFocus?: (task: Entity) => void;
   onNote?: (id: string) => void;
 }) {
-  const { data, save, setError } = workspace;
-  const [editing, setEditing] = useState<Entity | null>(null),
-    [q, setQ] = useState(''),
-    [project, setProject] = useState(''),
-    [sort, setSort] = useState('manual');
+  const { data, moveTask } = workspace;
+  const { t } = useI18n();
+  const { query: q, project, sort } = view;
+  const [editing, setEditing] = useState<Entity | null>(null);
+  const [moving, setMoving] = useState(false),
+    [moveError, setMoveError] = useState(''),
+    [notice, setNotice] = useState('');
+  const movingRef = useRef(false);
+  const updateView = (patch: Partial<TaskView>) => onViewChange({ ...view, ...patch });
+  const sortHint = t(
+    '当前按日期或优先级显示，拖动只改变状态。调整位置请切换手动排序。',
+    'Dragging changes status in this sort. Choose Manual order to rearrange cards.',
+  );
   const filtered = data.tasks
     .filter(
       (t) =>
@@ -98,35 +116,55 @@ export default function Tasks({
             ['Urgent', 'High', 'Medium', 'Low'].indexOf(b.priority)
           : (a.order || 0) - (b.order || 0),
     );
-  async function drop(e: React.DragEvent, status: string, before?: Entity) {
+  async function move(task: Entity, status: string, beforeId: string | null = null) {
+    if (movingRef.current) return;
+    movingRef.current = true;
+    setMoving(true);
+    setMoveError('');
+    setNotice('');
+    try {
+      const result = await moveTask({ id: task.id, status, beforeId });
+      if (result.changed) setNotice(t('任务已更新。', 'Task updated.'));
+    } catch (cause: any) {
+      setMoveError(
+        cause.message || t('未能移动任务，请重试。', 'Could not move the task. Try again.'),
+      );
+    } finally {
+      movingRef.current = false;
+      setMoving(false);
+    }
+  }
+  function drop(e: React.DragEvent, status: string, before?: Entity) {
     e.preventDefault();
+    if (movingRef.current) return;
     const id = e.dataTransfer.getData('nexus/task');
     const task = data.tasks.find((t) => t.id === id);
     if (!task) return;
-    try {
-      const ordered = filtered.filter((t) => t.status === status && t.id !== id);
-      const at = before ? ordered.findIndex((t) => t.id === before.id) : ordered.length;
-      ordered.splice(at < 0 ? ordered.length : at, 0, task);
-      for (let i = 0; i < ordered.length; i++)
-        await save('tasks', {
-          ...ordered[i],
-          order: i,
-          status,
-          completedAt:
-            status === 'Done' ? ordered[i].completedAt || new Date().toISOString() : null,
-        });
-    } catch (e: any) {
-      setError(e.message);
+    if (sort !== 'manual' && task.status === status) {
+      setNotice(sortHint);
+      return;
     }
+    void move(task, status, sort === 'manual' ? before?.id || null : null);
   }
   return (
     <>
       <div className="toolbar wrap">
         <div className="search-field">
           <Search size={15} />
-          <input placeholder="搜索任务或标签…" value={q} onChange={(e) => setQ(e.target.value)} />
+          <input
+            aria-label={t('搜索任务或标签', 'Search tasks or tags')}
+            placeholder={t('搜索任务或标签…', 'Search tasks or tags…')}
+            value={q}
+            disabled={moving}
+            onChange={(e) => updateView({ query: e.target.value })}
+          />
         </div>
-        <select aria-label="项目过滤" value={project} onChange={(e) => setProject(e.target.value)}>
+        <select
+          aria-label="项目过滤"
+          value={project}
+          disabled={moving}
+          onChange={(e) => updateView({ project: e.target.value })}
+        >
           <option value="">
             <L text="所有项目" />
           </option>
@@ -136,7 +174,12 @@ export default function Tasks({
             </option>
           ))}
         </select>
-        <select aria-label="任务排序" value={sort} onChange={(e) => setSort(e.target.value)}>
+        <select
+          aria-label="任务排序"
+          value={sort}
+          disabled={moving}
+          onChange={(e) => updateView({ sort: e.target.value as TaskView['sort'] })}
+        >
           <option value="manual">
             <L text="手动排序" />
           </option>
@@ -149,95 +192,165 @@ export default function Tasks({
         </select>
         <button
           className="primary"
+          disabled={moving}
           onClick={() =>
-            setEditing({ id: uid(), status: 'Inbox', priority: 'Medium', dueDate: today() })
+            setEditing({
+              id: uid(),
+              status: 'Inbox',
+              priority: 'Medium',
+              dueDate: today(),
+              project,
+            })
           }
         >
           <Plus size={15} />
           <L text="新建任务" />
         </button>
       </div>
-      <div className="kanban">
-        {statuses.map((status) => (
-          <section
-            className="kanban-column"
-            key={status}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => drop(e, status)}
-          >
-            <h3>
-              <i className={'status-dot ' + status.replaceAll(' ', '-')} />
-              <L text={status} />
-              <span>{filtered.filter((t) => t.status === status).length}</span>
-            </h3>
-            {filtered
-              .filter((t) => t.status === status)
-              .map((t) => (
-                <article
-                  className="task-card"
-                  draggable
-                  key={t.id}
-                  onDragStart={(e) => e.dataTransfer.setData('nexus/task', t.id)}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.stopPropagation();
-                    drop(e, status, t);
-                  }}
-                >
-                  <div className="task-card-top">
-                    <span className={'priority ' + t.priority}>
-                      <L text={t.priority || 'Medium'} />
-                    </span>
-                    <GripVertical size={12} />
-                  </div>
-                  <div className="task-workflow-actions">
-                    {!['Done', 'Cancelled'].includes(t.status) && onFocus && (
-                      <button aria-label={`专注 ${t.title}`} onClick={() => onFocus(t)}>
-                        <Timer size={13} />
-                        <L text="专注" />
-                      </button>
-                    )}
-                    {t.sourceNote && onNote && data.notes.some((n) => n.id === t.sourceNote) && (
-                      <button
-                        aria-label={`来源灵感 ${t.title}`}
-                        onClick={() => onNote(t.sourceNote)}
-                      >
-                        <NotebookPen size={13} />
-                        <L text="来源灵感" />
-                      </button>
-                    )}
-                    {Number(t.actualTime) > 0 && (
-                      <small>{Math.round(t.actualTime * 10) / 10} min</small>
-                    )}
-                  </div>
-                  <button className="task-title" onClick={() => setEditing(t)}>
-                    {t.title}
-                  </button>
-                  <p>{data.projects.find((p) => p.id === t.project)?.name || 'Personal'}</p>
-                  <div className="task-meta">
-                    <span className={t.dueDate < today() && status !== 'Done' ? 'overdue' : ''}>
-                      {t.dueDate || '无截止日期'}
-                    </span>
-                    <button
-                      title="安排到日历"
-                      aria-label={`安排 ${t.title}`}
-                      onClick={() => onSchedule(t)}
-                    >
-                      <CalendarPlus size={14} />
-                    </button>
-                  </div>
-                </article>
-              ))}
-            <button
-              className="add-task"
-              onClick={() => setEditing({ id: uid(), status, priority: 'Medium', project })}
-            >
-              <Plus size={13} />
-              <L text="添加任务" />
-            </button>
-          </section>
-        ))}
+      <div className="task-board-feedback">
+        {(q || project) && (
+          <button disabled={moving} onClick={() => updateView({ query: '', project: '' })}>
+            {t('清除筛选', 'Clear filters')}
+          </button>
+        )}
+        {sort !== 'manual' && <p data-testid="task-sort-hint">{sortHint}</p>}
+        <span role="status" aria-live="polite">
+          {moving ? t('正在更新任务…', 'Updating task…') : notice}
+        </span>
       </div>
+      {moveError && (
+        <div className="task-move-error" role="alert">
+          {moveError}
+        </div>
+      )}
+      {!filtered.length && (
+        <div className="panel empty" data-testid="tasks-empty">
+          <h3>
+            {q || project
+              ? t('没有符合筛选的任务', 'No tasks match these filters')
+              : t('从一件小事开始', 'Start with one small task')}
+          </h3>
+          <p>
+            {q || project
+              ? t(
+                  '试试其他关键词或清除筛选，任务仍保存在本地。',
+                  'Try another search or clear filters. Your tasks are still saved locally.',
+                )
+              : t(
+                  '点击上方“新建任务”，添加第一件要做的事。',
+                  'Use New task above to add the first thing you want to do.',
+                )}
+          </p>
+        </div>
+      )}
+      {filtered.length > 0 && (
+        <div className="kanban">
+          {statuses.map((status) => (
+            <section
+              className="kanban-column"
+              key={status}
+              data-status={status}
+              onDragOver={(e) => {
+                if (!moving) e.preventDefault();
+              }}
+              onDrop={(e) => drop(e, status)}
+            >
+              <h3>
+                <i className={'status-dot ' + status.replaceAll(' ', '-')} />
+                <L text={status} />
+                <span>{filtered.filter((t) => t.status === status).length}</span>
+              </h3>
+              {filtered
+                .filter((t) => t.status === status)
+                .map((t) => (
+                  <article
+                    className="task-card"
+                    draggable={!moving}
+                    data-task-id={t.id}
+                    key={t.id}
+                    onDragStart={(e) => {
+                      if (movingRef.current) e.preventDefault();
+                      else e.dataTransfer.setData('nexus/task', t.id);
+                    }}
+                    onDragOver={(e) => {
+                      if (!moving) e.preventDefault();
+                    }}
+                    onDrop={(e) => {
+                      e.stopPropagation();
+                      drop(e, status, t);
+                    }}
+                  >
+                    <div className="task-card-top">
+                      <span className={'priority ' + t.priority}>
+                        <L text={t.priority || 'Medium'} />
+                      </span>
+                      <GripVertical size={12} />
+                    </div>
+                    <select
+                      className="task-status-select"
+                      aria-label={`任务状态 ${t.title}`}
+                      value={t.status}
+                      disabled={moving}
+                      onChange={(e) => void move(t, e.target.value)}
+                    >
+                      {statuses.map((state) => (
+                        <option key={state} value={state}>
+                          <L text={state} />
+                        </option>
+                      ))}
+                    </select>
+                    <div className="task-workflow-actions">
+                      {!['Done', 'Cancelled'].includes(t.status) && onFocus && (
+                        <button aria-label={`专注 ${t.title}`} onClick={() => onFocus(t)}>
+                          <Timer size={13} />
+                          <L text="专注" />
+                        </button>
+                      )}
+                      {t.sourceNote && onNote && data.notes.some((n) => n.id === t.sourceNote) && (
+                        <button
+                          aria-label={`来源灵感 ${t.title}`}
+                          onClick={() => onNote(t.sourceNote)}
+                        >
+                          <NotebookPen size={13} />
+                          <L text="来源灵感" />
+                        </button>
+                      )}
+                      {Number(t.actualTime) > 0 && (
+                        <small>{Math.round(t.actualTime * 10) / 10} min</small>
+                      )}
+                    </div>
+                    <button className="task-title" disabled={moving} onClick={() => setEditing(t)}>
+                      {t.title}
+                    </button>
+                    <p>
+                      {data.projects.find((p) => p.id === t.project)?.name || <L text="Personal" />}
+                    </p>
+                    <div className="task-meta">
+                      <span className={t.dueDate < today() && status !== 'Done' ? 'overdue' : ''}>
+                        {t.dueDate || '无截止日期'}
+                      </span>
+                      <button
+                        title="安排到日历"
+                        aria-label={`安排 ${t.title}`}
+                        onClick={() => onSchedule(t)}
+                      >
+                        <CalendarPlus size={14} />
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              <button
+                className="add-task"
+                disabled={moving}
+                onClick={() => setEditing({ id: uid(), status, priority: 'Medium', project })}
+              >
+                <Plus size={13} />
+                <L text="添加任务" />
+              </button>
+            </section>
+          ))}
+        </div>
+      )}
       {editing && (
         <TaskEditor task={editing} workspace={workspace} onClose={() => setEditing(null)} />
       )}
