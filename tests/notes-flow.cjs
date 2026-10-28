@@ -95,6 +95,15 @@ async function save(page) {
     await p.getByRole('heading', { name: '原始灵感 A', exact: true }).waitFor();
     const original = (await list(p, 'notes')).find((note) => note.title === '原始灵感 A');
     await button(p, '编辑').click();
+    // Editable fields appear before the draft-ready effect assigns initial focus.
+    // Wait for that existing initialization before fill sends text to the editor.
+    await p.waitForFunction(() => {
+      const title = document.querySelector('dialog[open] input[aria-label="笔记标题"]');
+      return (
+        document.querySelector('dialog[open] .entity-form')?.getAttribute('aria-busy') ===
+          'false' && title === document.activeElement
+      );
+    });
     await p.getByLabel('内容（Markdown）', { exact: true }).fill('A 单独保留的编辑草稿');
     await p.keyboard.press('Escape');
     await closed(p);

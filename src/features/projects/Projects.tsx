@@ -35,11 +35,13 @@ export default function Projects({
   onTask,
   onNote,
   onFocus,
+  onTasks,
 }: WorkspaceActions & {
   runs?: AgentRun[];
   onTask?: (task: Entity) => void;
   onNote?: (id: string) => void;
   onFocus?: (task: Entity) => void;
+  onTasks?: (projectId: string) => void;
 }) {
   const { t } = useI18n();
   const [editing, setEditing] = useState<Entity | null>(null),
@@ -275,6 +277,15 @@ export default function Projects({
             <div className="project-links">
               <div>
                 <h3>{t('近期任务', 'Recent tasks')}</h3>
+                {onTasks && (
+                  <button className="panel-link" onClick={() => onTasks(selected.id)}>
+                    {t(
+                      `查看全部任务（${projectTasks.length}）`,
+                      `View all tasks (${projectTasks.length})`,
+                    )}
+                    <ArrowUpRight size={13} />
+                  </button>
+                )}
                 {projectTasks.slice(0, 5).map((task) => (
                   <div className="project-linked-row" key={task.id}>
                     {onTask ? (

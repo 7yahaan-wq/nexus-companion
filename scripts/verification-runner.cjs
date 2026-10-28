@@ -439,6 +439,7 @@ const DESKTOP = [
   'agent-recovery',
   'calendar-navigation',
   'tasks-flow',
+  'review-navigation',
 ];
 const PACKAGED = [
   'e2e',
@@ -452,6 +453,7 @@ const PACKAGED = [
   'agent-recovery',
   'calendar-navigation',
   'tasks-flow',
+  'review-navigation',
   'portable',
 ];
 

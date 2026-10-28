@@ -1,4 +1,4 @@
-> 0.5.2 修复项目筛选下新建任务后不可见，保留跨页筛选，并以单次事务完成任务状态移动和排序。沿用带输入指纹的 Harness 续跑。保留会话 tokens、账号额度和既有工作流，当前结果见 [项目状态](docs/PROJECT_STATUS.md)，可重复开发流程见 [DEVELOPMENT_LOOP](docs/DEVELOPMENT_LOOP.md)。Nia 素材未修改，只有 idle 动画已获用户视觉接受。
+> 0.5.3 打通收工回顾到日报的查看、复制和导出；项目详情可查看全部关联任务。沿用带输入指纹的 Harness 续跑。保留会话 tokens、账号额度和既有工作流，当前结果见 [项目状态](docs/PROJECT_STATUS.md)，可重复开发流程见 [DEVELOPMENT_LOOP](docs/DEVELOPMENT_LOOP.md)。Nia 素材未修改，只有 idle 动画已获用户视觉接受。
 
 # Nexus Companion
 
@@ -8,17 +8,17 @@
 
 当前版本的文件位于 `dist/`；该目录不进入 Git。GitHub 上的源码可以重新打包，安装文件作为 Release 资源上传需要相应授权。校验值见 [发布记录](docs/PROJECT_STATUS.md)：
 
-- `NexusCompanion-Setup-0.5.2.exe`：安装版。
-- `NexusCompanion-Portable-0.5.2.exe`：免安装启动版，默认使用 AppData，可在设置中选择数据位置。
+- `NexusCompanion-Setup-0.5.3.exe`：安装版。
+- `NexusCompanion-Portable-0.5.3.exe`：免安装启动版，默认使用 AppData，可在设置中选择数据位置。
 - `win-unpacked/Nexus Companion.exe`：解包版本，可直接启动；整个目录需要一起保留。
 
 首次启动会引导选择项目目录、主题和角色。没有演示任务或随机 Agent 数据。安装包未签名，Windows 可能显示发布者未验证；目前未提供代码签名证书。
 
-完整的安装、功能和故障排查说明见 [Nexus Companion 0.5.2 使用手册](docs/USER_GUIDE.md)。
+完整的安装、功能和故障排查说明见 [Nexus Companion 0.5.3 使用手册](docs/USER_GUIDE.md)。
 
 ## 已实现
 
-当前工作流包含可恢复草稿、灵感转任务、每日三件事与收工回顾、项目下一步、跨页专注计时及任务用时联动。Agent 卡片新增会话累计 tokens，详情区分最近请求，并独立展示账号套餐额度；当前详情可直接刷新。首页突出今日与逾期工作，Nia 在窄窗口下不遮挡内容。图集预解码、单格切换与八状态立绘继续保留；七组非 idle 动画尚待用户视觉验收。详见 [版本说明](docs/RELEASE_0.5.2.md)。
+当前工作流包含可恢复草稿、灵感转任务、每日三件事与收工回顾、项目下一步、跨页专注计时及任务用时联动。Agent 卡片新增会话累计 tokens，详情区分最近请求，并独立展示账号套餐额度；当前详情可直接刷新。首页突出今日与逾期工作，Nia 在窄窗口下不遮挡内容。图集预解码、单格切换与八状态立绘继续保留；七组非 idle 动画尚待用户视觉验收。详见 [版本说明](docs/RELEASE_0.5.3.md)。
 
 - Home：一键记录和查看灵感、今日任务、最近 Agent 观测、等待处理项、日程、项目进度和真实统计。
 - Projects：创建/编辑/删除，Godot/Unity 识别，目录/VS Code/终端/项目启动，重要文档，Git 分支、未提交文件、最近提交（只读）。外部程序未安装时显示错误。
@@ -80,7 +80,7 @@ npm start
 ```powershell
 npm test          # 领域 / 存储 / 安全测试
 npm run harness -- --full  # 完整桌面回归
-npm run package  # 生成并审计 NSIS/portable，成功后清理识别到的旧版生成文件
+npm run package  # 生成并审计 NSIS/portable；验收通过后再单独清理
 npm run verify:packaged  # 打包后桌面流程 + 便携EXE启动
 ```
 

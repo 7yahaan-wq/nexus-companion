@@ -41,8 +41,8 @@ for (const target of [
   if (stat && !stat.isFile()) throw Error('release output must be a regular file: ' + destination);
 }
 const names = [
-  'NexusCompanion-Setup-' + version + '.exe',
   'NexusCompanion-Portable-' + version + '.exe',
+  'NexusCompanion-Setup-' + version + '.exe',
 ];
 const lines = names.map((name) => {
   const hash = crypto

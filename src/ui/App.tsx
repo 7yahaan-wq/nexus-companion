@@ -49,6 +49,9 @@ export default function App() {
     agents = useAgents();
   const focus = useFocus(workspace.refresh);
   const [taskView, setTaskView] = useState<TaskView>({ query: '', project: '', sort: 'manual' });
+  const [reportRequest, setReportRequest] = useState<{ date: string; revision: number } | null>(
+    null,
+  );
   const [palette, setPalette] = useState(false),
     [capture, setCapture] = useState(false),
     [settingsLoaded, setSettingsLoaded] = useState(false);
@@ -91,6 +94,7 @@ export default function App() {
     setSettings(values);
   }, []);
   const action = useCallback((value: string) => {
+    setReportRequest(null);
     setSettingsFocusSection(null);
     setPalette(false);
     setCapture(false);
@@ -102,7 +106,10 @@ export default function App() {
     else if (value === 'task')
       setTask({ id: uid(), status: 'Planned', priority: 'Medium', dueDate: today() });
     else if (value === 'note') setNote({ id: uid(), title: '', content: '' });
-    else setPage(value);
+    else if (value === 'AllTasks') {
+      setTaskView({ query: '', project: '', sort: 'manual' });
+      setPage('Tasks');
+    } else setPage(value);
   }, []);
   const openConnections = useCallback(() => {
     action('Settings');
@@ -307,6 +314,10 @@ export default function App() {
             </div>
             {page === 'Home' ? (
               <Home
+                onReport={(date) => {
+                  action('Timeline');
+                  setReportRequest({ date, revision: Date.now() });
+                }}
                 workspace={workspace}
                 agents={agents}
                 onAction={action}
@@ -316,6 +327,10 @@ export default function App() {
               />
             ) : page === 'Projects' ? (
               <Projects
+                onTasks={(project) => {
+                  action('Tasks');
+                  setTaskView({ query: '', project, sort: 'manual' });
+                }}
                 {...workspace}
                 runs={agents.runs}
                 onTask={taskEditor}
@@ -339,7 +354,7 @@ export default function App() {
             ) : page === 'Agents' ? (
               <Agents agents={agents} setError={setError} onOpenConnections={openConnections} />
             ) : page === 'Timeline' ? (
-              <Timeline workspace={workspace} agents={agents.runs} />
+              <Timeline workspace={workspace} agents={agents.runs} reportRequest={reportRequest} />
             ) : page === 'Notes' ? (
               <Notes
                 workspace={workspace}

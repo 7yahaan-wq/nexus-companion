@@ -50,3 +50,10 @@ Nia 当前只渲染一个完整格子，加载解码后才开始计时，遵循�
 [CodexMonitor 固定提交的侧栏](https://github.com/Dimillian/CodexMonitor/blob/dd61b9abd37de5ded86e82b9fe8a83fd49d46fa5/src/features/app/components/Sidebar.tsx) 区分搜索无结果、未添加工作区和没有会话。[其搜索栏](https://github.com/Dimillian/CodexMonitor/blob/dd61b9abd37de5ded86e82b9fe8a83fd49d46fa5/src/features/app/components/SidebarSearchBar.tsx) 提供清除操作。Nexus 结合只读目录来源，进一步区分暂停和读取异常，提供清除筛选、启用和直达连接设置。
 
 上述为源码观察和本产品适配判断。独立智能体在隔离数据上实际复现了两类卡点后才选择实施，未复制上游代码或素材，未引入新依赖。容量摘要暂缓，继续复用已有每日计划。开发及证据复用流程见 [DEVELOPMENT_LOOP.md](DEVELOPMENT_LOOP.md)。
+
+## 2026-10-28：日报与项目上下文
+
+- [Super Productivity 固定提交的每日总结](https://github.com/super-productivity/super-productivity/blob/79c678aab9ff6acbb8c26e5ec72a8fb0eb2ab09e/src/app/pages/daily-summary/daily-summary.component.ts#L143)：路由 dayStr 驱动日任务/专注汇总，页面并列展示总结笔记。其笔记是全局例行模板，不能推断为历史回顾存储。Nexus 借鉴日期明确、总结与反思同页；继续使用自己的 daily-plan 日期键，并防止迟到读取覆盖新日期。
+- [Vikunja 固定提交的项目视图路由](https://github.com/go-vikunja/vikunja/blob/bbc998ebb14f0d31073b48cf48cf1597e9b4b5e7/frontend/src/router/index.ts#L366)：project.index 重定向带 projectId 与记忆的 viewId。Nexus 借鉴进入项目就携带项目上下文，复用 App 的 TaskView，显式进入时清除冲突关键词。未引入其路由系统、服务或代码。
+
+以上是官方源码观察与本地适配的区分；研究本身不证明 Nexus 通过运行验收。

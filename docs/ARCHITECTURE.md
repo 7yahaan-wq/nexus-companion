@@ -1,6 +1,6 @@
 # Nexus Companion architecture
 
-## Current architecture — 0.5.2
+## Current architecture — 0.5.3
 
 Electron + React + TypeScript + Vite. Electron provides Windows tray, notifications, global shortcuts, filesystem and NSIS/portable packaging without a Rust toolchain. React owns presentation only. Node services own persistence and integrations behind a narrow context-isolated IPC bridge. SQLite runs in a worker (Node built-in SQLite); no native addon ABI dependency. Windows AppData/Nexus Companion stores data, logs and imported assets. Ordinary workflows remain local, without analytics or cloud sync. The explicit exception is a user-triggered, read-only account/usage query through the official local Codex CLI, which may contact Codex services.
 
@@ -45,3 +45,5 @@ Backups include records and only referenced assets, with SHA-256 validation. Imp
 ## Bounded verification workflow
 
 Verification remains a fixed local sequence, without model execution or an unattended repair agent. Explicit resume validates source/evaluator/toolchain fingerprints, evidence logs and required build/package artifacts before reusing recent successful stages. Reports distinguish fresh execution and reuse. Failures stop the sequence; wall-clock, step and output bounds prevent unbounded runs. Independent user critique, immutable acceptance conditions and ownership are documented in [DEVELOPMENT_LOOP.md](DEVELOPMENT_LOOP.md).
+
+日报按选定日期读取 settings 的 daily-plan 记录，过期异步响应被忽略；Home 等待当前写入成功后才跳转。纯 makeReport 接受可选的同日计划，复制与导出复用当前生成内容。显式项目任务入口由 App 设置 TaskView 并清除旧关键词，普通侧栏导航保留视图。

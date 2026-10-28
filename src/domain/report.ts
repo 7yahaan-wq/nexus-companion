@@ -1,9 +1,15 @@
+import type { DailyPlan } from './planning';
 interface RecordData {
   id: string;
   [key: string]: any;
 }
 const dayKey = (value: string) => (value ? new Date(value).toLocaleDateString('sv-SE') : '');
-export function makeReport(date: string, data: Record<string, RecordData[]>, agents: RecordData[]) {
+export function makeReport(
+  date: string,
+  data: Record<string, RecordData[]>,
+  agents: RecordData[],
+  plan?: DailyPlan | null,
+) {
   const start = new Date(date + 'T00:00').getTime(),
     end = new Date(date + 'T23:59:59.999').getTime();
   const completed = data.tasks.filter((t) => t.status === 'Done' && dayKey(t.completedAt) === date);
@@ -43,7 +49,19 @@ export function makeReport(date: string, data: Record<string, RecordData[]>, age
   );
   const items = (rows: RecordData[], key = 'title') =>
     rows.length ? rows.map((r) => `- ${r[key] || r.id}`).join('\n') : '- 无';
-  return `# ${date} · Daily Development Report\n\n## Completed Tasks\n${items(completed)}\n\n## Agent Activity（本地观测）\n${activity.length ? activity.map((a) => `- ${a.taskName} · ${a.status} · ${a.currentStep}`).join('\n') : '- 无可用记录'}\n\n## Modified Projects\n${items(projects, 'name')}\n\n## Agent Runtime\n- 已知且有开始/结束事件的时间：${Math.round(runtime / 60000)} 分钟\n- 未结束、缺少事件的时长：Unavailable；不计入合计\n\n## Focus Time\n- ${Math.round(focus / 60)} 分钟\n\n## Failed Tasks\n${items(
+  const selectedPlan = plan?.date === date && plan.id === `daily-plan:${date}` ? plan : null;
+  const priorities = selectedPlan
+    ? [...new Set(selectedPlan.topTaskIds || [])]
+        .slice(0, 3)
+        .map(
+          (id) => `- ${data.tasks.find((task) => task.id === id)?.title || '已删除或不可用的任务'}`,
+        )
+        .join('\n') || '- 当天未选择重点任务'
+    : '';
+  const review = selectedPlan
+    ? `## Daily Plan / 当日计划\n- 可用时间：${selectedPlan.capacityMinutes} 分钟\n- ${selectedPlan.closedAt ? '已收工' : selectedPlan.startedAt ? '已开工，尚未收工' : '尚未开工'}\n\n### Priorities / 重点任务（当前名称）\n${priorities}\n\n## Reflection / 收工回顾\n${selectedPlan.reflection?.trim() ? selectedPlan.reflection : '当天尚未填写回顾。'}`
+    : '## Daily Plan / 当日计划\n当天没有已保存的计划或回顾。';
+  return `# ${date} · Daily Development Report\n\n${review}\n\n## Completed Tasks\n${items(completed)}\n\n## Agent Activity（本地观测）\n${activity.length ? activity.map((a) => `- ${a.taskName} · ${a.status} · ${a.currentStep}`).join('\n') : '- 无可用记录'}\n\n## Modified Projects\n${items(projects, 'name')}\n\n## Agent Runtime\n- 已知且有开始/结束事件的时间：${Math.round(runtime / 60000)} 分钟\n- 未结束、缺少事件的时长：Unavailable；不计入合计\n\n## Focus Time\n- ${Math.round(focus / 60)} 分钟\n\n## Failed Tasks\n${items(
     activity.filter((a) => a.status === 'FAILED'),
     'taskName',
   )}\n\n## Waiting Tasks\n${items(data.tasks.filter((t) => t.status === 'Waiting'))}\n${items(

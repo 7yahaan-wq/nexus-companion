@@ -36,9 +36,14 @@ export const widgets: WidgetDefinition[] = [
 ];
 // Keep writes ordered across Home remounts so navigating away cannot drop a review.
 let dailyPlanWrites: Promise<unknown> = Promise.resolve();
+let latestPlanWrite: { date: string; result: Promise<unknown>; failed: boolean } | null = null;
 function writeDailyPlan(value: DailyPlan) {
   const result = dailyPlanWrites.then(() => api('save', 'settings', value));
-  dailyPlanWrites = result.catch(() => undefined);
+  const write = { date: value.date, result, failed: false };
+  latestPlanWrite = write;
+  dailyPlanWrites = result.catch(() => {
+    write.failed = true;
+  });
   return result;
 }
 export default function Home({
@@ -48,6 +53,7 @@ export default function Home({
   onTask,
   onFocus,
   onNote,
+  onReport,
 }: {
   workspace: WorkspaceActions;
   agents: ReturnType<typeof useAgents>;
@@ -55,6 +61,7 @@ export default function Home({
   onTask: (t?: Entity) => void;
   onFocus?: (task: Entity) => void;
   onNote?: (id: string) => void;
+  onReport: (date: string) => void;
 }) {
   const { data, save, setError } = workspace;
   const { t, language } = useI18n();
@@ -68,6 +75,8 @@ export default function Home({
   }, [planning]);
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [openingReport, setOpeningReport] = useState(false);
+  const reportOpening = useRef(false);
   const [notice, setNotice] = useState('');
   const [now, setNow] = useState(Date.now());
   const mounted = useRef(true);
@@ -110,7 +119,7 @@ export default function Home({
     };
   }, [day, setError]);
   async function persist(next: DailyPlan, message = '', automatic = false) {
-    if (!loaded || (saving && !automatic)) return;
+    if (!loaded || reportOpening.current || (saving && !automatic)) return;
     if (!automatic) setSaving(true);
     try {
       const normalized = dailyPlan(day, {
@@ -125,6 +134,25 @@ export default function Home({
       setError(e.message);
     } finally {
       if (mounted.current && !automatic) setSaving(false);
+    }
+  }
+  async function openReport() {
+    if (!loaded || reportOpening.current) return;
+    const reportDay = day;
+    reportOpening.current = true;
+    setOpeningReport(true);
+    setError('');
+    try {
+      if (latestPlanWrite?.date === reportDay) {
+        if (latestPlanWrite.failed) await writeDailyPlan(planRef.current);
+        else await latestPlanWrite.result;
+      }
+      if (mounted.current) onReport(reportDay);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      reportOpening.current = false;
+      if (mounted.current) setOpeningReport(false);
     }
   }
   function toggleTop(id: string) {
@@ -229,7 +257,7 @@ export default function Home({
         </span>
         <button
           className="day-plan-toggle"
-          disabled={!loaded || saving}
+          disabled={!loaded || saving || openingReport}
           onClick={() => setPlanning(!planning)}
           aria-expanded={planning}
         >
@@ -238,7 +266,7 @@ export default function Home({
         {!plan.startedAt ? (
           <button
             className="primary"
-            disabled={!loaded || saving}
+            disabled={!loaded || saving || openingReport}
             onClick={async () => {
               await persist({ ...plan, startedAt: new Date().toISOString() });
               setPlanning(true);
@@ -343,7 +371,7 @@ export default function Home({
               </p>
             </div>
           )}
-          <button className="panel-link" onClick={() => onAction('Tasks')}>
+          <button className="panel-link" onClick={() => onAction('AllTasks')}>
             {t('查看全部任务', 'View all tasks')}
             <ArrowUpRight size={13} />
           </button>
@@ -423,7 +451,7 @@ export default function Home({
                     {task.title}
                   </button>
                   <button
-                    disabled={saving}
+                    disabled={saving || openingReport}
                     aria-label={t(`取消重点：${task.title}`, `Unpin: ${task.title}`)}
                     onClick={() => toggleTop(task.id)}
                   >
@@ -436,7 +464,7 @@ export default function Home({
                 <select
                   aria-label={t('加入今日重点', 'Add a priority')}
                   value=""
-                  disabled={saving || chosen.length >= 3}
+                  disabled={saving || openingReport || chosen.length >= 3}
                   onChange={(e) => toggleTop(e.target.value)}
                 >
                   <option value="">
@@ -458,7 +486,7 @@ export default function Home({
                   min="0"
                   max="1440"
                   value={plan.capacityMinutes}
-                  disabled={saving}
+                  disabled={saving || openingReport}
                   onChange={(e) =>
                     void persist(
                       { ...planRef.current, capacityMinutes: Number(e.target.value) },
@@ -491,7 +519,7 @@ export default function Home({
                   <div className="leftover-row" key={task.id}>
                     <button onClick={() => onTask(task)}>{task.title}</button>
                     {task.dueDate !== day && (
-                      <button disabled={saving} onClick={() => moveToday(task)}>
+                      <button disabled={saving || openingReport} onClick={() => moveToday(task)}>
                         {t('移到今天', 'Move to today')}
                       </button>
                     )}
@@ -519,7 +547,7 @@ export default function Home({
                   rows={3}
                   maxLength={4000}
                   value={plan.reflection}
-                  disabled={saving}
+                  disabled={saving || openingReport}
                   onChange={(e) =>
                     void persist({ ...planRef.current, reflection: e.target.value }, '', true)
                   }
@@ -533,7 +561,7 @@ export default function Home({
               </p>
               <div className="planning-actions">
                 <button
-                  disabled={saving}
+                  disabled={saving || openingReport}
                   onClick={() =>
                     void persist(plan, t('今日计划与回顾已保存', 'Daily plan and reflection saved'))
                   }
@@ -542,7 +570,7 @@ export default function Home({
                 </button>
                 {plan.closedAt ? (
                   <button
-                    disabled={saving}
+                    disabled={saving || openingReport}
                     onClick={() =>
                       void persist(
                         { ...plan, closedAt: null },
@@ -555,7 +583,7 @@ export default function Home({
                 ) : (
                   <button
                     className="primary"
-                    disabled={saving}
+                    disabled={saving || openingReport}
                     onClick={() =>
                       void persist(
                         {
@@ -741,7 +769,7 @@ export default function Home({
             `${completed.length} tasks completed · ${focus} minutes focused`,
           )}
         </p>
-        <button onClick={() => onAction('Timeline')}>
+        <button disabled={!loaded || openingReport} onClick={() => void openReport()}>
           <L text="查看日报 ↗" />
         </button>
       </div>

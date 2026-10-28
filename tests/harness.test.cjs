@@ -311,7 +311,7 @@ test('fixed plans keep original desktop coverage, new journeys, domain ordering,
     '.env.production.local',
   ]);
   assert.equal(full.stages.filter((stage) => stage.id === 'source:contract').length, 1);
-  assert.equal(full.stages.filter((stage) => stage.id.startsWith('source:desktop:')).length, 20);
+  assert.equal(full.stages.filter((stage) => stage.id.startsWith('source:desktop:')).length, 21);
   assert.ok(full.stages.some((stage) => stage.id === 'source:desktop:tasks-flow'));
   assert.ok(full.stages.length <= 32);
   const core = createPlan(root, 'core');
@@ -326,12 +326,14 @@ test('fixed plans keep original desktop coverage, new journeys, domain ordering,
   assert.ok(packaged.stages.some((stage) => stage.id === 'packaged:agent-recovery'));
   assert.ok(packaged.stages.some((stage) => stage.id === 'packaged:calendar-navigation'));
   assert.ok(packaged.stages.some((stage) => stage.id === 'packaged:tasks-flow'));
+  assert.ok(full.stages.some((stage) => stage.id === 'source:desktop:review-navigation'));
+  assert.ok(packaged.stages.some((stage) => stage.id === 'packaged:review-navigation'));
   assert.equal(packaged.stages.at(-1).id, 'packaged:portable');
   assert.deepEqual(packaged.stages.at(-1).outputs, [
     '.test-data/portable-smoke.png',
     '.test-data/portable-result.json',
   ]);
-  assert.equal(packaged.stages.length, 13);
+  assert.equal(packaged.stages.length, 14);
 });
 
 test('verification plans cannot load an inherited live development server or old executable', () => {

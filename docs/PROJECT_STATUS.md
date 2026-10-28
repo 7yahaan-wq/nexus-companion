@@ -1,17 +1,17 @@
 # Project status
 
-## Current release: 0.5.2 (2026-10-24)
+## Current release: 0.5.3 (2026-10-28)
 
-This release improves daily task creation, retained filters, accessible status changes and atomic board moves. The current source harness, archive audit, packaged desktop journeys and actual portable EXE checks have passed.
+This release connects saved daily reflections to report viewing/copy/export and projects to complete scoped task boards. Current source, packaged desktop and actual portable EXE verification have passed.
 
 Source is private at [7yahaan-wq/nexus-companion](https://github.com/7yahaan-wq/nexus-companion). Generated EXEs live in ignored `dist/`; pushing source does not upload release binaries.
 
 ## Current product
 
 - Notes and quick capture keep local drafts across closing and restart. Saving selects the note and clears stale filters, including when renaming the selected note. Ideas create linked tasks without duplicates; tasks link back to their source.
-- Home prioritizes today's work, unfinished overdue tasks and the next calendar event. Daily plans hold up to three priorities, available minutes and a saved reflection. Rescheduling and task completion remain explicit actions.
+- Home prioritizes today's work, unfinished overdue tasks and the next calendar event. Daily plans hold up to three priorities, available minutes and a saved reflection; Home waits for the latest save before directly opening the report. Selected-date plans are included in its preview, copy and export. Rescheduling and task completion remain explicit actions.
 - Focus starts from tasks or projects and remains visible across pages. Pause/restart recovery, exact-once time credit and manual-time edit receipts protect task totals. Older completed sessions are not backfilled.
-- Projects show linked tasks and notes, a resume action and an automatically saved next step. Task forms keep secondary fields under More options and protect unsaved edits. Calendar task scheduling defaults to the next quarter-hour.
+- Projects show linked tasks and notes, a resume action, an automatically saved next step and a counted link to the complete project task board. Task forms keep secondary fields under More options and protect unsaved edits. Calendar task scheduling defaults to the next quarter-hour.
 - Nia supports compact layout, single-cel playback, eight state portraits and a persistent animation/portrait switch. Only idle animation has user visual acceptance; seven non-idle sequences remain candidates. Core and imported Avatar Packs remain supported.
 - Backups include daily plans, drafts and capture preferences. Runtime state and credentials stay excluded. Codex integration observes local files and does not control live sessions.
 
@@ -24,29 +24,36 @@ Source is private at [7yahaan-wq/nexus-companion](https://github.com/7yahaan-wq/
 
 ## Independent experience and selected improvements
 
-An independent agent used isolated multi-project fixtures and native mouse dragging. It reproduced project-filtered creation hiding the new task, task/idea round trips losing all filters, automatic-sort dragging changing the hidden manual order without visual feedback, and filtered moves creating duplicate manual order values. Evidence is local under `.test-data/ux-review-20261024-round2/`. The observed hidden tasks retained their relative order; no data loss was established by this baseline.
+An independent agent reproduced two daily-use gaps on 0.5.2: saved reflection absent from preview/clipboard/export, and nine linked project tasks reduced to five without a full-list entry. Controlled baseline evidence is under .test-data/ux-review-20261028/. The independent agent then authored tests/review-navigation.cjs, covering save/read failures, two response-order races, real Markdown export and 9/0/1-task project navigation.
 
-Two paths were selected before implementation: filtered task work and reliable task movement. A read-only review then identified explicit capture navigation and committed-move/list-refresh failure boundaries; both were added to the fixed regression. Acceptance is documented in [DEVELOPMENT_LOOP.md](DEVELOPMENT_LOOP.md). Existing regression assertions remain intact; the Harness coverage assertion adds the new tasks-flow suite.
+The static review found no new blocking defect. Its documented limit is that a failed Home reflection is retained for retry while the user remains there; this release does not claim recovery of failed drafts after switching pages or restarting. GitHub source observations and local adaptations are recorded in [OPEN_SOURCE_RESEARCH.md](OPEN_SOURCE_RESEARCH.md).
 
 ## Current verification
 
-| Check                     | Status / evidence                                                                                                          |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Full source Harness       | Passed: 87 unit tests; all 26 stages including 20 desktop suites; .test-data/verification.json                             |
-| Resume                    | Executed 26, reused 0: version/source changes invalidated old passes; current run passed first try                         |
-| Independent review        | UI navigation, failure/retry, strict move validation and transaction reviewed                                              |
-| Package/archive audit     | Passed: 40 application files match the ASAR; 4,580 archive entries inspected; .test-data/release-audit.json                |
-| Packaged desktop/portable | Passed: all 13 stages executed, including 11 desktop suites and actual portable EXE; .test-data/packaged-verification.json |
-| Installer wizard          | Not installed or checked                                                                                                   |
+| Check                 | Result                                                                                                    |
+| --------------------- | --------------------------------------------------------------------------------------------------------- |
+| Full source Harness   | Passed: 98 unit tests, 27 stages including 21 desktop suites; .test-data/verification.json                |
+| Source resume         | Final resume: executed 2 (environment, affected units), reused 25; earlier recovery executed 3, reused 24 |
+| Package/archive audit | Passed: 40 source files match app.asar; 4,580 entries inspected                                           |
+| Packaged verification | Passed: 14 stages including 12 desktop suites and actual portable EXE; executed 10, reused 4              |
+| Installer wizard      | Built but not installed or checked                                                                        |
 
-Baseline 0.5.1 reports are retained under `.test-data/iteration-2026-10-24-round2/baseline-0.5.1-*`. This release retains the existing conservative dependency fingerprints, fixed bounds and explicit --resume behavior. It does not treat changed sources or a new version as already verified.
+The first source run passed all 27 stages with 96 units. Release review then added two cleanup regressions. The first packaged run stopped at notes-flow: event traces and the controlled SQLite record proved that automatic text entry raced the editor's initial focus and typed into the title. The test now waits for initial readiness/focus; its persistence assertions are unchanged. Only affected or unfinished checks were executed on resume. Finalization now uses the audit checksum order, so refreshing companion documents preserves the exact verified checksum bytes; the final script change reran units and reused all desktop stages. This is a test synchronization correction, not a claimed product-focus fix.
 
-Current Windows x64 artifacts were built and checked on 2026-10-24 (Asia/Shanghai). Final SHA-256 values also appear in `dist/SHA256SUMS-0.5.2.txt`:
+The independent reviewer inspected both English/light/1060px source screenshots: no clipped or overlapping controls. Current acceptance screenshots are retained. The project image captures inspection in progress, not completed project detection. Focused security review found and then re-reviewed the same-version repackaging cleanup gate: the current report must match the agreement output fingerprint and current executable hashes.
+
+Baseline 0.5.2 reports, first source pass, first packaged failure and diagnostic traces are retained under .test-data/iteration-2026-10-28/ and .test-data/ux-review-20261028/. All tests use controlled profiles/Codex fixtures. No real account queries or personal data were used.
+
+Current Windows x64 artifacts (2026-10-28); matching checksum file: dist/SHA256SUMS-0.5.3.txt.
 
 | Artifact                          |     Bytes | SHA-256                                                            |
 | --------------------------------- | --------: | ------------------------------------------------------------------ |
-| NexusCompanion-Portable-0.5.2.exe | 137625443 | `2114ce0864e5543694bfaea612ceef1437c00b9c91bc00ec2be60010d7889cfd` |
-| NexusCompanion-Setup-0.5.2.exe    | 137835407 | `d31760a8469789e9e15df8581e7cea0ad7f6be8ca500638e34cd471ff9952fd4` |
+| NexusCompanion-Portable-0.5.3.exe | 137626156 | `cc298e9237b956121c557e3af4837cee39eefb8dff6d8d8894bd8455155286c3` |
+| NexusCompanion-Setup-0.5.3.exe    | 137836133 | `e68a4c3cad52399d8ab8fe5eec7d76e71c62b07691d6d13302f51da5c6f4ca66` |
+
+## Cleanup and rollback
+
+Cleanup completed: 3 reviewed baseline screenshots, 1 duplicate controlled export and 1 obsolete source release note removed (5 files, 1,169,147 bytes). Baseline reports explicitly say “媒体已清理”; text, current acceptance media and failure traces remain. The old release note remains in tag v0.5.2 and the rollback companion bundle. Distribution preview/apply found 0 additional obsolete release files. Keep current 0.5.3 and the verified 0.5.2 rollback bundle, including its matching checksum and companion release note. Current verification logs/outputs, test databases/fixtures, dependency/toolchain caches, artwork and the user's pre-existing AGENTS.md edit are protected.
 
 ## Known limits and next candidates
 
@@ -54,8 +61,8 @@ Current Windows x64 artifacts were built and checked on 2026-10-24 (Asia/Shangha
 - Seven candidate animations still need visual acceptance. Frame counts, hashes, anchor metrics and source uploads cannot establish facial quality. Imported GIF motion is independent of the built-in animation toggle.
 - Calendar single-occurrence exceptions, external calendars, configurable dashboard widgets and Live2D/Spine are not implemented. Daily calendar capacity summaries remain a future candidate.
 - Project deletion does not cascade or unlink all related entities. VS Code discovery checks default installation locations and may miss custom installs. Task movement is now transactional; broader targeted background refresh remains a candidate.
-- Daily reflections are saved but not yet included in the generated daily report. Project details show a limited recent task list without a dedicated show-all action. Both remain future candidates.
-- Some detailed help and backend diagnostics remain Chinese. Settings navigation can be simplified without removing useful controls.
+- Reflection drafts whose saves fail are retryable on Home; leaving the page before a successful save is not a draft-recovery guarantee. Report priority labels use current task names, not historical name snapshots.
+- Markdown soft line breaks in a reflection render as a paragraph; copy/export preserve the exact multiline text. Some detailed help and backend diagnostics remain Chinese. Settings navigation can be simplified without removing useful controls.
 - Windows executables are unsigned. OS notification settings can suppress toasts. The development-only `extract-zip` dependency retains an upstream advisory; Electron archives are checked against the official hash before extraction.
 
-See [USER_GUIDE.md](USER_GUIDE.md), [DEVELOPMENT_HANDOFF.md](DEVELOPMENT_HANDOFF.md), [START_ON_NEW_PC.md](START_ON_NEW_PC.md), [VERIFICATION.md](VERIFICATION.md), [RELEASE_0.5.2.md](RELEASE_0.5.2.md) and [NIA_ANIMATION.md](NIA_ANIMATION.md). The source-only frame-inspection tool is `docs/NIA_REVIEW.html`; open it from a source checkout with its `public/` artwork, not from the packaged documentation.
+See [USER_GUIDE.md](USER_GUIDE.md), [DEVELOPMENT_HANDOFF.md](DEVELOPMENT_HANDOFF.md), [START_ON_NEW_PC.md](START_ON_NEW_PC.md), [VERIFICATION.md](VERIFICATION.md), [RELEASE_0.5.3.md](RELEASE_0.5.3.md) and [NIA_ANIMATION.md](NIA_ANIMATION.md). The source-only frame-inspection tool is `docs/NIA_REVIEW.html`; open it from a source checkout with its `public/` artwork, not from the packaged documentation.
