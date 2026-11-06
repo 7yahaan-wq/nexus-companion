@@ -1,4 +1,5 @@
 import type { AgentRun, AvatarState } from './types';
+import choreography from '../../art/nia-state-hires/choreography.json' with { type: 'json' };
 
 export const avatarStates: AvatarState[] = [
   'idle',
@@ -43,24 +44,26 @@ export interface SpriteAnimation {
 
 // Idle remains byte-for-byte accepted art. The seven independent sequences
 // are complete generated cels, pending the user's visual acceptance.
-const sequence = (state: string, duration: number, loop: boolean, still = 23): SpriteAnimation => ({
+const sequence = (state: AvatarState, durations: readonly number[], loop: boolean, still = 23): SpriteAnimation => ({
   sheet: './assets/nia/animations-hires/' + state + '.png',
+  // The atlas already contains the complete cels in authored playback order.
   frames: Array.from({ length: 24 }, (_, i) => i),
-  durations: [500, ...Array(22).fill(duration), 600], still, loop,
+  durations, still, loop,
 });
+const regularTiming = (duration: number) => [500, ...Array(22).fill(duration), 600];
 export const niaAnimations: Record<AvatarState, SpriteAnimation> = {
   idle: {
     sheet: './assets/nia/animations/idle.png',
     frames: Array.from({ length: 12 }, (_, i) => i * 2),
     durations: [700, ...Array(11).fill(115)], still: 0, loop: true,
   },
-  working: sequence('working', 110, true, 0),
-  thinking: sequence('thinking', 125, true, 0),
-  happy: sequence('happy', 115, false),
-  warning: sequence('warning', 120, false),
-  error: sequence('error', 130, false),
-  sleepy: sequence('sleepy', 160, true, 19),
-  celebrate: sequence('celebrate', 105, false),
+  working: sequence('working', choreography.working.durations, true, 0),
+  thinking: sequence('thinking', regularTiming(125), true, 0),
+  happy: sequence('happy', regularTiming(115), false),
+  warning: sequence('warning', choreography.warning.durations, false),
+  error: sequence('error', regularTiming(130), false),
+  sleepy: sequence('sleepy', regularTiming(160), true, 19),
+  celebrate: sequence('celebrate', choreography.celebrate.durations, false),
 };
 
 export function resolveAvatarState(runs: AgentRun[], focus = false, now = Date.now()): AvatarState {

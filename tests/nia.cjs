@@ -120,6 +120,7 @@ async function launch(first = true) {
         const context = canvas.getContext('2d');
         context.imageSmoothingEnabled = false;
         const anchors = [];
+        const silhouetteTops = [];
         const sharpness = [];
         let borderPixels = 0;
         let laptopPixelMismatches = 0;
@@ -141,9 +142,11 @@ async function launch(first = true) {
           let xSum = 0;
           let ySum = 0;
           let samples = 0;
+          let silhouetteTop = null;
           for (let y = 0; y < 362; y++) {
             for (let x = 0; x < 362; x++) {
               const index = (y * 362 + x) * 4;
+              if (silhouetteTop === null && data[index + 3] > 140) silhouetteTop = y;
               if ((x < 8 || y < 8 || x >= 354 || y >= 354) && data[index + 3]) borderPixels++;
               if (x < 162 || x >= 204 || y < 280 || y >= 320) continue;
               const red = data[index];
@@ -156,6 +159,7 @@ async function launch(first = true) {
             }
           }
           anchors.push(samples ? [xSum / samples, ySum / samples] : null);
+          silhouetteTops.push(silhouetteTop);
           // A blurred double exposure loses high-frequency eye and eyelash detail.
           const gray = (x, y) => {
             const i = (y * 362 + x) * 4;
@@ -173,9 +177,14 @@ async function launch(first = true) {
           sharpness.push(edgeSquares / edgeCount - (edgeSum / edgeCount) ** 2);
         }
         sharpness.sort((a, b) => a - b);
-        return { borderPixels, laptopPixelMismatches, anchors, medianSharpness: sharpness[12] };
+        return { borderPixels, laptopPixelMismatches, anchors, silhouetteTops, medianSharpness: sharpness[12] };
       });
       assert.equal(art.borderPixels, 0, state + ' must not bleed across cells');
+      if (state === 'warning' || state === 'celebrate') {
+        const [before, after] = art.silhouetteTops.slice(11, 13);
+        assert.ok(before !== null && after !== null && Math.abs(after - before) <= 3,
+          state + ': head silhouette jumps at the source-page join');
+      }
       if (state === 'idle') assert.equal(art.laptopPixelMismatches, 0, 'accepted idle laptop unchanged');
       console.log(state, 'sharpness', art.medianSharpness.toFixed(1));
       assert.ok(art.medianSharpness > 500, state + ' must keep legible facial linework');

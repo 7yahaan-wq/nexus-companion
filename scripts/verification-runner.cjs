@@ -467,6 +467,7 @@ function createPlan(root, mode) {
     'scripts/verify-packaged.cjs',
   ];
   const source = ['src', 'public', 'electron'];
+  const choreography = 'art/nia-state-hires/choreography.json';
   const codexHome = path.join(
     root,
     '.test-data',
@@ -550,7 +551,7 @@ function createPlan(root, mode) {
         'source:typescript',
         'TypeScript',
         ['node_modules/typescript/bin/tsc', '--noEmit'],
-        ['src', 'tsconfig.json'],
+        ['src', choreography, 'tsconfig.json'],
       ),
       stage(
         'source:domain',
@@ -564,7 +565,7 @@ function createPlan(root, mode) {
           'source:renderer',
           'renderer build',
           ['node_modules/vite/bin/vite.js', 'build'],
-          ['src', 'public', 'index.html', 'vite.config.ts', 'tsconfig.json'],
+          ['src', 'public', choreography, 'index.html', 'vite.config.ts', 'tsconfig.json'],
           ['build'],
         ),
         optionalInputs: ['.env', '.env.local', '.env.production', '.env.production.local'],
@@ -573,7 +574,7 @@ function createPlan(root, mode) {
         'source:unit',
         'unit tests',
         ['--test', ...units],
-        [...source, 'scripts', 'tests/support', ...units],
+        [...source, choreography, 'art/nia-state-hires/manifest.json', 'docs/NIA_REVIEW.html', 'scripts', 'tests/support', ...units],
       ),
       ...(mode === 'full' ? DESKTOP : ['nia']).map((name) =>
         stage(

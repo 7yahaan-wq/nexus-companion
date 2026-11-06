@@ -1,8 +1,8 @@
 # 项目开发接续说明
 
-核对日期：2026-10-28。当前版本 `0.5.3`，工作目录：`D:\ProjectNia\nexus-companion`。本次补全日报回顾、日期读取恢复及项目全部任务导航，沿用验证续跑，保留既有工作流与数据。当前验收和发布结果统一见 [PROJECT_STATUS.md](PROJECT_STATUS.md) 和 [VERIFICATION.md](VERIFICATION.md)。
+核对日期：2026-11-07。当前版本 `0.5.4`，工作目录：`D:\ProjectNia\nexus-companion`。0.5.4 的美术工作集中在专注、提醒与庆祝动画，素材与复现方法见 [NIA_ANIMATION.md](NIA_ANIMATION.md)。当前验收和发布结果统一见 [PROJECT_STATUS.md](PROJECT_STATUS.md) 和 [VERIFICATION.md](VERIFICATION.md)。
 
-先读根目录 [AGENTS.md](../AGENTS.md)；跨机器启动见 [START_ON_NEW_PC.md](START_ON_NEW_PC.md)。本文的源码说明已按 0.5.3 更新，第 7 节的机器路径和安装工具仍是历史环境记录，不能直接套用到另一台电脑。
+先读根目录 [AGENTS.md](../AGENTS.md)；跨机器启动见 [START_ON_NEW_PC.md](START_ON_NEW_PC.md)。本文的源码说明已按 0.5.4 更新，第 7 节的机器路径和安装工具仍是历史环境记录，不能直接套用到另一台电脑。
 
 本文基于现有源码、配置、测试和发布文件整理，用于后续在本机继续开发。当前发布验收见 VERIFICATION.md；本次已实现的优化与后续候选项分别记录。修改功能后应同步更新相关说明。
 
@@ -283,7 +283,7 @@ npm start
 
 `verify` 中的桌面套件包含基础页面、工作流、Nia、受控 `agent-usage` 用量交互，以及 Agent 恢复和日历定位。入口 `scripts/verify.cjs` 使用的固定列表位于 `scripts/verification-runner.cjs`；它不自动完成安装器安装验收。
 
-`npm run harness -- --full` 与 `verify` 使用同一个固定阶段列表，环境和资源契约只运行一次。`npm run package` 生成新包和配套文档，完成源码/归档审计后，才删除名称匹配规则的旧版安装器、便携版、blockmap、校验和及版本说明。`npm run verify:packaged` 执行打包桌面流程和实际便携 EXE 检查。不得递归清空 `dist`，不得将不受 Git 跟踪的目录当作临时垃圾。
+`npm run harness -- --full` 与 `verify` 使用同一个固定阶段列表，环境和资源契约只运行一次。`npm run package` 生成新包、配套文档和归档审计。新包通过完整打包验收后，使用 clean-dist 预览清理清单，并显式指定回退版。`npm run verify:packaged` 执行打包桌面流程和实际便携 EXE 检查。不得递归清空 `dist`，不得将不受 Git 跟踪的目录当作临时垃圾。
 
 `e2e.cjs`、`usability.cjs` 与 `nia.cjs` 可用 `NEXUS_PACKAGED_EXE` 指定已解包的应用测试。`NEXUS_TEST_MODE=1` 仅在未打包应用中用于跳过首次引导；完整用户路径测试保留首次引导。
 

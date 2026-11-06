@@ -57,3 +57,8 @@ Nia 当前只渲染一个完整格子，加载解码后才开始计时，遵循�
 - [Vikunja 固定提交的项目视图路由](https://github.com/go-vikunja/vikunja/blob/bbc998ebb14f0d31073b48cf48cf1597e9b4b5e7/frontend/src/router/index.ts#L366)：project.index 重定向带 projectId 与记忆的 viewId。Nexus 借鉴进入项目就携带项目上下文，复用 App 的 TaskView，显式进入时清除冲突关键词。未引入其路由系统、服务或代码。
 
 以上是官方源码观察与本地适配的区分；研究本身不证明 Nexus 通过运行验收。
+
+## 2026-11-07 桌宠的动作与逐帧停留
+
+- **VPet** 在载入 PNG 序列时为每格读取独立时长。摸头反应会依次播放起势、循环段和收势。Nia 借鉴逐格停留和分段审查的方法，针对每个动作分别观察进入、主要姿势和结束。[逐帧时长](https://github.com/LorisYounger/VPet/blob/5f2042568780550d6f93c4bf27a148bf93790210/VPet-Simulator.Core/Graph/PNGAnimation.cs#L233-L239) · [摸头动作](https://github.com/LorisYounger/VPet/blob/5f2042568780550d6f93c4bf27a148bf93790210/VPet-Simulator.Core/Display/MainDisplay.cs#L168-L170)
+- **VS Code Pets** 的 Finley 在 idle 开头连续使用两格相同姿势，末格回到起始姿势。其可编辑源定义用于生成并核对运行资源。Nia 复用自己的完整源格，并在实际尺寸检查停留和末格到首格的接缝。[Finley 姿势定义](https://github.com/tonybaloney/vscode-pets/blob/15f13bc96cb8bade1aff2d49e363cd332b18536b/media/finley/pixel-art.json#L900-L921) · [导出工作流](https://github.com/tonybaloney/vscode-pets/blob/15f13bc96cb8bade1aff2d49e363cd332b18536b/docs/contributing.md#L22-L41)

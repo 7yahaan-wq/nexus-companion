@@ -40,7 +40,7 @@ test('idle stays unchanged and seven states use independent complete 24-cel sequ
   assert.deepEqual(Object.keys(niaAnimations).sort(), [...avatarStates].sort());
   assert.deepEqual(Object.keys(avatarTriggers).sort(), [...avatarStates].sort());
   assert.equal(new Set(Object.values(niaAnimations).map((animation) => animation.sheet)).size, 8);
-  for (const animation of Object.values(niaAnimations)) {
+  for (const [state, animation] of Object.entries(niaAnimations)) {
     const file = path.join(__dirname, '../public', animation.sheet);
     const bytes = fs.readFileSync(file);
     assert.equal(bytes.subarray(1, 4).toString(), 'PNG');
@@ -51,7 +51,9 @@ test('idle stays unchanged and seven states use independent complete 24-cel sequ
     assert.ok(animation.frames.every((frame) => frame >= 0 && frame < 24));
     assert.equal(animation.durations.length, animation.frames.length);
     assert.ok(animation.still >= 0 && animation.still < 24);
-    assert.ok(animation.durations.every((duration) => duration >= 100 && duration <= 5000));
+    const shortestFrame = ['working', 'warning', 'celebrate'].includes(state) ? 32 : 100;
+    assert.ok(animation.durations.every((duration) =>
+      Number.isInteger(duration) && duration >= shortestFrame && duration <= 5000), state);
     assert.equal(typeof animation.loop, 'boolean');
   }
   assert.deepEqual(niaAnimations.idle.frames, Array.from({ length: 12 }, (_, i) => i * 2));
@@ -64,5 +66,39 @@ test('idle stays unchanged and seven states use independent complete 24-cel sequ
   }
   for (const state of ['happy', 'warning', 'error', 'celebrate']) {
     assert.equal(niaAnimations[state].loop, false);
+  }
+});
+
+test('authored timing plays the corresponding original cels in their packed order', async () => {
+  const { niaAnimations } = await import('../src/domain/avatar.ts');
+  const choreography = require('../art/nia-state-hires/choreography.json');
+  const manifest = require('../art/nia-state-hires/manifest.json');
+  for (const state of ['working', 'warning', 'celebrate']) {
+    const animation = niaAnimations[state];
+    const packed = manifest.states[state].frames;
+    const originalFrames = animation.frames.map((slot) => {
+      assert.equal(packed[slot].frame, slot, state);
+      return packed[slot].sourceIndex;
+    });
+    assert.deepEqual(originalFrames, choreography[state].sourceOrder, state);
+    assert.deepEqual(animation.durations, choreography[state].durations, state);
+  }
+  const closed = new Set([10, 11, 12, 13, 22, 23]);
+  const closedTime = choreography.working.sourceOrder.reduce((sum, source, slot) =>
+    sum + (closed.has(source) ? niaAnimations.working.durations[slot] : 0), 0);
+  assert.ok(closedTime <= 300, 'working should reopen its eyes within a brief blink');
+});
+
+test('the local review page matches every runtime timeline and atlas', async () => {
+  const { avatarLabels, niaAnimations } = await import('../src/domain/avatar.ts');
+  const html = fs.readFileSync(path.join(__dirname, '../docs/NIA_REVIEW.html'), 'utf8');
+  const table = html.match(/<script type="application\/json" id="animations">([\s\S]*?)<\/script>/);
+  assert.ok(table, 'review data must be embedded for file:// use');
+  const review = JSON.parse(table[1]);
+  assert.deepEqual(Object.keys(review), Object.keys(niaAnimations));
+  for (const [state, animation] of Object.entries(niaAnimations)) {
+    const sheet = path.posix.join('../public', animation.sheet);
+    assert.deepEqual(review[state], { ...animation, sheet, label: avatarLabels[state] },
+      state + ': run node scripts/sync-nia-review.mjs to sync the review page');
   }
 });

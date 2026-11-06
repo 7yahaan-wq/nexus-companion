@@ -1,8 +1,8 @@
 # Project status
 
-## Current release: 0.5.3 (2026-10-28)
+## Current release 0.5.4 (2026-11-07)
 
-This release connects saved daily reflections to report viewing/copy/export and projects to complete scoped task boards. Current source, packaged desktop and actual portable EXE verification have passed.
+This release revises three Nia animation candidates for daily use. Use the settings preview to watch the working loop, warning reaction and celebration at their actual display size.
 
 Source is private at [7yahaan-wq/nexus-companion](https://github.com/7yahaan-wq/nexus-companion). Generated EXEs live in ignored `dist/`; pushing source does not upload release binaries.
 
@@ -22,38 +22,35 @@ Source is private at [7yahaan-wq/nexus-companion](https://github.com/7yahaan-wq/
 - Only manual buttons start the installed Codex CLI for `account/rateLimits/read` or `account/usage/read`. Queries use the selected Codex directory and its current CLI account. Nexus never reads credentials, signs in, submits prompts or controls threads. The CLI may refresh its own authentication. Results stay in renderer memory.
 - Official thread Credits, when available, retain microcredit precision and model groups. A valid response without thread usage is explicitly unavailable, never zero. Installed CLI/account compatibility and service availability affect this feature.
 
-## Independent experience and selected improvements
+## Animation review
 
-An independent agent reproduced two daily-use gaps on 0.5.2: saved reflection absent from preview/clipboard/export, and nine linked project tasks reduced to five without a full-list entry. Controlled baseline evidence is under .test-data/ux-review-20261028/. The independent agent then authored tests/review-navigation.cjs, covering save/read failures, two response-order races, real Markdown export and 9/0/1-task project navigation.
+Each of the three revised actions uses all 24 of its original full cels. The six source pages are unchanged. The working loop now lasts 4,748 ms (previously 3,520 ms), with its six closed-eye cels visible for 220 ms in total (previously 660 ms).
 
-The static review found no new blocking defect. Its documented limit is that a failed Home reflection is retained for retry while the user remains there; this release does not claim recovery of failed drafts after switching pages or restarting. GitHub source observations and local adaptations are recorded in [OPEN_SOURCE_RESEARCH.md](OPEN_SOURCE_RESEARCH.md).
+Across the transition from playback positions 11 to 12 (zero-based), the top of the visible artwork moved 10 pixels in the old warning and celebration atlases. In the new warning atlas the top moves from y=29 to 30, and in celebration from y=30 to 29. These measurements use the original 362-pixel cel and alpha above 140. They measure a specific jump. Visual review also covers expression, the working loop boundary and the final held poses of the two reactions. Only idle has user visual acceptance. [Local source and review workflow](NIA_ANIMATION.md)
+
+An independent reviewer compared anonymized old and new sequences at 255 pixels. They selected B for working, B for warning and A for celebration. All three choices were 0.5.4 after unblinding. The observed working blink lasted about 219 ms (formerly 663 ms). The warning and celebration head-top jumps measured about 0.7 screen pixels each (formerly 7). The reviewer still saw a 1–2-pixel shift at the laptop edges and small robot in both reactions, and a brief change in the mouth and eye line at celebration frame 10. These details remain open for user review.
 
 ## Current verification
 
-| Check                 | Result                                                                                                    |
-| --------------------- | --------------------------------------------------------------------------------------------------------- |
-| Full source Harness   | Passed: 98 unit tests, 27 stages including 21 desktop suites; .test-data/verification.json                |
-| Source resume         | Final resume: executed 2 (environment, affected units), reused 25; earlier recovery executed 3, reused 24 |
-| Package/archive audit | Passed: 40 source files match app.asar; 4,580 entries inspected                                           |
-| Packaged verification | Passed: 14 stages including 12 desktop suites and actual portable EXE; executed 10, reused 4              |
-| Installer wizard      | Built but not installed or checked                                                                        |
+- The full source Harness passed in one run on 0.5.4. It executed 27 stages and reused zero. All 100 unit tests passed.
+- Repeating the selected-state art export reused all three states after verifying their inputs and output hashes. It skipped rendering 72 cels and three runtime atlases.
+- The release audit matched 40 source files to the packaged application and inspected 4,580 archive entries. On the packaged Windows desktop app reporting 0.5.4, an independent user walkthrough saw all three 24-cel atlases at 2,172 × 1,448 pixels. The measured blink was 225 ms over a 4.74-second working cycle. Warning and celebration each held the last cel during an additional 850 ms of observation. The walkthrough recorded no page errors.
+- The packaged Harness passed all 14 stages. It executed 14 and reused zero. The actual portable EXE reached its SQLite bridge and exited with code 0. The installer was built and hashed. The installer wizard was not run.
 
-The first source run passed all 27 stages with 96 units. Release review then added two cleanup regressions. The first packaged run stopped at notes-flow: event traces and the controlled SQLite record proved that automatic text entry raced the editor's initial focus and typed into the title. The test now waits for initial readiness/focus; its persistence assertions are unchanged. Only affected or unfinished checks were executed on resume. Finalization now uses the audit checksum order, so refreshing companion documents preserves the exact verified checksum bytes; the final script change reran units and reused all desktop stages. This is a test synchronization correction, not a claimed product-focus fix.
+### Windows artifacts
 
-The independent reviewer inspected both English/light/1060px source screenshots: no clipped or overlapping controls. Current acceptance screenshots are retained. The project image captures inspection in progress, not completed project detection. Focused security review found and then re-reviewed the same-version repackaging cleanup gate: the current report must match the agreement output fingerprint and current executable hashes.
+| File | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `NexusCompanion-Portable-0.5.4.exe` | 137,641,530 | `82f38b1ace941d980dbfd012c148f718c26329c83e1a992c633d88898d6ef5ec` |
+| `NexusCompanion-Setup-0.5.4.exe` | 137,851,501 | `2095da979ea0d16209ffa06841715dc8dc9b93b521ba1e74cc65527d74b69798` |
 
-Baseline 0.5.2 reports, first source pass, first packaged failure and diagnostic traces are retained under .test-data/iteration-2026-10-28/ and .test-data/ux-review-20261028/. All tests use controlled profiles/Codex fixtures. No real account queries or personal data were used.
+`dist/` retains the current 0.5.4 release and the verified 0.5.3 rollback.
 
-Current Windows x64 artifacts (2026-10-28); matching checksum file: dist/SHA256SUMS-0.5.3.txt.
+### Cleanup
 
-| Artifact                          |     Bytes | SHA-256                                                            |
-| --------------------------------- | --------: | ------------------------------------------------------------------ |
-| NexusCompanion-Portable-0.5.3.exe | 137626156 | `cc298e9237b956121c557e3af4837cee39eefb8dff6d8d8894bd8455155286c3` |
-| NexusCompanion-Setup-0.5.3.exe    | 137836133 | `e68a4c3cad52399d8ab8fe5eec7d76e71c62b07691d6d13302f51da5c6f4ca66` |
+After verification, this round removed 29 files totaling 297,564,017 bytes (283.78 MiB). Twelve intermediate images and one-off scripts from the anonymized walkthrough accounted for 12,371,979 bytes. Twelve baseline boards, old atlas copies and temporary comparison pages/keys accounted for 9,582,611 bytes. Five obsolete 0.5.2 release files, including its executables and release note, accounted for 275,609,427 bytes. The intermediate review media have been cleaned up.
 
-## Cleanup and rollback
-
-Cleanup completed: 3 reviewed baseline screenshots, 1 duplicate controlled export and 1 obsolete source release note removed (5 files, 1,169,147 bytes). Baseline reports explicitly say “媒体已清理”; text, current acceptance media and failure traces remain. The old release note remains in tag v0.5.2 and the rollback companion bundle. Distribution preview/apply found 0 additional obsolete release files. Keep current 0.5.3 and the verified 0.5.2 rollback bundle, including its matching checksum and companion release note. Current verification logs/outputs, test databases/fixtures, dependency/toolchain caches, artwork and the user's pre-existing AGENTS.md edit are protected.
+The compact before/after comparison remains at `.test-data/nia-art-20261107/art-comparison.jpg` in the local workspace. The source review page, isolated databases, fixtures and verification logs are retained, along with both 0.5.3 executables, matching release files and three rollback verification records.
 
 ## Known limits and next candidates
 
@@ -65,4 +62,4 @@ Cleanup completed: 3 reviewed baseline screenshots, 1 duplicate controlled expor
 - Markdown soft line breaks in a reflection render as a paragraph; copy/export preserve the exact multiline text. Some detailed help and backend diagnostics remain Chinese. Settings navigation can be simplified without removing useful controls.
 - Windows executables are unsigned. OS notification settings can suppress toasts. The development-only `extract-zip` dependency retains an upstream advisory; Electron archives are checked against the official hash before extraction.
 
-See [USER_GUIDE.md](USER_GUIDE.md), [DEVELOPMENT_HANDOFF.md](DEVELOPMENT_HANDOFF.md), [START_ON_NEW_PC.md](START_ON_NEW_PC.md), [VERIFICATION.md](VERIFICATION.md), [RELEASE_0.5.3.md](RELEASE_0.5.3.md) and [NIA_ANIMATION.md](NIA_ANIMATION.md). The source-only frame-inspection tool is `docs/NIA_REVIEW.html`; open it from a source checkout with its `public/` artwork, not from the packaged documentation.
+See [USER_GUIDE.md](USER_GUIDE.md), [DEVELOPMENT_HANDOFF.md](DEVELOPMENT_HANDOFF.md), [START_ON_NEW_PC.md](START_ON_NEW_PC.md), [VERIFICATION.md](VERIFICATION.md), [RELEASE_0.5.4.md](RELEASE_0.5.4.md) and [NIA_ANIMATION.md](NIA_ANIMATION.md). The source-only frame-inspection tool is `docs/NIA_REVIEW.html`; open it from a source checkout with its `public/` artwork, not from the packaged documentation.

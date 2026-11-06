@@ -4,17 +4,26 @@ Each output maps to one grid cell in one persisted generated sheet. The only
 geometric operation is whole-cel uniform scaling and translation. No optical
 flow, local warping, face compositing, blending or invented in-between frames.
 """
+import argparse
+import hashlib
+import io
+import json
+import os
+import tempfile
+from contextlib import contextmanager
 from pathlib import Path
-import argparse, hashlib, json
-import cv2
+
 import numpy as np
-from PIL import Image
+from PIL import Image, __version__ as pillow_version
 
 STATES = ('working', 'thinking', 'happy', 'warning', 'error', 'sleepy', 'celebrate')
 CELL = 362
-SOURCE_CELL = 256
-ANCHOR = (182.3442623, 296.79508197)
-LAPTOP_WIDTH = 195
+ROOT = Path(__file__).resolve().parents[1]
+ART = ROOT / 'art/nia-state-hires'
+RUNTIME = ROOT / 'public/assets/nia/animations-hires'
+REFERENCE = ROOT / 'art/nia-classic-frames/idle/000.png'
+# Bump when the crop, registration, alpha treatment or atlas format changes.
+RASTER_REVISION = 2
 
 
 def measure(cel, original=False):
@@ -37,83 +46,195 @@ def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def integers(values, low, high):
+    return (isinstance(values, list) and len(values) == 24
+            and all(type(value) is int and low <= value <= high for value in values))
+
+
+def load_choreography(path):
+    config = json.loads(path.read_text(encoding='utf-8'))
+    if not isinstance(config, dict) or set(config) - set(STATES):
+        raise ValueError(f'{path}: expected a map of non-idle state names')
+    for state, entry in config.items():
+        if not isinstance(entry, dict) or set(entry) - {'sourceOrder', 'durations', 'scalePermille'}:
+            raise ValueError(f'{state}: unexpected choreography fields')
+        order = entry.get('sourceOrder')
+        if not integers(order, 0, 23) or len(set(order)) != 24:
+            raise ValueError(f'{state}: sourceOrder must contain each original cell 0..23 once')
+        if not integers(entry.get('durations'), 1, 2**31 - 1):
+            raise ValueError(f'{state}: expected 24 positive millisecond durations')
+        if 'scalePermille' in entry and not integers(entry['scalePermille'], 980, 1020):
+            raise ValueError(f'{state}: expected 24 scalePermille values (980..1020) in source order')
+    return config
+
+
+def default_order(state):
+    order = list(range(24))
+    if state == 'working':
+        order[12:] = [12, 13, 22, 23, 20, 21, 14, 15, 16, 17, 18, 19]
+    elif state == 'happy':
+        order[7], order[8] = 8, 7
+    elif state == 'sleepy':
+        order[3], order[4] = 4, 3
+    return order
+
+
+def register(cel, anchor, permille):
+    x, y, width = measure(cel)
+    pixels = np.array(cel)
+    pixels[pixels[:, :, 3] <= 3] = 0
+    source = Image.fromarray(pixels).convert('RGBa')
+    scale = anchor[2] / width * (permille / 1000)
+    tx, ty = anchor[0] - x * scale, anchor[1] - y * scale
+    # Every trial resamples the original intact cel in premultiplied alpha.
+    best = None
+    for _ in range(40):
+        output = source.transform((CELL, CELL), Image.Transform.AFFINE,
+            (1 / scale, 0, -tx / scale, 0, 1 / scale, -ty / scale),
+            resample=Image.Resampling.BICUBIC).convert('RGBA')
+        mx, my, _ = measure(output, True)
+        dx, dy = anchor[0] - mx, anchor[1] - my
+        error = max(abs(dx), abs(dy))
+        if best is None or error < best[0]:
+            best = (error, output, tx, ty)
+        if error < 0.12:
+            break
+        tx += dx * 0.5
+        ty += dy * 0.5
+    _, output, tx, ty = best
+    return output, scale, [tx, ty]
+
+
+def render(state, pages, order, scales, anchor, folder, atlas_path):
+    sheets = [Image.open(io.BytesIO(page)).convert('RGBA') for page in pages]
+    if any(sheet.size != (1536, 1024) for sheet in sheets):
+        raise ValueError(f'{state}: wrong source grid')
+    atlas = Image.new('RGBA', (6 * CELL, 4 * CELL))
+    details, signatures = [], set()
+    for index, source_index in enumerate(order):
+        page, cell = divmod(source_index, 12)
+        sx, sy = (cell % 4) * 384, (cell // 4) * 341
+        cel = sheets[page].crop((sx, sy, sx + 384, sy + 341))
+        output, scale, translation = register(cel, anchor, scales[source_index])
+        alpha = np.asarray(output)[:, :, 3]
+        if (alpha[:8].any() or alpha[-8:].any() or alpha[:, :8].any() or alpha[:, -8:].any()):
+            raise ValueError(f'{state}/{index}: border spill')
+        signatures.add(hashlib.sha256(output.tobytes()).digest())
+        target = folder / f'{index:03}.png'
+        output.save(target, optimize=True)
+        atlas.paste(output, (index % 6 * CELL, index // 6 * CELL))
+        ax, ay, width = measure(output, True)
+        details.append({'frame': index, 'sourceIndex': source_index, 'scale': scale,
+            'translation': translation, 'anchor': [ax, ay], 'laptopWidth': width, 'sha256': sha(target)})
+    if len(signatures) != 24:
+        raise ValueError(f'{state}: repeated full drawings')
+    atlas.save(atlas_path, optimize=True)
+    return details
+
+
+def cache_hit(entry, inputs, order, folder, atlas):
+    if not isinstance(entry, dict) or entry.get('exportInputs') != inputs or entry.get('uniqueCels') != 24:
+        return False
+    if entry.get('sourceSha256') != inputs['sourceSha256'] or not atlas.is_file() or sha(atlas) != entry.get('atlasSha256'):
+        return False
+    details = entry.get('frames', [])
+    if not isinstance(details, list) or len(details) != 24:
+        return False
+    for index, detail in enumerate(details):
+        target = folder / f'{index:03}.png'
+        if (not isinstance(detail, dict) or detail.get('frame') != index or detail.get('sourceIndex') != order[index]
+                or not target.is_file() or sha(target) != detail.get('sha256')):
+            return False
+    return True
+
+
+@contextmanager
+def manifest_lock(path):
+    # An OS-held lock releases on process exit, including interrupted exports.
+    # Keep the lock outside the asset directories and shared across invocations.
+    key = hashlib.sha256(os.path.normcase(str(path.resolve())).encode()).hexdigest()
+    with open(Path(tempfile.gettempdir()) / f'nia-export-{key}.lock', 'a+b') as lock:
+        lock.seek(0)
+        if os.name == 'nt':
+            import msvcrt
+            msvcrt.locking(lock.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        yield
+
+
+def write_manifest(path, manifest):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    staged = tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', newline='\n',
+                                         dir=path.parent, delete=False)
+    temp = Path(staged.name)
+    try:
+        with staged:
+            staged.write(json.dumps(manifest, indent=2) + '\n')
+        temp.replace(path)
+    finally:
+        temp.unlink(missing_ok=True)
+
+
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--source', type=Path, default=Path('art/nia-state-hires/pages'))
-    parser.add_argument('--frames', type=Path, default=Path('art/nia-state-hires/frames'))
-    parser.add_argument('--output', type=Path, default=Path('public/assets/nia/animations-hires'))
+    parser = argparse.ArgumentParser(description=__doc__, epilog=
+        'Production: --state warning --state celebrate. Trial: --state warning '
+        '--frames trial/frames --output trial/atlases [--source trial/pages] '
+        '[--choreography trial/choreography.json]. The trial manifest defaults to trial/manifest.json.')
+    parser.add_argument('--state', action='append', choices=STATES, help='repeat to select states; defaults to all')
+    parser.add_argument('--source', type=Path, default=ART / 'pages', help='directory of original 4x3 page PNGs')
+    parser.add_argument('--frames', type=Path, default=ART / 'frames', help='destination for 24 registered cels per state')
+    parser.add_argument('--output', type=Path, default=RUNTIME, help='destination for 6x4 runtime atlases')
+    parser.add_argument('--manifest', type=Path, help='defaults to manifest.json beside the frames directory')
+    parser.add_argument('--choreography', type=Path, default=ART / 'choreography.json', help='state timing, order and optional uniform scale')
     args = parser.parse_args()
-    global ANCHOR, LAPTOP_WIDTH
-    ax, ay, LAPTOP_WIDTH = measure(Image.open('art/nia-classic-frames/idle/000.png'), True)
-    ANCHOR = (ax, ay)
-    args.output.mkdir(parents=True, exist_ok=True)
-    manifest = {'reviewStatus': 'candidate: pending user visual acceptance', 'states': {}}
-    for state in STATES:
-        sources = [args.source / f'{state}-{page}.png' for page in ('a', 'b')]
-        sheets = [Image.open(source).convert('RGBA') for source in sources]
-        if any(sheet.size != (1536, 1024) for sheet in sheets):
-            raise ValueError(f'{state}: wrong source grid')
-        folder = args.frames / state
-        folder.mkdir(parents=True, exist_ok=True)
-        atlas = Image.new('RGBA', (2172, 1448))
-        details, signatures = [], set()
-        for index in range(24):
-            col, row = index % 6, index // 6
-            source_index = index
-            # Working B ends on a second blink; reorder its complete cels to
-            # finish open-eyed, preserving all 24 original drawings.
-            if state == 'working' and index >= 12:
-                source_index = [12,13,22,23,20,21,14,15,16,17,18,19][index-12]
-            if state == 'happy' and index in (7,8):
-                source_index = 15-index
-            if state == 'sleepy' and index in (3,4):
-                source_index = 7-index
-            page, cell = divmod(source_index, 12)
-            sx, sy = (cell % 4) * 384, (cell // 4) * 341
-            cel = sheets[page].crop((sx, sy, sx + 384, sy + 341))
-            x, y, width = measure(cel)
-            pixels = np.array(cel)
-            pixels[pixels[:, :, 3] <= 3] = 0  # transparent export noise only
-            cel = Image.fromarray(pixels)
-            scale = LAPTOP_WIDTH / width
-            tx, ty = ANCHOR[0] - x * scale, ANCHOR[1] - y * scale
-            # Premultiplied resampling prevents RGB hidden under alpha=0 from
-            # producing colored halos. The entire intact cel uses one transform.
-            best = None
-            for attempt in range(40):
-                output = cel.convert('RGBa').transform((CELL, CELL), Image.Transform.AFFINE,
-                    (1 / scale, 0, -tx / scale, 0, 1 / scale, -ty / scale),
-                    resample=Image.Resampling.BICUBIC).convert('RGBA')
-                mx, my, _ = measure(output, True)
-                dx, dy = ANCHOR[0] - mx, ANCHOR[1] - my
-                error = max(abs(dx), abs(dy))
-                if best is None or error < best[0]:
-                    best = (error, output, tx, ty)
-                if error < 0.12:
-                    break
-                tx += dx * 0.5
-                ty += dy * 0.5
-            _, output, tx, ty = best
-            alpha = np.asarray(output)[:, :, 3]
-            if (alpha[:8].any() or alpha[-8:].any() or alpha[:, :8].any() or alpha[:, -8:].any()):
-                raise ValueError(f'{state}/{index}: border spill')
-            signature = hashlib.sha256(output.tobytes()).hexdigest()
-            signatures.add(signature)
-            target = folder / f'{index:03}.png'
-            output.save(target, optimize=True)
-            atlas.paste(output, (col * CELL, row * CELL))
-            ax, ay, w = measure(output, True)
-            details.append({'frame': index, 'sourceIndex': source_index, 'scale': scale, 'translation': [tx, ty],
-                'anchor': [ax, ay], 'laptopWidth': w, 'sha256': sha(target)})
-        target = args.output / (state + '.png')
-        atlas.save(target, optimize=True)
-        if len(signatures) != 24:
-            raise ValueError(f'{state}: repeated full drawings')
-        manifest['states'][state] = {'sourceSha256': [sha(source) for source in sources], 'atlasSha256': sha(target),
-            'frames': details, 'uniqueCels': len(signatures)}
-        anchors = np.array([d['anchor'] for d in details])
-        print(state, '24 complete cels; anchor spread', np.ptp(anchors, axis=0).round(3).tolist())
-    (args.source.parent / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+    manifest_path = (args.manifest or args.frames.parent / 'manifest.json').resolve()
+    production = [args.frames.resolve() == ART / 'frames', args.output.resolve() == RUNTIME,
+                  manifest_path == ART / 'manifest.json']
+    custom_inputs = args.source.resolve() != ART / 'pages' or args.choreography.resolve() != ART / 'choreography.json'
+    if any(production) and (not all(production) or custom_inputs):
+        parser.error('trial exports require separate --frames, --output and manifest destinations')
+    config = load_choreography(args.choreography)
+    reference = REFERENCE.read_bytes()
+    anchor = measure(Image.open(io.BytesIO(reference)), True)
+    with manifest_lock(manifest_path):
+        manifest = (json.loads(manifest_path.read_text(encoding='utf-8')) if manifest_path.exists() else
+                    {'reviewStatus': 'candidate: pending user visual acceptance', 'states': {}})
+        states = manifest['states']
+        if not isinstance(states, dict):
+            raise ValueError(f'{manifest_path}: invalid states map')
+        for state in dict.fromkeys(args.state or STATES):
+            entry = config.get(state, {})
+            order = entry.get('sourceOrder', default_order(state))
+            scales = entry.get('scalePermille', [1000] * 24)
+            pages = [(args.source / f'{state}-{page}.png').read_bytes() for page in ('a', 'b')]
+            source_hashes = [hashlib.sha256(page).hexdigest() for page in pages]
+            inputs = {'revision': RASTER_REVISION, 'pillow': pillow_version, 'numpy': np.__version__,
+                      'referenceSha256': hashlib.sha256(reference).hexdigest(),
+                      'sourceSha256': source_hashes, 'sourceOrder': order, 'scalePermille': scales}
+            folder = args.frames / state
+            atlas = args.output / f'{state}.png'
+            if cache_hit(states.get(state), inputs, order, folder, atlas):
+                print(f'{state}: reused 24 verified cels and atlas')
+                continue
+            folder.mkdir(parents=True, exist_ok=True)
+            args.output.mkdir(parents=True, exist_ok=True)
+            with tempfile.TemporaryDirectory(dir=folder) as frames_stage, tempfile.TemporaryDirectory(dir=args.output) as atlas_stage:
+                staged_atlas = Path(atlas_stage) / atlas.name
+                details = render(state, pages, order, scales, anchor, Path(frames_stage), staged_atlas)
+                atlas_sha = sha(staged_atlas)
+                for item in details:
+                    name = f"{item['frame']:03}.png"
+                    (Path(frames_stage) / name).replace(folder / name)
+                staged_atlas.replace(atlas)
+            states[state] = {'sourceSha256': source_hashes, 'atlasSha256': atlas_sha,
+                             'frames': details, 'uniqueCels': 24, 'exportInputs': inputs}
+            # Publish only complete states. An interruption during the preceding
+            # replacements invalidates the old hashes and the next run repairs it.
+            write_manifest(manifest_path, manifest)
+            anchors = np.array([d['anchor'] for d in details])
+            print(state, '24 complete cels; anchor spread', np.ptp(anchors, axis=0).round(3).tolist(), flush=True)
 
 
 if __name__ == '__main__':
