@@ -114,13 +114,15 @@ async function launch(first = true) {
           return signatures.size;
         });
       assert.equal(distinctCells, 24, state + ' must contain twenty-four different drawn cells');
-      const art = await sprite.locator('img').first().evaluate((img) => {
+      const checkProps = state === 'warning' || state === 'celebrate';
+      const art = await sprite.locator('img').first().evaluate((img, checkProps) => {
         const canvas = document.createElement('canvas');
         canvas.width = canvas.height = 362;
         const context = canvas.getContext('2d');
         context.imageSmoothingEnabled = false;
         const anchors = [];
         const silhouetteTops = [];
+        const props = [];
         const sharpness = [];
         let borderPixels = 0;
         let laptopPixelMismatches = 0;
@@ -129,6 +131,23 @@ async function launch(first = true) {
           context.clearRect(0, 0, 362, 362);
           context.drawImage(img, (frame % 6) * 362, Math.floor(frame / 6) * 362, 362, 362, 0, 0, 362, 362);
           const data = context.getImageData(0, 0, 362, 362).data;
+          if (checkProps) {
+            // This row crosses both outer laptop edges, away from Nia's sleeves.
+            const row = data.subarray(297 * 362 * 4, 298 * 362 * 4);
+            const edges = [];
+            for (let x = 0; x < 362; x++) if (row[x * 4 + 3] > 180) edges.push(x);
+            // Follow the blue housing rather than the changing icon on its display.
+            let bluePixels = 0, xSum = 0, ySum = 0;
+            for (let y = 186; y < 254; y++) for (let x = 48; x < 130; x++) {
+              const i = (y * 362 + x) * 4;
+              if (data[i + 3] <= 160 || data[i + 2] - data[i] <= 65 || data[i + 2] - data[i + 1] <= 25) continue;
+              bluePixels++;
+              xSum += x;
+              ySum += y;
+            }
+            if (edges.length < 180 || bluePixels < 500) throw Error('Missing laptop or robot sample');
+            props.push({ left: edges[0], right: edges.at(-1), x: xSum / bluePixels, y: ySum / bluePixels });
+          }
           const laptop = [];
           for (let y = 285; y < 315; y++) for (let x = 110; x < 250; x++) {
             const start = (y * 362 + x) * 4;
@@ -177,13 +196,26 @@ async function launch(first = true) {
           sharpness.push(edgeSquares / edgeCount - (edgeSum / edgeCount) ** 2);
         }
         sharpness.sort((a, b) => a - b);
-        return { borderPixels, laptopPixelMismatches, anchors, silhouetteTops, medianSharpness: sharpness[12] };
-      });
+        return { borderPixels, laptopPixelMismatches, anchors, props, silhouetteTops, medianSharpness: sharpness[12] };
+      }, checkProps);
       assert.equal(art.borderPixels, 0, state + ' must not bleed across cells');
-      if (state === 'warning' || state === 'celebrate') {
+      if (checkProps) {
         const [before, after] = art.silhouetteTops.slice(11, 13);
         assert.ok(before !== null && after !== null && Math.abs(after - before) <= 3,
           state + ': head silhouette jumps at the source-page join');
+        const steps = art.props.slice(1).map((next, i) => {
+          const previous = art.props[i];
+          return {
+            edge: Math.max(Math.abs(next.left - previous.left), Math.abs(next.right - previous.right)),
+            robot: Math.hypot(next.x - previous.x, next.y - previous.y),
+          };
+        });
+        const warning = state === 'warning';
+        assert.ok(steps.every(step => step.edge <= 1), state + ': laptop edge jumps between cels');
+        assert.ok(steps[11].robot <= (warning ? 0.8 : 2.4), state + ': blue housing jumps at the page join');
+        // Scan the complete action as well: moving the old jolt to a neighbour is a regression.
+        assert.ok(steps.every(step => step.robot <= (warning ? 1.2 : 2.4)),
+          state + ': robot displacement elsewhere exceeds the reviewed motion range');
       }
       if (state === 'idle') assert.equal(art.laptopPixelMismatches, 0, 'accepted idle laptop unchanged');
       console.log(state, 'sharpness', art.medianSharpness.toFixed(1));

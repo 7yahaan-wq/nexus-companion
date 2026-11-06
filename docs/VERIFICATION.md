@@ -1,6 +1,6 @@
 # 验证与交付边界
 
-当前版本 **0.5.4**。本轮验收包括 Nia 候选动画的源格、运行图集、实际尺寸播放及循环接缝。当前构建的实际执行、复用和产物哈希统一记入 [PROJECT_STATUS.md](PROJECT_STATUS.md)，旧版本结果不能验证新构建。固定开发流程见 [DEVELOPMENT_LOOP.md](DEVELOPMENT_LOOP.md)。
+当前版本 **0.5.5**。本轮用 0.5.4 对照提醒和庆祝的电脑边缘、机器人位移、头部接缝和末姿，并验证试做图集可直接进入正式导出。当前构建的实际执行、复用和产物哈希统一记入 [PROJECT_STATUS.md](PROJECT_STATUS.md)，旧版本结果不能验证新构建。固定开发流程见 [DEVELOPMENT_LOOP.md](DEVELOPMENT_LOOP.md)。
 
 ## 运行入口
 
@@ -33,7 +33,7 @@
 - `.test-data/verification.json`：完整源码回归各阶段及耗时。
 - `.test-data/packaged-verification.json`：打包桌面与便携程序结果。
 - `.test-data/release-audit.json`：源码与 ASAR 比对、包内隐私检查及产物哈希。
-- `dist/SHA256SUMS-0.5.4.txt`：本次两个 EXE 的最终校验值，成功打包后生成。
+- `dist/SHA256SUMS-0.5.5.txt`：本次两个 EXE 的最终校验值，成功打包后生成。
 
 截图与测试数据库不进入 Git 或应用发布包。清理生成物前须逐项确认绝对路径和用途，保留缓存必要证据、当前版及一个已验证回退版，不递归清空工作目录。打包版必须与当前源码一致；不能拿旧 `win-unpacked` 目录代替重建。
 
@@ -55,4 +55,4 @@ Codex 本地文件观测不等于实时控制，日报不等于完整审计账�
 
 新增 `tests/review-navigation.cjs` 同时进入 source/packaged 固定列表：27 个源码阶段（21 桌面套件），14 个打包阶段（12 桌面套件、归档审计和实际 portable）。覆盖保存等待/失败重试、日期响应乱序、复制与真实导出一致、加载失败不可导出、9/0/1 项任务导航及英文浅色窄窗口。
 
-清理在 `verify:packaged` 成功后运行 `node scripts/clean-dist.cjs --keep-version 0.5.3` 预览，再加 `--apply`。脚本核对报告完整阶段、agreement 输出指纹与当前 audit/checksums 字节、审计哈希、两个版本的完整文件及进程占用，保护未知文件、链接和目录。版本升级时回退参数必须按实际保留版本调整。
+清理在 `verify:packaged` 成功后运行 `node scripts/clean-dist.cjs --keep-version 0.5.4` 预览，再加 `--apply`。脚本核对报告完整阶段、agreement 输出指纹与当前 audit/checksums 字节、审计哈希、两个版本的完整文件及进程占用，保护未知文件、链接和目录。版本升级时回退参数必须按实际保留版本调整。

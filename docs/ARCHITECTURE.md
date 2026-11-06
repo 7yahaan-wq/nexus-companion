@@ -1,6 +1,6 @@
 # Nexus Companion architecture
 
-## Current architecture — 0.5.4
+## Current architecture — 0.5.5
 
 Electron + React + TypeScript + Vite. Electron provides Windows tray, notifications, global shortcuts, filesystem and NSIS/portable packaging without a Rust toolchain. React owns presentation only. Node services own persistence and integrations behind a narrow context-isolated IPC bridge. SQLite runs in a worker (Node built-in SQLite); no native addon ABI dependency. Windows AppData/Nexus Companion stores data, logs and imported assets. Ordinary workflows remain local, without analytics or cloud sync. The explicit exception is a user-triggered, read-only account/usage query through the official local Codex CLI, which may contact Codex services.
 

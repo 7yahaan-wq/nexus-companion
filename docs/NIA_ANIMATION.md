@@ -1,6 +1,6 @@
 # Nia 动画与立绘
 
-0.5.4 集中调整专心工作、温柔提醒与庆祝完成三种候选动作。只有悠闲 idle 动画已获用户视觉接受，其他七种动画均待用户审阅。[当版验收记录](PROJECT_STATUS.md)
+0.5.5 集中改善温柔提醒与庆祝完成中笔记本边缘和小机器人的衔接。只有悠闲 idle 动画已获用户视觉接受，其他七种动画均待用户审阅。[当版验收记录](PROJECT_STATUS.md)
 
 ## 素材保留范围
 
@@ -22,16 +22,17 @@
 
 运行图集为 6×4，每格 362×362，边缘留白至少 8 像素。原页、提示词和 manifest 用于追溯来源；定位点和哈希只证明对应工程性质，不能保证每处笔触一致或脸部自然。
 
-`src/domain/avatar.ts` 定义状态、静止姿势和循环策略。idle 使用受保护的 `[0,2,...,22]`，首格 700 ms，其余每格 115 ms。专注、提醒和庆祝共用 `art/nia-state-hires/choreography.json` 中的编排：`sourceOrder` 将两页里的 24 个源格各用一次，`durations` 是播放顺序中每格的毫秒数，`scalePermille` 是可选的按源格编号设置的整格缩放千分比。idle/working/thinking/sleepy 循环，happy/warning/error/celebrate 播放一次后停留。
+`src/domain/avatar.ts` 定义状态、静止姿势和循环策略。idle 使用受保护的 `[0,2,...,22]`，首格 700 ms，其余每格 115 ms。专注、提醒和庆祝共用 `art/nia-state-hires/choreography.json` 中的编排：`sourceOrder` 将两页里的 24 个源格各用一次，`durations` 是播放顺序中每格的毫秒数，`scalePermille` 是可选的按源格编号设置的整格缩放千分比。可选的 `anchorYHundredths` 同样按源格编号设置，全格竖向偏移以百分之一输出像素为单位，每个值在 −45 到 +45 之间。idle/working/thinking/sleepy 循环，happy/warning/error/celebrate 播放一次后停留。
 
 播放器先加载并解码图集，再推进时间轴；每次只显示一个完整格子，不交叉淡化。切换图集使用独立 DOM key，避免旧图承接新坐标。隐藏窗口、关闭角色动画或系统减少动态效果时暂停。`scripts/build-nia-24.py` 只负责已接受 idle 的整格打包，不应重新生成或改变其哈希。
 
 ## 在本机修改一个动作
 
 1. 打开该状态的两张源页，先挑出准备、主要动作和收势。修改编排时，一直用原始完整画面，保留头发、衣服、手和道具之间的关系。专注动作需要跨末帧和首帧检查，提醒和庆祝需要让最终停留的姿势单独也能读懂。
-2. 在项目根目录使用已装有 `scripts/requirements-nia.txt` 所列 Pillow、NumPy 的 Python 环境。只重导本次改动的状态，例如 `python scripts/prepare-nia-states.py --state working`。一次选择多个状态可重复 `--state`。试做时，同时指定 `--frames .test-data/nia-trial/frames --output .test-data/nia-trial/atlases`，试做清单将写入 `.test-data/nia-trial/manifest.json`。
-3. 导出器按状态比对源页、参考图、源格顺序、比例、环境和已有输出哈希。再次运行相同的导出命令时，符合条件的状态显示 `reused`。单改 `durations` 时播放器直接读取新时长，在项目根目录运行 `node scripts/sync-nia-review.mjs` 即可同步离线验收页，无需重新生成图片。
-4. 在源码目录打开 `docs/NIA_REVIEW.html` 逐格定位眼睛、发顶及电脑边缘，再到设置的「认识更多面的 Nia」按实际尺寸看完整动作。以同一处过渡做修改前后的比较，在项目状态里分别记录工程检查、独立体验及用户验收结果。[本轮参考的桌宠项目](OPEN_SOURCE_RESEARCH.md)
+2. 在项目根目录使用符合 `scripts/requirements-nia.txt` 的 Pillow 和 NumPy。试做提醒动作时，将编排保存在独立目录，运行 `python scripts/prepare-nia-states.py --state warning --choreography .test-data/nia-trial/candidate.json --frames .test-data/nia-trial/frames --output .test-data/nia-trial/atlases`。导出器把该次清单写入 `.test-data/nia-trial/manifest.json`。
+3. 在实际侧栏尺寸播放整段，重点比较眼睛、头顶、机器人和笔记本两边。确认候选后，将该状态的编排写入 `art/nia-state-hires/choreography.json`，再运行 `python scripts/prepare-nia-states.py --state warning --reuse-trial .test-data/nia-trial`。导出器核对源页、编排、配准与渲染环境，验证 24 个单格及图集的哈希后直接使用试做结果。
+4. 直接从原页重导使用 `python scripts/prepare-nia-states.py --state warning`。可重复 `--state` 选择多个动作。相同输入与已有输出哈希全部匹配时，显示 `reused`。单改 `durations` 时，运行 `node scripts/sync-nia-review.mjs` 即可同步源码离线审核页。
+5. 打开 `docs/NIA_REVIEW.html` 逐格查看道具和发顶，再到设置的「认识更多面的 Nia」看末姿、自然速度及实际尺寸。工程测量、独立体验和用户验收分别记录。[桌宠项目参考](OPEN_SOURCE_RESEARCH.md)
 
 ## 使用与验收
 

@@ -1,8 +1,8 @@
 # Project status
 
-## Current release 0.5.4 (2026-11-07)
+## Current release 0.5.5 (2026-11-07)
 
-This release revises three Nia animation candidates for daily use. Use the settings preview to watch the working loop, warning reaction and celebration at their actual display size.
+This release refines the laptop and small robot in Nia’s warning and celebration reactions. Both can be replayed in the settings preview.
 
 Source is private at [7yahaan-wq/nexus-companion](https://github.com/7yahaan-wq/nexus-companion). Generated EXEs live in ignored `dist/`; pushing source does not upload release binaries.
 
@@ -24,33 +24,51 @@ Source is private at [7yahaan-wq/nexus-companion](https://github.com/7yahaan-wq/
 
 ## Animation review
 
-Each of the three revised actions uses all 24 of its original full cels. The six source pages are unchanged. The working loop now lasts 4,748 ms (previously 3,520 ms), with its six closed-eye cels visible for 220 ms in total (previously 660 ms).
+Warning and celebration each use their 24 original full cels. The source pages and durations are preserved. The changed ordering and whole-cel registration target the transition between slots 11 and 12 (zero-based). Only idle has user visual acceptance. [Local art and review workflow](NIA_ANIMATION.md)
 
-Across the transition from playback positions 11 to 12 (zero-based), the top of the visible artwork moved 10 pixels in the old warning and celebration atlases. In the new warning atlas the top moves from y=29 to 30, and in celebration from y=30 to 29. These measurements use the original 362-pixel cel and alpha above 140. They measure a specific jump. Visual review also covers expression, the working loop boundary and the final held poses of the two reactions. Only idle has user visual acceptance. [Local source and review workflow](NIA_ANIMATION.md)
+An independent reviewer watched the two reactions at the 255-pixel sidebar size. Warning B and celebration A were selected before unblinding. Both were 0.5.5. The measurements below refer to the visible page join, with values in sidebar pixels.
 
-An independent reviewer compared anonymized old and new sequences at 255 pixels. They selected B for working, B for warning and A for celebration. All three choices were 0.5.4 after unblinding. The observed working blink lasted about 219 ms (formerly 663 ms). The warning and celebration head-top jumps measured about 0.7 screen pixels each (formerly 7). The reviewer still saw a 1–2-pixel shift at the laptop edges and small robot in both reactions, and a brief change in the mouth and eye line at celebration frame 10. These details remain open for user review.
+| Visible movement at the join | Warning, 0.5.4 → 0.5.5 | Celebration, 0.5.4 → 0.5.5 |
+| --- | --- | --- |
+| Laptop left edge | 1.69 → 1.41 | 2.11 → 1.41 |
+| Laptop right edge | 1.13 → 1.13 | 1.83 → 1.13 |
+| Robot left shell edge | 1.55 → 0.70 | 1.27 → 0.42 |
+| Top of the hair | 0.70 → 0.70 | 0.70 → 0.70 |
+
+The warning antenna texture still flickers slightly. The celebration robot still dips by about two sidebar pixels. These observations remain available for the user's visual review.
+
+A separate check measures the 362-pixel source cels. Across all 23 adjacent transitions of each revised reaction, the maximum horizontal change at either laptop edge is one source pixel on the scanline at y=297 (alpha above 180). At the single page join, the two-dimensional displacement of the blue robot shell's centroid fell from 0.870 to 0.122 source pixels in warning and from 2.917 to 2.096 in celebration. The centroid measures a different feature from the visible left edge in the table.
 
 ## Current verification
 
-- The full source Harness passed in one run on 0.5.4. It executed 27 stages and reused zero. All 100 unit tests passed.
-- Repeating the selected-state art export reused all three states after verifying their inputs and output hashes. It skipped rendering 72 cels and three runtime atlases.
-- The release audit matched 40 source files to the packaged application and inspected 4,580 archive entries. On the packaged Windows desktop app reporting 0.5.4, an independent user walkthrough saw all three 24-cel atlases at 2,172 × 1,448 pixels. The measured blink was 225 ms over a 4.74-second working cycle. Warning and celebration each held the last cel during an additional 850 ms of observation. The walkthrough recorded no page errors.
-- The packaged Harness passed all 14 stages. It executed 14 and reused zero. The actual portable EXE reached its SQLite bridge and exited with code 0. The installer was built and hashed. The installer wizard was not run.
+- The 0.5.5 full source Harness executed 27 stages and reused zero. All 100 unit tests passed. The desktop Nia regression checks both props throughout the two reactions.
+- The two trials supplied all 48 cels and both atlases to the production export. Their bytes and hashes matched. Isolated trials rejected altered registration inputs, damaged output and out-of-range offsets while preserving the destination. Zero vertical offset retained eligibility for the existing raster cache.
+
+- The release audit matched all 40 expected files to the packaged application and checked 4,580 archive entries. The packaged Harness executed all 14 stages and reused zero. The portable EXE started, reached the SQLite bridge and exited with code 0. Installer verification covered the built file and its checksum.
 
 ### Windows artifacts
 
 | File | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `NexusCompanion-Portable-0.5.4.exe` | 137,641,530 | `82f38b1ace941d980dbfd012c148f718c26329c83e1a992c633d88898d6ef5ec` |
-| `NexusCompanion-Setup-0.5.4.exe` | 137,851,501 | `2095da979ea0d16209ffa06841715dc8dc9b93b521ba1e74cc65527d74b69798` |
+| `NexusCompanion-Portable-0.5.5.exe` | 137,606,518 | `e70f492683cbac3fc87cfdf60bb39c06a4a00960229780aab7a28e51c32b7ee8` |
+| `NexusCompanion-Setup-0.5.5.exe` | 137,816,610 | `12b86bd72a876d9adf3c1abfb01aefcde6b6154a4d07b22e9eda1b727a5b290c` |
 
-`dist/` retains the current 0.5.4 release and the verified 0.5.3 rollback.
+The verified rollback is 0.5.4. The local before/after animation is retained at `.test-data/props-055/nia-props-comparison.webp`.
 
 ### Cleanup
 
-After verification, this round removed 29 files totaling 297,564,017 bytes (283.78 MiB). Twelve intermediate images and one-off scripts from the anonymized walkthrough accounted for 12,371,979 bytes. Twelve baseline boards, old atlas copies and temporary comparison pages/keys accounted for 9,582,611 bytes. Five obsolete 0.5.2 release files, including its executables and release note, accounted for 275,609,427 bytes. The intermediate review media have been cleaned up.
+After verification, this round removed 120 files totaling 303,382,981 bytes (289.33 MiB) and 16 empty trial directories.
 
-The compact before/after comparison remains at `.test-data/nia-art-20261107/art-comparison.jpg` in the local workspace. The source review page, isolated databases, fixtures and verification logs are retained, along with both 0.5.3 executables, matching release files and three rollback verification records.
+| Removed files | Count | Bytes |
+| --- | ---: | ---: |
+| Warning trial | 36 | 7,343,379 |
+| Celebration art trials | 36 | 6,452,657 |
+| Isolated export checks | 33 | 5,869,381 |
+| Temporary user-review media | 5 | 2,205,989 |
+| Old atlas copies and temporary blind-review tools | 5 | 5,901,233 |
+| Superseded 0.5.3 distribution | 5 | 275,610,342 |
+
+Intermediate review media were cleaned up. The real-time before/after animation, compact measurements, verification logs and isolated data remain available, along with the complete 0.5.4 rollback bundle.
 
 ## Known limits and next candidates
 
@@ -62,4 +80,4 @@ The compact before/after comparison remains at `.test-data/nia-art-20261107/art-
 - Markdown soft line breaks in a reflection render as a paragraph; copy/export preserve the exact multiline text. Some detailed help and backend diagnostics remain Chinese. Settings navigation can be simplified without removing useful controls.
 - Windows executables are unsigned. OS notification settings can suppress toasts. The development-only `extract-zip` dependency retains an upstream advisory; Electron archives are checked against the official hash before extraction.
 
-See [USER_GUIDE.md](USER_GUIDE.md), [DEVELOPMENT_HANDOFF.md](DEVELOPMENT_HANDOFF.md), [START_ON_NEW_PC.md](START_ON_NEW_PC.md), [VERIFICATION.md](VERIFICATION.md), [RELEASE_0.5.4.md](RELEASE_0.5.4.md) and [NIA_ANIMATION.md](NIA_ANIMATION.md). The source-only frame-inspection tool is `docs/NIA_REVIEW.html`; open it from a source checkout with its `public/` artwork, not from the packaged documentation.
+See [USER_GUIDE.md](USER_GUIDE.md), [DEVELOPMENT_HANDOFF.md](DEVELOPMENT_HANDOFF.md), [START_ON_NEW_PC.md](START_ON_NEW_PC.md), [VERIFICATION.md](VERIFICATION.md), [RELEASE_0.5.5.md](RELEASE_0.5.5.md) and [NIA_ANIMATION.md](NIA_ANIMATION.md). The source-only frame-inspection tool is `docs/NIA_REVIEW.html`; open it from a source checkout with its `public/` artwork, not from the packaged documentation.

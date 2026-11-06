@@ -9,6 +9,7 @@ import hashlib
 import io
 import json
 import os
+import shutil
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
@@ -56,7 +57,7 @@ def load_choreography(path):
     if not isinstance(config, dict) or set(config) - set(STATES):
         raise ValueError(f'{path}: expected a map of non-idle state names')
     for state, entry in config.items():
-        if not isinstance(entry, dict) or set(entry) - {'sourceOrder', 'durations', 'scalePermille'}:
+        if not isinstance(entry, dict) or set(entry) - {'sourceOrder', 'durations', 'scalePermille', 'anchorYHundredths'}:
             raise ValueError(f'{state}: unexpected choreography fields')
         order = entry.get('sourceOrder')
         if not integers(order, 0, 23) or len(set(order)) != 24:
@@ -65,6 +66,8 @@ def load_choreography(path):
             raise ValueError(f'{state}: expected 24 positive millisecond durations')
         if 'scalePermille' in entry and not integers(entry['scalePermille'], 980, 1020):
             raise ValueError(f'{state}: expected 24 scalePermille values (980..1020) in source order')
+        if 'anchorYHundredths' in entry and not integers(entry['anchorYHundredths'], -45, 45):
+            raise ValueError(f'{state}: expected 24 anchorYHundredths values (-45..45) in source order')
     return config
 
 
@@ -105,7 +108,7 @@ def register(cel, anchor, permille):
     return output, scale, [tx, ty]
 
 
-def render(state, pages, order, scales, anchor, folder, atlas_path):
+def render(state, pages, order, scales, anchor, folder, atlas_path, y_offsets):
     sheets = [Image.open(io.BytesIO(page)).convert('RGBA') for page in pages]
     if any(sheet.size != (1536, 1024) for sheet in sheets):
         raise ValueError(f'{state}: wrong source grid')
@@ -115,7 +118,8 @@ def render(state, pages, order, scales, anchor, folder, atlas_path):
         page, cell = divmod(source_index, 12)
         sx, sy = (cell % 4) * 384, (cell // 4) * 341
         cel = sheets[page].crop((sx, sy, sx + 384, sy + 341))
-        output, scale, translation = register(cel, anchor, scales[source_index])
+        target_anchor = (anchor[0], anchor[1] + y_offsets[source_index] / 100, anchor[2])
+        output, scale, translation = register(cel, target_anchor, scales[source_index])
         alpha = np.asarray(output)[:, :, 3]
         if (alpha[:8].any() or alpha[-8:].any() or alpha[:, :8].any() or alpha[:, -8:].any()):
             raise ValueError(f'{state}/{index}: border spill')
@@ -146,6 +150,25 @@ def cache_hit(entry, inputs, order, folder, atlas):
                 or not target.is_file() or sha(target) != detail.get('sha256')):
             return False
     return True
+
+
+def reuse_trial(trial, state, inputs, folder, atlas):
+    manifest = json.loads((trial / 'manifest.json').read_text(encoding='utf-8'))
+    entry = manifest['states'][state]
+    if entry.get('exportInputs') != inputs:
+        raise ValueError(f'{state}: trial inputs do not match the requested export')
+    for index in range(24):
+        name = f'{index:03}.png'
+        shutil.copyfile(trial / 'frames' / state / name, folder / name)
+    shutil.copyfile(trial / 'atlases' / atlas.name, atlas)
+    # Check the staged bytes, even if another process is currently revising the trial.
+    if not cache_hit(entry, inputs, inputs['sourceOrder'], folder, atlas):
+        raise ValueError(f'{state}: trial PNGs or frame mapping failed verification')
+    for frame in entry['frames']:
+        transform = [frame['scale'], *frame['translation'], *frame['anchor'], frame['laptopWidth']]
+        if len(frame['translation']) != 2 or len(frame['anchor']) != 2 or not np.isfinite(transform).all():
+            raise ValueError(f'{state}: invalid trial registration for frame {frame["frame"]}')
+    return entry['frames']
 
 
 @contextmanager
@@ -183,12 +206,16 @@ def main():
         '--frames trial/frames --output trial/atlases [--source trial/pages] '
         '[--choreography trial/choreography.json]. The trial manifest defaults to trial/manifest.json.')
     parser.add_argument('--state', action='append', choices=STATES, help='repeat to select states; defaults to all')
+    parser.add_argument('--reuse-trial', type=Path,
+                        help='use matching verified manifest.json, frames/ and atlases/ from a trial directory')
     parser.add_argument('--source', type=Path, default=ART / 'pages', help='directory of original 4x3 page PNGs')
     parser.add_argument('--frames', type=Path, default=ART / 'frames', help='destination for 24 registered cels per state')
     parser.add_argument('--output', type=Path, default=RUNTIME, help='destination for 6x4 runtime atlases')
     parser.add_argument('--manifest', type=Path, help='defaults to manifest.json beside the frames directory')
     parser.add_argument('--choreography', type=Path, default=ART / 'choreography.json', help='state timing, order and optional uniform scale')
     args = parser.parse_args()
+    if args.reuse_trial and not args.state:
+        parser.error('--reuse-trial requires at least one explicit --state')
     manifest_path = (args.manifest or args.frames.parent / 'manifest.json').resolve()
     production = [args.frames.resolve() == ART / 'frames', args.output.resolve() == RUNTIME,
                   manifest_path == ART / 'manifest.json']
@@ -208,11 +235,15 @@ def main():
             entry = config.get(state, {})
             order = entry.get('sourceOrder', default_order(state))
             scales = entry.get('scalePermille', [1000] * 24)
+            y_offsets = entry.get('anchorYHundredths', [0] * 24)
             pages = [(args.source / f'{state}-{page}.png').read_bytes() for page in ('a', 'b')]
             source_hashes = [hashlib.sha256(page).hexdigest() for page in pages]
             inputs = {'revision': RASTER_REVISION, 'pillow': pillow_version, 'numpy': np.__version__,
                       'referenceSha256': hashlib.sha256(reference).hexdigest(),
                       'sourceSha256': source_hashes, 'sourceOrder': order, 'scalePermille': scales}
+            # A zero offset uses the existing registration and its verified cache entry.
+            if any(y_offsets):
+                inputs['anchorYHundredths'] = y_offsets
             folder = args.frames / state
             atlas = args.output / f'{state}.png'
             if cache_hit(states.get(state), inputs, order, folder, atlas):
@@ -222,7 +253,10 @@ def main():
             args.output.mkdir(parents=True, exist_ok=True)
             with tempfile.TemporaryDirectory(dir=folder) as frames_stage, tempfile.TemporaryDirectory(dir=args.output) as atlas_stage:
                 staged_atlas = Path(atlas_stage) / atlas.name
-                details = render(state, pages, order, scales, anchor, Path(frames_stage), staged_atlas)
+                if args.reuse_trial:
+                    details = reuse_trial(args.reuse_trial, state, inputs, Path(frames_stage), staged_atlas)
+                else:
+                    details = render(state, pages, order, scales, anchor, Path(frames_stage), staged_atlas, y_offsets)
                 atlas_sha = sha(staged_atlas)
                 for item in details:
                     name = f"{item['frame']:03}.png"
@@ -234,7 +268,8 @@ def main():
             # replacements invalidates the old hashes and the next run repairs it.
             write_manifest(manifest_path, manifest)
             anchors = np.array([d['anchor'] for d in details])
-            print(state, '24 complete cels; anchor spread', np.ptp(anchors, axis=0).round(3).tolist(), flush=True)
+            action = 'reused from trial' if args.reuse_trial else 'exported'
+            print(state, action, '24 complete cels; anchor spread', np.ptp(anchors, axis=0).round(3).tolist(), flush=True)
 
 
 if __name__ == '__main__':

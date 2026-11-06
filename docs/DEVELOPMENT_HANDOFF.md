@@ -1,8 +1,8 @@
 # 项目开发接续说明
 
-核对日期：2026-11-07。当前版本 `0.5.4`，工作目录：`D:\ProjectNia\nexus-companion`。0.5.4 的美术工作集中在专注、提醒与庆祝动画，素材与复现方法见 [NIA_ANIMATION.md](NIA_ANIMATION.md)。当前验收和发布结果统一见 [PROJECT_STATUS.md](PROJECT_STATUS.md) 和 [VERIFICATION.md](VERIFICATION.md)。
+核对日期：2026-11-07。当前版本 `0.5.5`，工作目录：`D:\ProjectNia\nexus-companion`。0.5.5 的美术工作集中在提醒和庆祝的道具稳定性，支持复用已校验的本地试做图集，素材与复现方法见 [NIA_ANIMATION.md](NIA_ANIMATION.md)。当前验收和发布结果统一见 [PROJECT_STATUS.md](PROJECT_STATUS.md) 和 [VERIFICATION.md](VERIFICATION.md)。
 
-先读根目录 [AGENTS.md](../AGENTS.md)；跨机器启动见 [START_ON_NEW_PC.md](START_ON_NEW_PC.md)。本文的源码说明已按 0.5.4 更新，第 7 节的机器路径和安装工具仍是历史环境记录，不能直接套用到另一台电脑。
+先读根目录 [AGENTS.md](../AGENTS.md)；跨机器启动见 [START_ON_NEW_PC.md](START_ON_NEW_PC.md)。本文的源码说明已按 0.5.5 更新，第 7 节的机器路径和安装工具仍是历史环境记录，不能直接套用到另一台电脑。
 
 本文基于现有源码、配置、测试和发布文件整理，用于后续在本机继续开发。当前发布验收见 VERIFICATION.md；本次已实现的优化与后续候选项分别记录。修改功能后应同步更新相关说明。
 
